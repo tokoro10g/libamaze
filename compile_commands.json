@@ -1,0 +1,12 @@
+[
+ {
+  "directory": "/home/tokoro/dev/libamaze",
+  "command": "g++ -MMD -std=gnu++17 -O2 -g3 -I include -c -o build/x86/mazeutility.o src/mazeutility.cpp",
+  "file": "src/mazeutility.cpp"
+ },
+ {
+  "directory": "/home/tokoro/dev/libamaze",
+  "command": "g++ -MMD -std=gnu++17 -O2 -g3 -I include -c -o build/x86/hello.o src/hello.cpp",
+  "file": "src/hello.cpp"
+ }
+]
