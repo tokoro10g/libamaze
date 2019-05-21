@@ -21,4 +21,13 @@ struct __attribute__((__packed__)) Coord {
     Direction dir;
 };
 
+static constexpr Direction DirFront = { 0x1 };
+static constexpr Direction DirRight = { 0x2 };
+static constexpr Direction DirBack = { 0x4 };
+static constexpr Direction DirLeft = { 0x8 };
+static constexpr Direction DirNorth = { 0x1 };
+static constexpr Direction DirEast = { 0x2 };
+static constexpr Direction DirSouth = { 0x4 };
+static constexpr Direction DirWest = { 0x8 };
+
 }

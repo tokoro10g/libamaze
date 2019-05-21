@@ -16,9 +16,11 @@ namespace Utility {
         if (type == 1) {
             int x, y;
             fs >> x >> y;
-            maze.setGoal(x, y);
+            Coord c = { static_cast<uint8_t>(x), static_cast<uint8_t>(y), DirEast };
+            maze.setGoal(c);
         } else {
-            maze.setGoal(7, 7);
+            Coord c = { 7, 7, DirEast };
+            maze.setGoal(c);
         }
         for (int i = 0; i < h; i++) {
             for (int j = 0; j < w; j++) {
@@ -58,7 +60,8 @@ namespace Utility {
     {
         maze.resize(w, h);
         maze.setType(1);
-        maze.setGoal(x, y);
+        Coord c = { static_cast<uint8_t>(x), static_cast<uint8_t>(y), DirEast };
+        maze.setGoal(c);
         for (int i = 0; i < h; i++) {
             for (int j = 0; j < w; j++) {
                 CellData cell = { 0 };
@@ -131,4 +134,30 @@ namespace Utility {
         }
     }
 }
+
+std::ostream& operator<<(std::ostream& os, Direction d)
+{
+    if (d.bits.NORTH) {
+        os << 'N';
+    }
+    if (d.bits.EAST) {
+        os << 'E';
+    }
+    if (d.bits.WEST) {
+        os << 'W';
+    }
+    if (d.bits.SOUTH) {
+        os << 'S';
+    }
+    if (d.half == 0) {
+        os << '0';
+    }
+    return os;
+}
+std::ostream& operator<<(std::ostream& os, Coord c)
+{
+    os << "(" << (int)c.x << ", " << (int)c.y << ", " << c.dir << ")";
+    return os;
+}
+
 }
