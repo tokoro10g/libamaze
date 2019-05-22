@@ -7,7 +7,7 @@
 int main()
 {
     Amaze::Maze maze;
-    Amaze::Utility::loadMazeFromFile(maze, "/home/tokoro/dev/micromouse_mazedat/maze2018halfexp.dat");
+    Amaze::Utility::loadMazeFromFile(maze, "../micromouse_mazedat/maze2018halfexp.dat");
 
     std::cout << "Hello" << std::endl;
     Amaze::Utility::printMaze(maze);

@@ -6,7 +6,7 @@
 namespace Amaze {
 namespace Utility {
 
-    void loadMazeFromStream(Maze& maze, std::istream& fs)
+    bool loadMazeFromStream(Maze& maze, std::istream& fs)
     {
         int type, w, h;
         fs >> type;
@@ -36,24 +36,29 @@ namespace Utility {
                     continue;
                 } else {
                     std::cerr << "Invalid maze data" << std::endl;
-                    return;
+                    return false;
                 }
                 maze.setCell((h - i - 1) * w + j, cell);
             }
         }
+        return true;
     }
 
-    void loadMazeFromStdin(Maze& maze)
+    bool loadMazeFromStdin(Maze& maze)
     {
-        loadMazeFromStream(maze, std::cin);
+        return loadMazeFromStream(maze, std::cin);
     }
 
-    void loadMazeFromFile(Maze& maze, std::string filename)
+    bool loadMazeFromFile(Maze& maze, std::string filename)
     {
         std::ifstream fs;
         fs.open(filename);
-        loadMazeFromStream(maze, fs);
+        if (fs.fail()) {
+            return false;
+        }
+        bool result = loadMazeFromStream(maze, fs);
         fs.close();
+        return result;
     }
 
     void loadEmptyMaze(int w, int h, int x, int y, Maze& maze)
