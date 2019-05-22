@@ -3,6 +3,7 @@
 #include "maze.h"
 #include <cmath>
 #include <limits>
+#include <utility>
 
 namespace Amaze {
 
@@ -13,9 +14,18 @@ public:
         : maze(maze)
     {
     }
-    virtual bool isConnected(TNodeId id_from, TNodeId id_to) const { return false; }
     virtual TCost distance(TNodeId id_from, TNodeId id_to) const { return TCost(0); }
-    virtual TCost edgeCost(TNodeId id_from, TNodeId id_to) const { return TCost(0); }
+    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const { return { false, 0 }; };
+    virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const
+    {
+        std::pair<bool, TCost> e = getEdge(id_from, id_to);
+        return e.first;
+    }
+    virtual TCost edgeCost(TNodeId id_from, TNodeId id_to) const
+    {
+        std::pair<bool, TCost> e = getEdge(id_from, id_to);
+        return e.second;
+    }
     virtual TNodeId nodeIdByCoord(Coord c) const { return TNodeId(0); }
     virtual Coord coordByNodeId(TNodeId id) const { return Coord(); }
 
@@ -35,38 +45,19 @@ public:
     {
         Base::size = maze.getWidth() * maze.getHeight();
     }
-    bool isConnected(TNodeId id_from, TNodeId id_to) const
+    std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
     {
         Coord c1, c2;
         c1 = coordByNodeId(id_from);
         c2 = coordByNodeId(id_to);
+        TCost maxcost = 0;
+        if (Base::maze.isSetWall(c1) || Base::maze.isSetWall(c2)) {
+            maxcost = std::numeric_limits<TCost>::max();
+        }
         if ((abs((int)c1.x - c2.x) == 1) ^ (abs((int)c1.y - c2.y) == 1)) {
-            return true;
+            return { true, std::max(TCost(1), maxcost) };
         }
-        return false;
-    }
-    TCost edgeCost(TNodeId id_from, TNodeId id_to) const
-    {
-        uint8_t w = Base::maze.getWidth();
-        Coord c = coordByNodeId(id_from);
-        if (!isConnected(id_from, id_to)) {
-            return std::numeric_limits<TCost>::max();
-        }
-        int diff = id_to - id_from;
-        if (diff == w) {
-            c.dir = DirNorth;
-        } else if (diff == -w) {
-            c.dir = DirSouth;
-        } else if (diff == 1) {
-            c.dir = DirEast;
-        } else if (diff == -1) {
-            c.dir = DirWest;
-        }
-        if (Base::maze.isSetWall(c)) {
-            return std::numeric_limits<TCost>::max();
-        } else {
-            return 1;
-        }
+        return { false, std::numeric_limits<TCost>::max() };
     }
     TCost distance(TNodeId id_from, TNodeId id_to) const
     {
@@ -99,57 +90,54 @@ public:
     {
         Base::size = maze.getWidth() * maze.getHeight();
     }
-    bool isConnected(TNodeId id_from, TNodeId id_to) const
+    std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
     {
         Coord c1, c2;
         c1 = coordByNodeId(id_from);
         c2 = coordByNodeId(id_to);
-        uint8_t tmp1 = std::max(c1.dir.half, c2.dir.half);
-        uint8_t tmp2 = std::min(c1.dir.half, c2.dir.half);
-        if (c1.x == c2.x && c1.y == c2.y && tmp1 / tmp2 == 2) {
-            return true;
+
+        TCost maxcost = 0;
+        if (Base::maze.isSetWall(c1) || Base::maze.isSetWall(c2)) {
+            maxcost = std::numeric_limits<TCost>::max();
+        }
+
+        uint8_t dirmax = std::max(c1.dir.half, c2.dir.half);
+        uint8_t dirmin = std::min(c1.dir.half, c2.dir.half);
+        if (c1.x == c2.x && c1.y == c2.y && (dirmax / dirmin == 2 || (dirmax == 8 && dirmin == 1))) {
+            return { true, std::max(TCost(2), maxcost) };
         }
         if (c1.dir.half == DirEast.half) {
             if (c2.dir.half == DirEast.half && abs((int)c1.x - c2.x) == 1 && c1.y == c2.y) {
-                return true;
+                return { true, std::max(TCost(3), maxcost) };
             }
             if (c2.dir.half == DirNorth.half) {
                 if (c2.x == c1.x + 1 && c1.y == c2.y) {
-                    return true;
+                    return { true, std::max(TCost(2), maxcost) };
                 }
                 if (c2.x == c1.x + 1 && c1.y == c2.y + 1) {
-                    return true;
+                    return { true, std::max(TCost(2), maxcost) };
                 }
                 if (c2.x == c1.x && c1.y == c2.y + 1) {
-                    return true;
+                    return { true, std::max(TCost(2), maxcost) };
                 }
             }
         } else {
             if (c2.dir.half == DirNorth.half && abs((int)c1.y - c2.y) == 1 && c1.x == c2.x) {
-                return true;
+                return { true, std::max(TCost(3), maxcost) };
             }
             if (c2.dir.half == DirEast.half) {
                 if (c1.x == c2.x + 1 && c2.y == c1.y) {
-                    return true;
+                    return { true, std::max(TCost(2), maxcost) };
                 }
                 if (c1.x == c2.x + 1 && c2.y == c1.y + 1) {
-                    return true;
+                    return { true, std::max(TCost(2), maxcost) };
                 }
                 if (c1.x == c2.x && c2.y == c1.y + 1) {
-                    return true;
+                    return { true, std::max(TCost(2), maxcost) };
                 }
             }
         }
-        return false;
-    }
-    TCost edgeCost(TNodeId id_from, TNodeId id_to) const
-    {
-        uint8_t w = Base::maze.getWidth();
-        Coord c = coordByNodeId(id_from);
-        if (!isConnected(id_from, id_to)) {
-            return std::numeric_limits<TCost>::max();
-        }
-        // TODO: implement
+        return { false, std::numeric_limits<TCost>::max() };
     }
     TCost distance(TNodeId id_from, TNodeId id_to) const
     {
