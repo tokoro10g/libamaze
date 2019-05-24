@@ -7,12 +7,13 @@
 
 namespace Amaze {
 
-template <template <typename, typename> typename TMazeGraph, typename TCost, typename TNodeId>
-class DStarLite : public Solver<TMazeGraph, TCost, TNodeId> {
+template <typename TMazeGraph>
+class DStarLite : public Solver<TMazeGraph> {
 public:
-    using Base = Solver<TMazeGraph, TCost, TNodeId>;
-    DStarLite(TMazeGraph<TCost, TNodeId>& mg)
-        : Solver<TMazeGraph, TCost, TNodeId>(mg)
+    using Base = Solver<TMazeGraph>;
+    using NodeId = typename TMazeGraph::NodeId;
+    DStarLite(TMazeGraph& mg)
+        : Solver<TMazeGraph>(mg)
     {
     }
     void computeShortestPath()
@@ -65,22 +66,30 @@ public:
         //cout << "The number of examined nodes in this round: " << examined_nodes << endl;
         //cout << "Maximum size of the open list: " << max_heap_size << endl;
     }
-    TNodeId getNextNodeId() const
+    NodeId getNextNodeId() const
     {
+        //TODO: Implement
+        return NodeId(0);
     }
-    TNodeId getCurrentNodeId() const
+    NodeId getCurrentNodeId() const
     {
+        //TODO: Implement
+        return NodeId(0);
     }
     void preSense()
     {
+        //TODO: Implement
         return;
     }
     void postSense()
     {
-
+        //TODO: Implement
+        return;
     }
     void reset()
     {
+        //TODO: Implement
+        return;
     }
 };
 

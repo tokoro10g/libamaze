@@ -4,29 +4,29 @@
 
 namespace Amaze {
 
-template <template <typename, typename> typename TMazeGraph, typename TCost, typename TNodeId>
+template <typename TMazeGraph>
 class Solver {
 public:
-    Solver(TMazeGraph<TCost, TNodeId>& mg)
+    Solver(TMazeGraph& mg)
         : mg(mg)
     {
     }
-    virtual Coord getNextLocation() const
+    virtual Coordinates getNextCoordinates() const
     {
         return mg.coordByNodeId(getNextNodeId());
     }
-    virtual Coord getCurrentLocation() const
+    virtual Coordinates getCurrentCoordinates() const
     {
         return mg.coordByNodeId(getCurrentNodeId());
     }
-    virtual TNodeId getNextNodeId() const;
-    virtual TNodeId getCurrentNodeId() const;
+    virtual typename TMazeGraph::NodeId getNextNodeId() const;
+    virtual typename TMazeGraph::NodeId getCurrentNodeId() const;
     virtual void preSense();
     virtual void postSense();
     virtual void reset();
 
 protected:
-    TMazeGraph<TCost, TNodeId>& mg;
+    TMazeGraph& mg;
 };
 
 }

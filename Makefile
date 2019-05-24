@@ -1,4 +1,4 @@
-COMPILE_OPTS = -MMD -std=gnu++17 -O2 -g3 $(INCLUDE_DIRS)
+COMPILE_OPTS = -MMD -std=gnu++17 -O2 -g3 -Wall $(INCLUDE_DIRS)
 
 CC = g++ # This is the main compiler
 CXX = $(CC)

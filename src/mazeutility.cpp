@@ -16,10 +16,10 @@ namespace Utility {
         if (type == 1) {
             int x, y;
             fs >> x >> y;
-            Coord c = { static_cast<uint8_t>(x), static_cast<uint8_t>(y), DirEast };
+            Coordinates c = { static_cast<uint8_t>(x), static_cast<uint8_t>(y), East };
             maze.setGoal(c);
         } else {
-            Coord c = { 7, 7, DirEast };
+            Coordinates c = { 7, 7, East };
             maze.setGoal(c);
         }
         for (int i = 0; i < h; i++) {
@@ -65,7 +65,7 @@ namespace Utility {
     {
         maze.resize(w, h);
         maze.setType(1);
-        Coord c = { static_cast<uint8_t>(x), static_cast<uint8_t>(y), DirEast };
+        Coordinates c = { static_cast<uint8_t>(x), static_cast<uint8_t>(y), East };
         maze.setGoal(c);
         for (int i = 0; i < h; i++) {
             for (int j = 0; j < w; j++) {
@@ -159,7 +159,7 @@ std::ostream& operator<<(std::ostream& os, Direction d)
     }
     return os;
 }
-std::ostream& operator<<(std::ostream& os, Coord c)
+std::ostream& operator<<(std::ostream& os, Coordinates c)
 {
     os << "(" << (int)c.x << ", " << (int)c.y << ", " << c.dir << ")";
     return os;

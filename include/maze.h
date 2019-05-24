@@ -27,9 +27,9 @@ private:
     uint8_t w;
     uint8_t h;
     uint8_t type;
-    Coord goal;
+    Coordinates goal;
 
-    void setWallInternal(Coord c, bool is_checked, bool val)
+    void setWallInternal(Coordinates c, bool is_checked, bool val)
     {
         data[c.y * w + c.x].byte |= (c.dir.half << (4 * is_checked));
 
@@ -52,14 +52,14 @@ public:
         : w(0)
         , h(0)
         , type(0)
-        , goal({ 0, 0, DirEast })
+        , goal({ 0, 0, East })
     {
     }
     Maze(uint8_t _w, uint8_t _h)
         : w(_w)
         , h(_h)
         , type(0)
-        , goal({ 0, 0, DirEast })
+        , goal({ 0, 0, East })
     {
     }
     ~Maze() { data.clear(); }
@@ -74,37 +74,37 @@ public:
     }
 
     void setType(uint8_t _type) { type = _type; }
-    Coord getGoal() const { return goal; }
-    void setGoal(Coord c) { goal = c; }
+    Coordinates getGoal() const { return goal; }
+    void setGoal(Coordinates c) { goal = c; }
     //uint16_t getGoalNodeIndex() const
     //{
-    //    Coord c;
+    //    Coordinates c;
     //    c.x = gx;
     //    c.y = gy;
     //    c.dir = gd;
     //    return coordToNodeIndex(c);
     //}
 
-    //uint16_t coordToNodeIndex(Coord c) const
+    //uint16_t coordToNodeIndex(Coordinates c) const
     //{
     //    switch (c.dir.half) {
-    //    case DirNorth.half:
+    //    case North.half:
     //        return c.y * (2 * w - 1) + c.x + w - 1;
-    //    case DirEast.half:
+    //    case East.half:
     //        return c.y * (2 * w - 1) + c.x;
-    //    case DirSouth.half:
+    //    case South.half:
     //        return c.y * (2 * w - 1) + c.x - w;
-    //    case DirWest.half:
+    //    case West.half:
     //        return c.y * (2 * w - 1) + c.x - 1;
     //    }
     //    return -1;
     //}
 
-    void setWall(Coord c) { setWallInternal(c, false, true); }
-    void setCheckedWall(Coord c) { setWallInternal(c, true, true); }
-    void resetWall(Coord c) { setWallInternal(c, false, false); }
-    void resetCheckedWall(Coord c) { setWallInternal(c, true, false); }
-    void toggleWall(Coord c)
+    void setWall(Coordinates c) { setWallInternal(c, false, true); }
+    void setCheckedWall(Coordinates c) { setWallInternal(c, true, true); }
+    void resetWall(Coordinates c) { setWallInternal(c, false, false); }
+    void resetCheckedWall(Coordinates c) { setWallInternal(c, true, false); }
+    void toggleWall(Coordinates c)
     {
         if (isSetWall(c)) {
             resetWall(c);
@@ -112,7 +112,7 @@ public:
             setWall(c);
         }
     }
-    void toggleCheckedWall(Coord c)
+    void toggleCheckedWall(Coordinates c)
     {
         if (isCheckedWall(c)) {
             resetCheckedWall(c);
@@ -123,11 +123,11 @@ public:
     void setCell(uint16_t index, CellData cd) { data[index] = cd; }
     CellData getCell(uint16_t index) const { return data[index]; }
 
-    bool isSetWall(Coord c) const { return isSetWall(c.y * w + c.x, c.dir); }
+    bool isSetWall(Coordinates c) const { return isSetWall(c.y * w + c.x, c.dir); }
     bool isSetWall(uint16_t index, Direction dir) const { return data[index].byte & dir.half; }
-    bool isCheckedWall(Coord c) const { return isCheckedWall(c.y * w + c.x, c.dir); }
+    bool isCheckedWall(Coordinates c) const { return isCheckedWall(c.y * w + c.x, c.dir); }
     bool isCheckedWall(uint16_t index, Direction dir) const { return data[index].byte & (dir.half << 4); }
-    bool isCheckedCell(Coord c) const { return isCheckedCell(c.y * w + c.x); }
+    bool isCheckedCell(Coordinates c) const { return isCheckedCell(c.y * w + c.x); }
     bool isCheckedCell(uint16_t index) const { return (data[index].byte & 0xF0) == 0xF0; }
 };
 }

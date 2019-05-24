@@ -5,41 +5,63 @@
 #include <fstream>
 #include <iostream>
 
+using namespace Amaze;
+
 int main()
 {
-    Amaze::Maze maze;
-    Amaze::Utility::loadMazeFromFile(maze, "../micromouse_mazedat/maze2018halfexp.dat");
+    Maze maze;
+    Utility::loadMazeFromFile(maze, "../micromouse_mazedat/maze2018halfexp.dat");
 
-    std::cout << "Hello" << std::endl;
-    Amaze::Utility::printMaze(maze);
+    Utility::printMaze(maze);
+    std::cout << std::endl;
 
-    Amaze::FourWayStepMapGraph<> mg(maze);
-    std::cout << mg.edgeExist(0, 1) << " " << (int)mg.edgeCost(0, 1) << std::endl;
-    std::cout << mg.edgeExist(0, 2) << " " << (int)mg.edgeCost(0, 2) << std::endl;
-    std::cout << mg.edgeExist(0, 32) << " " << (int)mg.edgeCost(0, 32) << std::endl;
-    std::cout << mg.edgeExist(31, 32) << " " << (int)mg.edgeCost(31, 32) << std::endl;
+    FourWayStepMapGraph<> mg1(maze);
+    auto solver1 = DStarLite(mg1);
 
-    Amaze::MazeGraph<>* mp = &mg;
-    std::cout << mp->edgeExist(0, 1) << " " << (int)mp->edgeCost(0, 1) << std::endl;
-    std::cout << mp->edgeExist(0, 2) << " " << (int)mp->edgeCost(0, 2) << std::endl;
-    std::cout << mp->edgeExist(0, 32) << " " << (int)mp->edgeCost(0, 32) << std::endl;
-    std::cout << mp->edgeExist(31, 32) << " " << (int)mp->edgeCost(31, 32) << std::endl;
+    auto e11 = mg1.getEdge({ 0, 1, North }, { 0, 1, East });
+    auto e12 = mg1.getEdge({ 0, 1, North }, { 0, 2, North });
+    auto e13 = mg1.getEdge({ 0, 1, East },  { 1, 2, North });
+    std::cout << (e11.first ? "true" : "false") << " " << (int)e11.second << std::endl;
+    std::cout << (e12.first ? "true" : "false") << " " << (int)e12.second << std::endl;
+    std::cout << (e13.first ? "true" : "false") << " " << (int)e13.second << std::endl;
+    std::cout << std::endl;
 
-    Amaze::SixWayWallNodeGraph<> mg2(maze);
-    std::pair<bool, uint8_t> e1 = mg2.getEdge(mg2.nodeIdByCoord({ 0, 1, Amaze::DirNorth }), mg2.nodeIdByCoord({ 0, 1, Amaze::DirEast }));
-    std::pair<bool, uint8_t> e2 = mg2.getEdge(mg2.nodeIdByCoord({ 0, 1, Amaze::DirNorth }), mg2.nodeIdByCoord({ 0, 2, Amaze::DirNorth }));
-    std::pair<bool, uint8_t> e3 = mg2.getEdge(mg2.nodeIdByCoord({ 0, 1, Amaze::DirEast }), mg2.nodeIdByCoord({ 1, 1, Amaze::DirNorth }));
-    std::cout << (e1.first ? "true" : "false") << " " << (int)e1.second << std::endl;
-    std::cout << (e2.first ? "true" : "false") << " " << (int)e2.second << std::endl;
-    std::cout << (e3.first ? "true" : "false") << " " << (int)e3.second << std::endl;
+    FourWayStepMapGraph<uint16_t> mg2(maze);
+    auto solver2 = DStarLite(mg2);
 
-    Amaze::Direction d;
-    d = Amaze::DirBack;
+    auto e21 = mg2.getEdge({ 0, 1, North }, { 0, 1, East });
+    auto e22 = mg2.getEdge({ 0, 1, North }, { 0, 2, North });
+    auto e23 = mg2.getEdge({ 0, 1, East },  { 1, 2, North });
+    std::cout << (e21.first ? "true" : "false") << " " << (int)e21.second << std::endl;
+    std::cout << (e22.first ? "true" : "false") << " " << (int)e22.second << std::endl;
+    std::cout << (e23.first ? "true" : "false") << " " << (int)e23.second << std::endl;
+    std::cout << std::endl;
+
+    FourWayStepMapGraph<float> mg3(maze);
+    auto solver3 = DStarLite(mg3);
+
+    auto e31 = mg3.getEdge({ 0, 1, North }, { 0, 1, East });
+    auto e32 = mg3.getEdge({ 0, 1, North }, { 0, 2, North });
+    auto e33 = mg3.getEdge({ 0, 1, East },  { 1, 2, North });
+    std::cout << (e31.first ? "true" : "false") << " " << e31.second << std::endl;
+    std::cout << (e32.first ? "true" : "false") << " " << e32.second << std::endl;
+    std::cout << (e33.first ? "true" : "false") << " " << e33.second << std::endl;
+    std::cout << std::endl;
+
+    SixWayWallNodeGraph<> mg4(maze);
+    auto e41 = mg4.getEdge({ 0, 1, North }, { 0, 1, East });
+    auto e42 = mg4.getEdge({ 0, 1, North }, { 0, 2, North });
+    auto e43 = mg4.getEdge({ 0, 1, East },  { 1, 1, North });
+    std::cout << (e41.first ? "true" : "false") << " " << (int)e41.second << std::endl;
+    std::cout << (e42.first ? "true" : "false") << " " << (int)e42.second << std::endl;
+    std::cout << (e43.first ? "true" : "false") << " " << (int)e43.second << std::endl;
+    std::cout << std::endl;
+
+    Direction d;
+    d = Back;
     std::cout << d << std::endl;
 
     std::cout << maze.getGoal() << std::endl;
-
-    Amaze::DStarLite<Amaze::MazeGraph, uint8_t, uint16_t> solver(mg);
 
     return 0;
 }

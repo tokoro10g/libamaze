@@ -15,19 +15,19 @@ union __attribute__((__packed__)) Direction {
     } bits;
 };
 
-struct __attribute__((__packed__)) Coord {
+struct __attribute__((__packed__)) Coordinates {
     uint8_t x;
     uint8_t y;
     Direction dir;
 };
 
-static constexpr Direction DirFront = { 0x1 };
-static constexpr Direction DirRight = { 0x2 };
-static constexpr Direction DirBack = { 0x4 };
-static constexpr Direction DirLeft = { 0x8 };
-static constexpr Direction DirNorth = { 0x1 };
-static constexpr Direction DirEast = { 0x2 };
-static constexpr Direction DirSouth = { 0x4 };
-static constexpr Direction DirWest = { 0x8 };
+static constexpr Direction Front = { 0x1 };
+static constexpr Direction Right = { 0x2 };
+static constexpr Direction Back = { 0x4 };
+static constexpr Direction Left = { 0x8 };
+static constexpr Direction North = { 0x1 };
+static constexpr Direction East = { 0x2 };
+static constexpr Direction South = { 0x4 };
+static constexpr Direction West = { 0x8 };
 
 }

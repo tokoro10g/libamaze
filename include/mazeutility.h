@@ -16,6 +16,6 @@ namespace Utility {
 }
 
 std::ostream& operator<<(std::ostream& os, Direction d);
-std::ostream& operator<<(std::ostream& os, Coord c);
+std::ostream& operator<<(std::ostream& os, Coordinates c);
 
 }
