@@ -7,7 +7,7 @@
 
 namespace Amaze {
 
-template <typename TNodeId, typename TCost>
+template <typename TCost = uint8_t, typename TNodeId = uint16_t>
 class MazeGraph {
 public:
     MazeGraph(const Maze& maze)
@@ -35,10 +35,10 @@ protected:
     const Maze& maze;
 };
 
-template <typename TNodeId, typename TCost>
-class FourWayStepMapGraph : public MazeGraph<TNodeId, TCost> {
+template <typename TCost = uint8_t, typename TNodeId = uint16_t>
+class FourWayStepMapGraph : public MazeGraph<TCost, TNodeId> {
 public:
-    using Base = MazeGraph<TNodeId, TCost>;
+    using Base = MazeGraph<TCost, TNodeId>;
 
     FourWayStepMapGraph(const Maze& maze)
         : Base(maze)
@@ -80,10 +80,10 @@ public:
     }
 };
 
-template <typename TNodeId, typename TCost>
-class SixWayWallNodeGraph : public MazeGraph<TNodeId, TCost> {
+template <typename TCost = uint8_t, typename TNodeId = uint16_t>
+class SixWayWallNodeGraph : public MazeGraph<TCost, TNodeId> {
 public:
-    using Base = MazeGraph<TNodeId, TCost>;
+    using Base = MazeGraph<TCost, TNodeId>;
 
     SixWayWallNodeGraph(const Maze& maze)
         : Base(maze)
