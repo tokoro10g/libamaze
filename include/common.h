@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 #include <utility>
 
 namespace Amaze {
@@ -29,5 +30,15 @@ static constexpr Direction North = { 0x1 };
 static constexpr Direction East = { 0x2 };
 static constexpr Direction South = { 0x4 };
 static constexpr Direction West = { 0x8 };
+
+template <typename T>
+T satSum(T a, T b)
+{
+    if (std::numeric_limits<T>::max() - a <= b) {
+        return std::numeric_limits<T>::max();
+    } else {
+        return a + b;
+    }
+}
 
 }

@@ -25,6 +25,8 @@ int main()
     std::cout << (e12.first ? "true" : "false") << " " << (int)e12.second << std::endl;
     std::cout << (e13.first ? "true" : "false") << " " << (int)e13.second << std::endl;
     std::cout << std::endl;
+    std::cout<< mg1.size <<std::endl;
+    std::cout << std::endl;
 
     FourWayStepMapGraph<uint16_t> mg2(maze);
     auto solver2 = DStarLite(mg2);
@@ -55,6 +57,8 @@ int main()
     std::cout << (e41.first ? "true" : "false") << " " << (int)e41.second << std::endl;
     std::cout << (e42.first ? "true" : "false") << " " << (int)e42.second << std::endl;
     std::cout << (e43.first ? "true" : "false") << " " << (int)e43.second << std::endl;
+    std::cout << std::endl;
+    std::cout<< mg4.size <<std::endl;
     std::cout << std::endl;
 
     Direction d;

@@ -17,7 +17,8 @@ public:
     {
     }
     virtual TCost distance(TNodeId id_from, TNodeId id_to) const;
-    virtual std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const {
+    virtual std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
+    {
         return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
     }
     virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const;
@@ -33,6 +34,14 @@ public:
     }
     virtual TNodeId nodeIdByCoordinates(Coordinates c) const { return TNodeId(0); }
     virtual Coordinates coordByNodeId(TNodeId id) const { return Coordinates(); }
+    virtual TNodeId getGoalNodeId() const
+    {
+        return nodeIdByCoordinates(maze.getGoal());
+    }
+    const Maze& getCMaze() const
+    {
+        return maze;
+    }
 
     unsigned int size;
 
@@ -50,7 +59,15 @@ public:
     {
         Base::size = maze.getWidth() * maze.getHeight();
     }
-    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const {
+    TCost distance(TNodeId id_from, TNodeId id_to) const
+    {
+        Coordinates c1, c2;
+        c1 = coordByNodeId(id_from);
+        c2 = coordByNodeId(id_to);
+        return std::max(abs((int)c1.x - c2.x), abs((int)c1.y - c2.y));
+    }
+    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
+    {
         return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
     }
     std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
@@ -67,13 +84,6 @@ public:
         }
         return { false, std::numeric_limits<TCost>::max() };
     }
-    TCost distance(TNodeId id_from, TNodeId id_to) const
-    {
-        Coordinates c1, c2;
-        c1 = coordByNodeId(id_from);
-        c2 = coordByNodeId(id_to);
-        return std::max(abs((int)c1.x - c2.x), abs((int)c1.y - c2.y));
-    }
     TNodeId nodeIdByCoordinates(Coordinates c) const
     {
         uint8_t w = Base::maze.getWidth();
@@ -84,7 +94,7 @@ public:
         uint8_t w = Base::maze.getWidth();
         uint8_t x = id % w;
         uint8_t y = id / w;
-        return { x, y, 0 };
+        return { x, y, { 0 } };
     }
 };
 
@@ -96,9 +106,16 @@ public:
     SixWayWallNodeGraph(const Maze& maze)
         : Base(maze)
     {
-        Base::size = maze.getWidth() * maze.getHeight();
+        Base::size = 2 * maze.getWidth() * maze.getHeight() - maze.getWidth() - maze.getHeight();
     }
-    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const {
+    TCost distance(TNodeId id_from, TNodeId id_to) const
+    {
+        Coordinates c1 = coordByNodeId(id_from);
+        Coordinates c2 = coordByNodeId(id_to);
+        return TCost(2) * std::max(abs((int)c1.x - c2.x), abs((int)c1.y - c2.y)) + (c1.x == c2.x && c1.y == c2.y && c1.dir.half != c2.dir.half);
+    }
+    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
+    {
         return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
     }
     std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
@@ -149,12 +166,6 @@ public:
             }
         }
         return { false, std::numeric_limits<TCost>::max() };
-    }
-    TCost distance(TNodeId id_from, TNodeId id_to) const
-    {
-        Coordinates c1 = coordByNodeId(id_from);
-        Coordinates c2 = coordByNodeId(id_to);
-        return TCost(2) * std::max(abs((int)c1.x - c2.x), abs((int)c1.y - c2.y)) + (c1.x == c2.x && c1.y == c2.y && c1.dir.half != c2.dir.half);
     }
     TNodeId nodeIdByCoordinates(Coordinates c) const
     {

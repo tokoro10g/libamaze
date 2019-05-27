@@ -2,8 +2,9 @@
 
 #include "solver.h"
 #include <algorithm>
-#include <vector>
 #include <limits>
+#include <vector>
+#include <bitset>
 
 namespace Amaze {
 
@@ -12,8 +13,16 @@ class DStarLite : public Solver<TMazeGraph> {
 public:
     using Base = Solver<TMazeGraph>;
     using NodeId = typename TMazeGraph::NodeId;
+    using Cost = typename TMazeGraph::Cost;
+    static constexpr Cost INF = std::numeric_limits<Cost>::max();
+
     DStarLite(TMazeGraph& mg)
         : Solver<TMazeGraph>(mg)
+        , key_modifier(0)
+        , id_start_orig(Base::mg.getCMaze().getWidth() - 1)
+        , id_start(id_start_orig)
+        , id_goal(0)
+        , id_last(id_start)
     {
     }
     void computeShortestPath()
@@ -88,9 +97,24 @@ public:
     }
     void reset()
     {
-        //TODO: Implement
+        key_modifier = Cost(0);
+        id_start = id_start_orig;
+        id_goal = Base::mg.getGoalNodeId();
+        id_last = id_start;
+        //setNodeRhs(id_goal, 0);
         return;
     }
+
+private:
+    Cost key_modifier;
+
+    const NodeId id_start_orig;
+    NodeId id_start;
+    NodeId id_goal;
+    NodeId id_last;
+
+    std::vector<NodeId> open_list;
+    std::bitset<10000> in_open_list;
 };
 
 }
