@@ -22,8 +22,9 @@ public:
     virtual typename TMazeGraph::NodeId getNextNodeId() const;
     virtual typename TMazeGraph::NodeId getCurrentNodeId() const;
     virtual void preSense();
-    virtual void postSense();
+    virtual void postSense(const std::vector<Coordinates>& sensed_coordinates);
     virtual void reset();
+    virtual void initialize();
 
 protected:
     TMazeGraph& mg;

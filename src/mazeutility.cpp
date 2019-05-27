@@ -11,7 +11,9 @@ namespace Utility {
         int type, w, h;
         fs >> type;
         fs >> w >> h;
-        maze.resize(w, h);
+        if (maze.getWidth() < w || maze.getHeight() < h) {
+            maze.resize(w, h);
+        }
         maze.setType(type);
         if (type == 1) {
             int x, y;

@@ -55,12 +55,21 @@ public:
         , goal({ 0, 0, East })
     {
     }
+    Maze(uint8_t _w)
+        : w(_w)
+        , h(_w)
+        , type(0)
+        , goal({ 0, 0, East })
+    {
+        data.resize(w * h);
+    }
     Maze(uint8_t _w, uint8_t _h)
         : w(_w)
         , h(_h)
         , type(0)
         , goal({ 0, 0, East })
     {
+        data.resize(w * h);
     }
     ~Maze() { data.clear(); }
 
@@ -76,29 +85,6 @@ public:
     void setType(uint8_t _type) { type = _type; }
     Coordinates getGoal() const { return goal; }
     void setGoal(Coordinates c) { goal = c; }
-    //uint16_t getGoalNodeIndex() const
-    //{
-    //    Coordinates c;
-    //    c.x = gx;
-    //    c.y = gy;
-    //    c.dir = gd;
-    //    return coordToNodeIndex(c);
-    //}
-
-    //uint16_t coordToNodeIndex(Coordinates c) const
-    //{
-    //    switch (c.dir.half) {
-    //    case North.half:
-    //        return c.y * (2 * w - 1) + c.x + w - 1;
-    //    case East.half:
-    //        return c.y * (2 * w - 1) + c.x;
-    //    case South.half:
-    //        return c.y * (2 * w - 1) + c.x - w;
-    //    case West.half:
-    //        return c.y * (2 * w - 1) + c.x - 1;
-    //    }
-    //    return -1;
-    //}
 
     void setWall(Coordinates c) { setWallInternal(c, false, true); }
     void setCheckedWall(Coordinates c) { setWallInternal(c, true, true); }
@@ -130,4 +116,5 @@ public:
     bool isCheckedCell(Coordinates c) const { return isCheckedCell(c.y * w + c.x); }
     bool isCheckedCell(uint16_t index) const { return (data[index].byte & 0xF0) == 0xF0; }
 };
+
 }
