@@ -49,7 +49,8 @@ int main()
     std::cout << (e33.first ? "true" : "false") << " " << e33.second << std::endl;
     std::cout << std::endl;
 
-    SixWayWallNodeGraph<> mg4(maze);
+    SixWayWallNodeGraph<uint16_t> mg4(maze);
+    auto solver4 = DStarLite(mg4);
     auto e41 = mg4.getEdge({ 0, 1, North }, { 0, 1, East });
     auto e42 = mg4.getEdge({ 0, 1, North }, { 0, 2, North });
     auto e43 = mg4.getEdge({ 0, 1, East }, { 1, 1, North });
@@ -67,11 +68,12 @@ int main()
     std::cout << maze.getGoal() << std::endl;
 
     std::cout << std::endl;
-    std::cout << "==============" << std::endl;
+    std::cout << "=======Testing D* Lite for 4-way Graph=======" << std::endl;
     std::cout << std::endl;
 
     solver1.initialize();
     decltype(mg1)::NodeId id_goal = mg1.getGoalNodeId();
+    std::cout << "The start is " << mg4.getStartNodeId() << std::endl;
     std::cout << "The goal is " << id_goal << std::endl;
     std::cout << std::endl;
 
@@ -80,6 +82,22 @@ int main()
         solver1.postSense(std::vector<Coordinates>());
     }
     std::cout << id_goal << std::endl;
+
+    std::cout << std::endl;
+    std::cout << "=======Testing D* Lite for 6-way Graph=======" << std::endl;
+    std::cout << std::endl;
+
+    solver4.initialize();
+    decltype(mg4)::NodeId id_goal4 = mg4.getGoalNodeId();
+    std::cout << "The start is " << mg4.getStartNodeId() << std::endl;
+    std::cout << "The goal is " << id_goal4 << std::endl;
+    std::cout << std::endl;
+
+    while (solver4.getCurrentNodeId() != id_goal4) {
+        std::cout << solver4.getCurrentNodeId() << std::endl;
+        solver4.postSense(std::vector<Coordinates>());
+    }
+    std::cout << id_goal4 << std::endl;
 
     return 0;
 }

@@ -68,7 +68,7 @@ public:
             auto kold = open_list.front().first;
             auto knew = calculateKey(uid);
             //std::cout<<(int)kold.first<<","<<(int)kold.second<<" "<<(int)knew.first<<","<<(int)knew.second<<std::endl;
-            //std::cout<<(int)g[uid]<<","<<(int)rhs[uid]<<std::endl;
+            //std::cout<<uid<<": "<<(int)g[uid]<<","<<(int)rhs[uid]<<std::endl;
             examined_nodes++;
             if (kold < knew) {
                 updateHeap(uid, knew);
