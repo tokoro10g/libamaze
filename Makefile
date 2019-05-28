@@ -5,6 +5,7 @@ CXX = $(CC)
 SRCDIR = src
 BUILDDIR = build/x86
 TARGET = bin/x86/runner
+TARGET_TEST = bin/x86/tester
  
 SRCEXT = cpp
 OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(wildcard $(SRCDIR)/*.cpp))
@@ -26,13 +27,18 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 run: $(TARGET)
 	@$(TARGET)
 
+runtest: $(TARGET_TEST)
+	@$(TARGET_TEST)
+
 clean:
 	@echo " Cleaning..."; 
 	@echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
 
 # Tests
-tester:
-	$(CC) $(CFLAGS) test/tester.cpp $(INC) $(LIB) -o bin/tester
+test: $(TARGET_TEST)
+
+$(TARGET_TEST): $(OBJECTS)
+	$(CC) $(CFLAGS) test/tester.cpp $^ $(INC) $(LIB) -o $(TARGET_TEST)
 
 .PHONY: clean
 

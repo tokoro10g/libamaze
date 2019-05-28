@@ -68,6 +68,7 @@ public:
     }
 
     static constexpr TNodeId size = 0;
+    static constexpr TCost INF = std::numeric_limits<TCost>::max();
 
 protected:
     const Maze& maze;
@@ -121,12 +122,12 @@ public:
         c2 = coordByNodeId(id_to);
         TCost maxcost = 0;
         if (blocked) {
-            maxcost = std::numeric_limits<TCost>::max();
+            maxcost = Base::INF;
         }
         if ((abs((int)c1.x - c2.x) == 1) ^ (abs((int)c1.y - c2.y) == 1)) {
             return { true, std::max(TCost(1), maxcost) };
         }
-        return { false, std::numeric_limits<TCost>::max() };
+        return { false, Base::INF };
     }
     std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
     {
@@ -166,7 +167,7 @@ public:
     static constexpr TNodeId size = W * W;
 };
 
-template <typename TCost = uint8_t, typename TNodeId = uint16_t, int W = 32>
+template <typename TCost = uint16_t, typename TNodeId = uint16_t, int W = 32>
 class SixWayWallNodeGraph : public MazeGraph<TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<TCost, TNodeId, W>;
@@ -210,7 +211,7 @@ public:
 
         TCost maxcost = 0;
         if (blocked) {
-            maxcost = std::numeric_limits<TCost>::max();
+            maxcost = Base::INF;
         }
 
         uint8_t dirmax = std::max(c1.dir.half, c2.dir.half);
@@ -249,7 +250,7 @@ public:
                 }
             }
         }
-        return { false, std::numeric_limits<TCost>::max() };
+        return { false, Base::INF };
     }
     std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
     {
@@ -274,7 +275,7 @@ public:
         case West.half:
             return c.y * (2 * W - 1) + c.x - 1;
         }
-        return std::numeric_limits<TNodeId>::max();
+        return Base::INF;
     }
     Coordinates coordByNodeId(TNodeId id) const
     {

@@ -32,19 +32,38 @@ private:
 
     void setWallInternal(Coordinates c, bool is_checked, bool val)
     {
-        data[c.y * w + c.x].byte |= (c.dir.half << (4 * is_checked));
-
+        if (val) {
+            data[c.y * w + c.x].byte |= (uint8_t)(c.dir.half * val) << (4 * is_checked);
+        } else {
+            data[c.y * w + c.x].byte &= ~((uint8_t)(c.dir.half * val) << (4 * is_checked));
+        }
         if (c.dir.bits.SOUTH && c.y != 0) {
-            data[(c.y - 1) * w + c.x].bits.NORTH = val;
+            if (is_checked) {
+                data[(c.y - 1) * w + c.x].bits.CHECKED_NORTH = val;
+            } else {
+                data[(c.y - 1) * w + c.x].bits.NORTH = val;
+            }
         }
         if (c.dir.bits.EAST && c.x != w - 1) {
-            data[c.y * w + c.x + 1].bits.WEST = val;
+            if (is_checked) {
+                data[c.y * w + c.x + 1].bits.CHECKED_WEST = val;
+            } else {
+                data[c.y * w + c.x + 1].bits.WEST = val;
+            }
         }
         if (c.dir.bits.NORTH && c.y != w - 1) {
-            data[(c.y + 1) * w + c.x].bits.SOUTH = val;
+            if (is_checked) {
+                data[(c.y + 1) * w + c.x].bits.CHECKED_SOUTH = val;
+            } else {
+                data[(c.y + 1) * w + c.x].bits.SOUTH = val;
+            }
         }
         if (c.dir.bits.WEST && c.x != 0) {
-            data[c.y * w + c.x - 1].bits.EAST = val;
+            if (is_checked) {
+                data[c.y * w + c.x - 1].bits.CHECKED_EAST = val;
+            } else {
+                data[c.y * w + c.x - 1].bits.EAST = val;
+            }
         }
     }
 

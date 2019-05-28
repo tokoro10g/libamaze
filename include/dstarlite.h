@@ -17,7 +17,7 @@ public:
     using NodeId = typename TMazeGraph::NodeId;
     using Cost = typename TMazeGraph::Cost;
     using HeapKey = std::pair<Cost, Cost>;
-    static constexpr Cost INF = std::numeric_limits<Cost>::max();
+    static constexpr Cost INF = TMazeGraph::INF;
 
     struct KeyCompare {
         bool operator()(const std::pair<HeapKey, NodeId>& a, const std::pair<HeapKey, NodeId>& b) const
@@ -33,8 +33,8 @@ public:
         , id_goal(mg.getGoalNodeId())
         , id_last(id_start)
     {
-        g.fill(std::numeric_limits<Cost>::max());
-        rhs.fill(std::numeric_limits<Cost>::max());
+        g.fill(INF);
+        rhs.fill(INF);
     }
     void updateHeap(NodeId id, HeapKey k)
     {
@@ -92,11 +92,11 @@ public:
                 }
             } else {
                 Cost gold = g[uid];
-                g[uid] = std::numeric_limits<Cost>::max();
+                g[uid] = INF;
                 auto f = [=](NodeId sid) {
                     if (rhs[sid] == satSum(Base::mg.edgeCost(sid, uid), gold)) {
                         if (rhs[sid] != 0) {
-                            Cost mincost = std::numeric_limits<Cost>::max();
+                            Cost mincost = INF;
                             std::vector<NodeId> v;
                             Base::mg.neighbors(sid, v);
                             for (auto spid : v) {
@@ -135,11 +135,6 @@ public:
     }
     void preSense()
     {
-        return;
-    }
-    void postSense(const std::vector<Coordinates>& changed_coordinates)
-    {
-        //TODO: Implement
         if (rhs[id_start] == 0) {
             // reached the goal
             // TODO: implement
@@ -157,14 +152,30 @@ public:
             Base::mg.neighbors(id_start, v);
             for (auto spid : v) {
                 Cost cost = satSum(Base::mg.edgeCost(id_start, spid), g[spid]);
-                //std::cout<<spid<<": "<<(int)cost<<std::endl;
+                //std::cout << spid << ": " << (int)cost << std::endl;
                 if (mincost > cost) {
                     mincost = cost;
                     argmin = spid;
                 }
             }
-
             id_start = argmin;
+        }
+        return;
+    }
+    void postSense(const std::vector<Coordinates>& changed_coordinates)
+    {
+        //TODO: Implement
+        if (rhs[id_start] == 0) {
+            // reached the goal
+            // TODO: implement
+            std::cout << "Reached the goal" << std::endl;
+        } else {
+            if (rhs[id_start] == INF) {
+                // no route
+                // TODO: implement
+                std::cerr << "No route" << std::endl;
+                return;
+            }
 
             if (!changed_coordinates.empty()) {
                 key_modifier += Base::mg.distance(id_last, id_start);
@@ -229,8 +240,8 @@ public:
         id_goal = Base::mg.getGoalNodeId();
         id_last = id_start;
 
-        g.fill(std::numeric_limits<Cost>::max());
-        rhs.fill(std::numeric_limits<Cost>::max());
+        g.fill(INF);
+        rhs.fill(INF);
 
         open_list.clear();
         in_open_list.reset();
