@@ -2,7 +2,9 @@
 
 #include "solver.h"
 #include <algorithm>
+#include <array>
 #include <bitset>
+#include <iostream>
 #include <limits>
 #include <vector>
 
@@ -24,16 +26,15 @@ public:
         }
     };
 
-    DStarLite(TMazeGraph& mg)
+    DStarLite(const TMazeGraph& mg)
         : Solver<TMazeGraph>(mg)
         , key_modifier(0)
-        , id_start_orig(Base::mg.getCMaze().getWidth() - 1)
-        , id_start(id_start_orig)
-        , id_goal(0)
+        , id_start(mg.getStartNodeId())
+        , id_goal(mg.getGoalNodeId())
         , id_last(id_start)
-        , move_from(std::numeric_limits<NodeId>::max())
-        , move_to(std::numeric_limits<NodeId>::max())
     {
+        g.fill(std::numeric_limits<Cost>::max());
+        rhs.fill(std::numeric_limits<Cost>::max());
     }
     void updateHeap(NodeId id, HeapKey k)
     {
@@ -66,6 +67,8 @@ public:
             auto uid = open_list.front().second;
             auto kold = open_list.front().first;
             auto knew = calculateKey(uid);
+            //std::cout<<(int)kold.first<<","<<(int)kold.second<<" "<<(int)knew.first<<","<<(int)knew.second<<std::endl;
+            //std::cout<<(int)g[uid]<<","<<(int)rhs[uid]<<std::endl;
             examined_nodes++;
             if (kold < knew) {
                 updateHeap(uid, knew);
@@ -73,7 +76,7 @@ public:
                 g[uid] = rhs[uid];
                 pop_heap(open_list.begin(), open_list.end(), KeyCompare());
                 open_list.pop_back();
-                if(!in_open_list.test(uid)){
+                if (!in_open_list.test(uid)) {
                     // this node is counted twice
                     continue;
                 }
@@ -114,8 +117,8 @@ public:
                 max_heap_size = open_list.size();
             }
         }
-        //cout << "The number of examined nodes in this round: " << examined_nodes << endl;
-        //cout << "Maximum size of the open list: " << max_heap_size << endl;
+        std::cout << "The number of examined nodes in this round: " << examined_nodes << std::endl;
+        std::cout << "Maximum size of the open list: " << max_heap_size << std::endl;
     }
     HeapKey calculateKey(NodeId id)
     {
@@ -134,16 +137,18 @@ public:
     {
         return;
     }
-    void postSense(const std::vector<Coordinates>& sensed_coordinates)
+    void postSense(const std::vector<Coordinates>& changed_coordinates)
     {
         //TODO: Implement
         if (rhs[id_start] == 0) {
             // reached the goal
             // TODO: implement
+            std::cout << "Reached the goal" << std::endl;
         } else {
             if (rhs[id_start] == INF) {
                 // no route
                 // TODO: implement
+                std::cerr << "No route" << std::endl;
                 return;
             }
             NodeId argmin = id_start;
@@ -152,38 +157,29 @@ public:
             Base::mg.neighbors(id_start, v);
             for (auto spid : v) {
                 Cost cost = satSum(Base::mg.edgeCost(id_start, spid), g[spid]);
+                //std::cout<<spid<<": "<<(int)cost<<std::endl;
                 if (mincost > cost) {
                     mincost = cost;
                     argmin = spid;
                 }
             }
-            //if (move_from == argmin && move_to == id_start) {
-            //    iloop_count++;
-            //} else {
-            //    iloop_count = 0;
-            //}
-            //if (iloop_count > 2) {
-            //    cerr << "CAUGHT IN AN INFINITE LOOP AT " << argmin << "," << id_start << "!!!!" << endl;
-            //    break;
-            //}
 
-            //move_from = id_start;
-            //move_to = argmin;
             id_start = argmin;
 
-            if (!sensed_coordinates.empty()) {
+            if (!changed_coordinates.empty()) {
                 key_modifier += Base::mg.distance(id_last, id_start);
                 id_last = id_start;
                 std::vector<std::pair<NodeId, NodeId>> changed_edges;
-                // TODO: make a list of changed edges according to the newly sensed coodinates
-                //
-                //
+                Base::mg.affectedEdges(changed_coordinates, changed_edges);
                 for (auto e : changed_edges) {
-                    Coordinates coord1 = Base::mg.coordByNodeId(e.first);
-                    Coordinates coord2 = Base::mg.coordByNodeId(e.second);
-                    Cost cold = Base::mg.edgeCost(e.first, e.second);
-                    // TODO: make sure that the edge cost is correctly updated via maze object
-                    //graph.setEdgeCost(e.first, e.second, (maze.isSetWall(coord1) || maze.isSetWall(coord2)) ? INF : 1);
+                    Cost cold;
+                    if (Base::mg.edgeCost(e.first, e.second) == INF) {
+                        // assume that the path is NOT blocked in the previous step
+                        cold = Base::mg.getEdgeWithHypothesis(e.first, e.second, false).second;
+                    } else {
+                        // assume that the path IS blocked in the previous step
+                        cold = Base::mg.getEdgeWithHypothesis(e.first, e.second, true).second;
+                    }
                     auto uid = e.first;
                     auto vid = e.second;
                     if (cold > INF) {
@@ -229,11 +225,12 @@ public:
     void reset()
     {
         key_modifier = Cost(0);
-        id_start = id_start_orig;
+        id_start = Base::mg.getStartNodeId();
         id_goal = Base::mg.getGoalNodeId();
         id_last = id_start;
-        move_from = std::numeric_limits<NodeId>::max();
-        move_to = std::numeric_limits<NodeId>::max();
+
+        g.fill(std::numeric_limits<Cost>::max());
+        rhs.fill(std::numeric_limits<Cost>::max());
 
         open_list.clear();
         in_open_list.reset();
@@ -241,21 +238,21 @@ public:
     void initialize()
     {
         reset();
+        rhs[id_goal] = 0;
+        open_list.push_back({ { Base::mg.distance(id_start, id_goal), 0 }, id_goal });
+        in_open_list.set(id_goal);
         computeShortestPath();
     }
 
 private:
     Cost key_modifier;
 
-    const NodeId id_start_orig;
     NodeId id_start;
     NodeId id_goal;
     NodeId id_last;
-    NodeId move_from;
-    NodeId move_to;
 
-    Cost g[TMazeGraph::size];
-    Cost rhs[TMazeGraph::size];
+    std::array<Cost, TMazeGraph::size> g;
+    std::array<Cost, TMazeGraph::size> rhs;
 
     std::vector<std::pair<HeapKey, NodeId>> open_list;
     std::bitset<TMazeGraph::size> in_open_list;

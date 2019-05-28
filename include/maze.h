@@ -27,6 +27,7 @@ private:
     uint8_t w;
     uint8_t h;
     uint8_t type;
+    Coordinates start;
     Coordinates goal;
 
     void setWallInternal(Coordinates c, bool is_checked, bool val)
@@ -52,6 +53,7 @@ public:
         : w(0)
         , h(0)
         , type(0)
+        , start({ 0, 0, North })
         , goal({ 0, 0, East })
     {
     }
@@ -59,6 +61,7 @@ public:
         : w(_w)
         , h(_w)
         , type(0)
+        , start({ 0, 0, North })
         , goal({ 0, 0, East })
     {
         data.resize(w * h);
@@ -67,6 +70,7 @@ public:
         : w(_w)
         , h(_h)
         , type(0)
+        , start({ 0, 0, North })
         , goal({ 0, 0, East })
     {
         data.resize(w * h);
@@ -83,6 +87,9 @@ public:
     }
 
     void setType(uint8_t _type) { type = _type; }
+
+    Coordinates getStart() const { return start; }
+    void setStart(Coordinates c) { start = c; }
     Coordinates getGoal() const { return goal; }
     void setGoal(Coordinates c) { goal = c; }
 

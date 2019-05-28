@@ -1,8 +1,11 @@
 #pragma once
 
 #include "maze.h"
+#include <array>
 #include <cmath>
+#include <iostream>
 #include <limits>
+#include <unordered_set>
 #include <utility>
 
 namespace Amaze {
@@ -16,13 +19,29 @@ public:
         : maze(maze)
     {
     }
-    virtual TCost distance(TNodeId id_from, TNodeId id_to) const;
-    virtual void neighbors(TNodeId id, std::vector<NodeId>& v) const;
+    virtual TCost distance(TNodeId id_from, TNodeId id_to) const = 0;
+    virtual void neighbors(TNodeId id, std::vector<TNodeId>& v) const = 0;
+    virtual void affectedEdges(const std::vector<Coordinates>& coordinates, std::vector<std::pair<TNodeId, TNodeId>>& edges) const
+    {
+        std::unordered_set<TNodeId> visited;
+        for (Coordinates c : coordinates) {
+            TNodeId id = nodeIdByCoordinates(c);
+            if (visited.find(id) == visited.end()) {
+                visited.insert(id);
+                std::vector<NodeId> v;
+                neighbors(nodeIdByCoordinates(c), v);
+                for (auto n : v) {
+                    edges.push_back({ id, n });
+                }
+            }
+        }
+    }
+    std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const;
+    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const = 0;
     virtual std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
     {
         return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
     }
-    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const;
     virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const
     {
         std::pair<bool, TCost> e = getEdge(id_from, id_to);
@@ -35,6 +54,10 @@ public:
     }
     virtual TNodeId nodeIdByCoordinates(Coordinates c) const { return TNodeId(0); }
     virtual Coordinates coordByNodeId(TNodeId id) const { return Coordinates(); }
+    virtual TNodeId getStartNodeId() const
+    {
+        return nodeIdByCoordinates(maze.getStart());
+    }
     virtual TNodeId getGoalNodeId() const
     {
         return nodeIdByCoordinates(maze.getGoal());
@@ -65,6 +88,10 @@ public:
     }
     TCost distance(TNodeId id_from, TNodeId id_to) const
     {
+        if (id_from >= size || id_to >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
         c2 = coordByNodeId(id_to);
@@ -72,20 +99,28 @@ public:
     }
     void neighbors(TNodeId id, std::vector<TNodeId>& v) const
     {
-        // TODO: implement
-        return;
+        if (id >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
+        std::array<int8_t, 4> diff = { -1, 1, W, -W };
+        for (auto d : diff) {
+            if (id + d >= 0 && id + d < size && Base::edgeExist(id, id + d)) {
+                v.push_back(id + d);
+            }
+        }
     }
-    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
+    std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const
     {
-        return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
-    }
-    std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
-    {
+        if (id_from >= size || id_to >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << id_from << ", " << id_to << " " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
         c2 = coordByNodeId(id_to);
         TCost maxcost = 0;
-        if (Base::maze.isSetWall(c1) || Base::maze.isSetWall(c2)) {
+        if (blocked) {
             maxcost = std::numeric_limits<TCost>::max();
         }
         if ((abs((int)c1.x - c2.x) == 1) ^ (abs((int)c1.y - c2.y) == 1)) {
@@ -93,12 +128,37 @@ public:
         }
         return { false, std::numeric_limits<TCost>::max() };
     }
+    std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
+    {
+        Coordinates c;
+        c.x = id_from % W;
+        c.y = id_from / W;
+        int diff = (int)id_to - id_from;
+        if (diff == W) {
+            c.dir = North;
+        } else if (diff == -W) {
+            c.dir = South;
+        } else if (diff == 1) {
+            c.dir = East;
+        } else if (diff == -1) {
+            c.dir = West;
+        }
+        return getEdgeWithHypothesis(id_from, id_to, Base::maze.isSetWall(c));
+    }
+    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
+    {
+        return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
+    }
     TNodeId nodeIdByCoordinates(Coordinates c) const
     {
         return TNodeId(c.x + c.y * W);
     }
     Coordinates coordByNodeId(TNodeId id) const
     {
+        if (id >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
         uint8_t x = id % W;
         uint8_t y = id / W;
         return { x, y, { 0 } };
@@ -117,27 +177,39 @@ public:
     }
     TCost distance(TNodeId id_from, TNodeId id_to) const
     {
+        if (id_from >= size || id_to >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
         Coordinates c1 = coordByNodeId(id_from);
         Coordinates c2 = coordByNodeId(id_to);
         return TCost(2) * std::max(abs((int)c1.x - c2.x), abs((int)c1.y - c2.y)) + (c1.x == c2.x && c1.y == c2.y && c1.dir.half != c2.dir.half);
     }
     void neighbors(TNodeId id, std::vector<TNodeId>& v) const
     {
-        // TODO: implement
-        return;
+        if (id >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
+        std::array<int8_t, 8> diff = { -1, 1, W, -W, W - 1, -W + 1, 2 * W - 1, -2 * W + 1 };
+        for (auto d : diff) {
+            if (id + d >= 0 && id + d < size && Base::edgeExist(id, id + d)) {
+                v.push_back(id + d);
+            }
+        }
     }
-    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
+    std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const
     {
-        return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
-    }
-    std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
-    {
+        if (id_from >= size || id_to >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
         c2 = coordByNodeId(id_to);
 
         TCost maxcost = 0;
-        if (Base::maze.isSetWall(c1) || Base::maze.isSetWall(c2)) {
+        if (blocked) {
             maxcost = std::numeric_limits<TCost>::max();
         }
 
@@ -179,6 +251,17 @@ public:
         }
         return { false, std::numeric_limits<TCost>::max() };
     }
+    std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
+    {
+        Coordinates c1, c2;
+        c1 = coordByNodeId(id_from);
+        c2 = coordByNodeId(id_to);
+        return getEdgeWithHypothesis(id_from, id_to, Base::maze.isSetWall(c1) || Base::maze.isSetWall(c2));
+    }
+    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
+    {
+        return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
+    }
     TNodeId nodeIdByCoordinates(Coordinates c) const
     {
         switch (c.dir.half) {
@@ -195,6 +278,10 @@ public:
     }
     Coordinates coordByNodeId(TNodeId id) const
     {
+        if (id >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
         Coordinates c;
         TNodeId tmp = id % (2 * W - 1);
         TNodeId tmp2 = id / (2 * W - 1);

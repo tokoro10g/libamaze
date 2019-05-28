@@ -7,7 +7,7 @@ namespace Amaze {
 template <typename TMazeGraph>
 class Solver {
 public:
-    Solver(TMazeGraph& mg)
+    Solver(const TMazeGraph& mg)
         : mg(mg)
     {
     }
@@ -19,15 +19,15 @@ public:
     {
         return mg.coordByNodeId(getCurrentNodeId());
     }
-    virtual typename TMazeGraph::NodeId getNextNodeId() const;
-    virtual typename TMazeGraph::NodeId getCurrentNodeId() const;
-    virtual void preSense();
-    virtual void postSense(const std::vector<Coordinates>& sensed_coordinates);
-    virtual void reset();
-    virtual void initialize();
+    virtual typename TMazeGraph::NodeId getNextNodeId() const = 0;
+    virtual typename TMazeGraph::NodeId getCurrentNodeId() const = 0;
+    virtual void preSense() = 0;
+    virtual void postSense(const std::vector<Coordinates>& sensed_coordinates) = 0;
+    virtual void reset() = 0;
+    virtual void initialize() = 0;
 
 protected:
-    TMazeGraph& mg;
+    const TMazeGraph& mg;
 };
 
 }

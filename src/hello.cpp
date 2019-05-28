@@ -11,7 +11,7 @@ int main()
 {
     constexpr uint8_t max_maze_width = 32;
     Maze maze(max_maze_width, max_maze_width);
-    Utility::loadMazeFromFile(maze, "../micromouse_mazedat/maze2018halfexp.dat");
+    Utility::loadMazeFromFile(maze, "../micromouse_mazedat/maze2017halfexp.dat");
 
     Utility::printMaze(maze);
     std::cout << std::endl;
@@ -30,7 +30,6 @@ int main()
     std::cout << std::endl;
 
     FourWayStepMapGraph<uint16_t> mg2(maze);
-    auto solver2 = DStarLite(mg2);
 
     auto e21 = mg2.getEdge({ 0, 1, North }, { 0, 1, East });
     auto e22 = mg2.getEdge({ 0, 1, North }, { 0, 2, North });
@@ -41,7 +40,6 @@ int main()
     std::cout << std::endl;
 
     FourWayStepMapGraph<float> mg3(maze);
-    auto solver3 = DStarLite(mg3);
 
     auto e31 = mg3.getEdge({ 0, 1, North }, { 0, 1, East });
     auto e32 = mg3.getEdge({ 0, 1, North }, { 0, 2, North });
@@ -67,6 +65,21 @@ int main()
     std::cout << d << std::endl;
 
     std::cout << maze.getGoal() << std::endl;
+
+    std::cout << std::endl;
+    std::cout << "==============" << std::endl;
+    std::cout << std::endl;
+
+    solver1.initialize();
+    decltype(mg1)::NodeId id_goal = mg1.getGoalNodeId();
+    std::cout << "The goal is " << id_goal << std::endl;
+    std::cout << std::endl;
+
+    while (solver1.getCurrentNodeId() != id_goal) {
+        std::cout << solver1.getCurrentNodeId() << std::endl;
+        solver1.postSense(std::vector<Coordinates>());
+    }
+    std::cout << id_goal << std::endl;
 
     return 0;
 }
