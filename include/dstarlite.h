@@ -117,8 +117,8 @@ public:
                 max_heap_size = open_list.size();
             }
         }
-        std::cout << "The number of examined nodes in this round: " << examined_nodes << std::endl;
-        std::cout << "Maximum size of the open list: " << max_heap_size << std::endl;
+        //std::cout << "The number of examined nodes in this round: " << examined_nodes << std::endl;
+        //std::cout << "Maximum size of the open list: " << max_heap_size << std::endl;
     }
     HeapKey calculateKey(NodeId id)
     {

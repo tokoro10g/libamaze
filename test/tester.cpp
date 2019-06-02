@@ -134,23 +134,24 @@ int main()
 
     //for(int i=0;i<80;i++){
     while (solver5.getCurrentNodeId() != id_goal5) {
-        Utility::printMaze(maze);
+        //Utility::printMaze(maze);
         uint16_t id = solver5.getCurrentNodeId();
-        CellData cd = maze.getCell(id);
-        std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
+        //CellData cd = maze.getCell(id);
+        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
+        std::cout << mg5.coordByNodeId(id) << std::endl;
         std::vector<Coordinates> changed_coordinates;
 
         solver5.preSense();
         id = solver5.getCurrentNodeId();
         sense(maze, reference_maze, mg5.coordByNodeId(id), changed_coordinates);
-        std::cout << "After sense: " << std::endl;
-        cd = maze.getCell(id);
-        std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
-        std::cout << "Changed coordinates: ";
-        for (auto c : changed_coordinates) {
-            std::cout << c << ", ";
-        }
-        std::cout << std::endl;
+        //std::cout << "After sense: " << std::endl;
+        //cd = maze.getCell(id);
+        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
+        //std::cout << "Changed coordinates: ";
+        //for (auto c : changed_coordinates) {
+        //    std::cout << c << ", ";
+        //}
+        //std::cout << std::endl;
         solver5.postSense(changed_coordinates);
     }
     std::cout << id_goal5 << std::endl;
