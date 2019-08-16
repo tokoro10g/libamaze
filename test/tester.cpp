@@ -1,6 +1,6 @@
-#include "dstarlite.h"
+//#include "dstarlite.h"
 #include "maze.h"
-#include "mazegraph.h"
+//#include "mazegraph.h"
 #include "mazeutility.h"
 #include <bitset>
 #include <fstream>
@@ -8,6 +8,7 @@
 
 using namespace Amaze;
 
+/*
 void sense(Maze& maze, const Maze& reference_maze, Coordinates c, std::vector<Coordinates>& changed_coordinates)
 {
     c.dir = North;
@@ -25,16 +26,18 @@ void sense(Maze& maze, const Maze& reference_maze, Coordinates c, std::vector<Co
         }
     }
 }
+*/
 
 int main()
 {
     constexpr uint8_t max_maze_width = 32;
-    Maze reference_maze(max_maze_width, max_maze_width);
+    Maze<max_maze_width> reference_maze;
     Utility::loadMazeFromFile(reference_maze, "../micromouse_mazedat/maze2017halfexp.dat");
 
     Utility::printMaze(reference_maze);
     std::cout << std::endl;
 
+    /*
     FourWayStepMapGraph mg1(reference_maze);
     auto solver1 = DStarLite(mg1);
     auto e11 = mg1.getEdge({ 0, 1, North }, { 0, 1, East });
@@ -118,10 +121,8 @@ int main()
     Maze maze(max_maze_width, max_maze_width);
     Coordinates goal_coordinates = reference_maze.getGoal();
     Utility::loadEmptyMaze(max_maze_width, max_maze_width, goal_coordinates.x, goal_coordinates.y, maze);
-    maze.setCheckedWall({ 0, 0, North });
-    maze.setCheckedWall({ 0, 0, East });
-    maze.setCheckedWall({ 0, 0, South });
-    maze.setCheckedWall({ 0, 0, West });
+    maze.setCheckedWall({ 0, 1 });
+    maze.setCheckedWall({ 1, 0 });
     FourWayStepMapGraph mg5(maze);
     auto solver5 = DStarLite(mg5);
 
@@ -155,5 +156,6 @@ int main()
         solver5.postSense(changed_coordinates);
     }
     std::cout << id_goal5 << std::endl;
+    */
     return 0;
 }

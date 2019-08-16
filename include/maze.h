@@ -1,146 +1,78 @@
 #pragma once
 
 #include "common.h"
+#include <bitset>
 #include <vector>
 
 namespace Amaze {
 
-union __attribute__((__packed__)) CellData {
-    uint8_t byte : 8;
-    struct __attribute__((__packed__)) {
-        unsigned NORTH : 1;
-        unsigned EAST : 1;
-        unsigned SOUTH : 1;
-        unsigned WEST : 1;
-        unsigned CHECKED_NORTH : 1;
-        unsigned CHECKED_EAST : 1;
-        unsigned CHECKED_SOUTH : 1;
-        unsigned CHECKED_WEST : 1;
-    } bits;
-};
-
-typedef std::vector<CellData> MazeData;
-
+template <uint8_t W = 32>
 class Maze {
 private:
-    MazeData data;
-    uint8_t w;
-    uint8_t h;
-    uint8_t type;
-    Coordinates start;
-    Coordinates goal;
+    using MazeData = std::bitset<(2 * W - 1) * (2 * W - 1)>;
+    MazeData maze_data;
+    MazeData check_data;
+    Position start;
+    Position goal;
 
-    void setWallInternal(Coordinates c, bool is_checked, bool val)
+    void setInternal(Position p, bool is_checked, bool val)
     {
-        if (val) {
-            data[c.y * w + c.x].byte |= (uint8_t)(c.dir.half * val) << (4 * is_checked);
+        // TODO: assert
+        if (!((p.x % 2) ^ (p.y % 2))) {
+            // not a wall
+            return;
+        }
+
+        uint16_t idx = p.y * (2 * W - 1) + p.x;
+        if (is_checked) {
+            check_data[idx] = val;
         } else {
-            data[c.y * w + c.x].byte &= ~((uint8_t)(c.dir.half * val) << (4 * is_checked));
+            maze_data[idx] = val;
         }
-        if (c.dir.bits.SOUTH && c.y != 0) {
-            if (is_checked) {
-                data[(c.y - 1) * w + c.x].bits.CHECKED_NORTH = val;
-            } else {
-                data[(c.y - 1) * w + c.x].bits.NORTH = val;
-            }
+    }
+    bool isSetInternal(Position p, bool is_checked) const
+    {
+        // TODO: assert
+        if (!((p.x % 2) ^ (p.y % 2))) {
+            // not a wall
+            return false;
         }
-        if (c.dir.bits.EAST && c.x != w - 1) {
-            if (is_checked) {
-                data[c.y * w + c.x + 1].bits.CHECKED_WEST = val;
-            } else {
-                data[c.y * w + c.x + 1].bits.WEST = val;
-            }
-        }
-        if (c.dir.bits.NORTH && c.y != w - 1) {
-            if (is_checked) {
-                data[(c.y + 1) * w + c.x].bits.CHECKED_SOUTH = val;
-            } else {
-                data[(c.y + 1) * w + c.x].bits.SOUTH = val;
-            }
-        }
-        if (c.dir.bits.WEST && c.x != 0) {
-            if (is_checked) {
-                data[c.y * w + c.x - 1].bits.CHECKED_EAST = val;
-            } else {
-                data[c.y * w + c.x - 1].bits.EAST = val;
-            }
+
+        uint16_t idx = p.y * (2 * W - 1) + p.x;
+        if (is_checked) {
+            return check_data[idx];
+        } else {
+            return maze_data[idx];
         }
     }
 
 public:
-    Maze()
-        : w(0)
-        , h(0)
-        , type(0)
-        , start({ 0, 0, North })
-        , goal({ 0, 0, East })
+    void resetData()
     {
-    }
-    Maze(uint8_t _w)
-        : w(_w)
-        , h(_w)
-        , type(0)
-        , start({ 0, 0, North })
-        , goal({ 0, 0, East })
-    {
-        data.resize(w * h);
-    }
-    Maze(uint8_t _w, uint8_t _h)
-        : w(_w)
-        , h(_h)
-        , type(0)
-        , start({ 0, 0, North })
-        , goal({ 0, 0, East })
-    {
-        data.resize(w * h);
-    }
-    ~Maze() { data.clear(); }
-
-    uint8_t getWidth() const { return w; }
-    uint8_t getHeight() const { return h; }
-    void resize(uint8_t _w, uint8_t _h)
-    {
-        w = _w;
-        h = _h;
-        data.resize(w * h);
+        maze_data.reset();
+        check_data.reset();
     }
 
-    void setType(uint8_t _type) { type = _type; }
+    uint8_t getWidth() const { return W; }
 
-    Coordinates getStart() const { return start; }
-    void setStart(Coordinates c) { start = c; }
-    Coordinates getGoal() const { return goal; }
-    void setGoal(Coordinates c) { goal = c; }
+    Position getStart() const { return start; }
+    void setStart(Position p) { start = p; }
+    Position getGoal() const { return goal; }
+    void setGoal(Position p) { goal = p; }
 
-    void setWall(Coordinates c) { setWallInternal(c, false, true); }
-    void setCheckedWall(Coordinates c) { setWallInternal(c, true, true); }
-    void resetWall(Coordinates c) { setWallInternal(c, false, false); }
-    void resetCheckedWall(Coordinates c) { setWallInternal(c, true, false); }
-    void toggleWall(Coordinates c)
+    void setWall(Position p, bool is_set) { setInternal(p, false, is_set); }
+    void setCheckedWall(Position p, bool is_set) { setInternal(p, true, is_set); }
+    void toggleWall(Position p)
     {
-        if (isSetWall(c)) {
-            resetWall(c);
-        } else {
-            setWall(c);
-        }
+        setWall(p, !isSetWall(p));
     }
-    void toggleCheckedWall(Coordinates c)
+    void toggleCheckedWall(Position p)
     {
-        if (isCheckedWall(c)) {
-            resetCheckedWall(c);
-        } else {
-            setCheckedWall(c);
-        }
+        setCheckedWall(p, !isCheckedWall(p));
     }
-    void setCell(uint16_t index, CellData cd) { data[index] = cd; }
-    CellData getCell(uint16_t index) const { return data[index]; }
 
-    bool isSetWall(Coordinates c) const { return isSetWall(c.y * w + c.x, c.dir); }
-    bool isSetWall(uint16_t index, Direction dir) const { return data[index].byte & dir.half; }
-    bool isCheckedWall(Coordinates c) const { return isCheckedWall(c.y * w + c.x, c.dir); }
-    bool isCheckedWall(uint16_t index, Direction dir) const { return data[index].byte & (dir.half << 4); }
-    bool isCheckedCell(Coordinates c) const { return isCheckedCell(c.y * w + c.x); }
-    bool isCheckedCell(uint16_t index) const { return (data[index].byte & 0xF0) == 0xF0; }
+    bool isSetWall(Position p) const { return isSetInternal(p, false); }
+    bool isCheckedWall(Position p) const { return isSetInternal(p, true); }
 };
 
 }
