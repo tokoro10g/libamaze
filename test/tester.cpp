@@ -1,6 +1,6 @@
-//#include "dstarlite.h"
+#include "dstarlite.h"
 #include "maze.h"
-//#include "mazegraph.h"
+#include "mazegraph.h"
 #include "mazeutility.h"
 #include <bitset>
 #include <fstream>
@@ -37,12 +37,11 @@ int main()
     Utility::printMaze(reference_maze);
     std::cout << std::endl;
 
-    /*
     FourWayStepMapGraph mg1(reference_maze);
     auto solver1 = DStarLite(mg1);
-    auto e11 = mg1.getEdge({ 0, 1, North }, { 0, 1, East });
-    auto e12 = mg1.getEdge({ 0, 1, North }, { 0, 2, North });
-    auto e13 = mg1.getEdge({ 0, 1, East }, { 1, 2, North });
+    auto e11 = mg1.getEdge({ 0, 2, NoDirection }, { 0, 2, NoDirection });
+    auto e12 = mg1.getEdge({ 0, 0, NoDirection }, { 0, 2, NoDirection });
+    auto e13 = mg1.getEdge({ 0, 0, NoDirection }, { 2, 0, NoDirection });
     std::cout << (e11.first ? "true" : "false") << " " << (int)e11.second << std::endl;
     std::cout << (e12.first ? "true" : "false") << " " << (int)e12.second << std::endl;
     std::cout << (e13.first ? "true" : "false") << " " << (int)e13.second << std::endl;
@@ -90,13 +89,17 @@ int main()
     std::cout << "The goal is " << id_goal << std::endl;
     std::cout << std::endl;
 
-    while (solver1.getCurrentNodeId() != id_goal) {
+    int timeout_count = 0;
+    //while (solver1.getCurrentNodeId() != id_goal || timeout_count > 100) {
+    for (int i=0;i<100;i++) {
         std::cout << mg1.coordByNodeId(solver1.getCurrentNodeId()) << std::endl;
         solver1.preSense();
         solver1.postSense(std::vector<Coordinates>());
+        timeout_count++;
     }
     std::cout << id_goal << std::endl;
 
+    /*
     std::cout << std::endl;
     std::cout << "=======Testing D* Lite for 6-way Graph=======" << std::endl;
     std::cout << std::endl;
@@ -107,10 +110,12 @@ int main()
     std::cout << "The goal is " << id_goal4 << std::endl;
     std::cout << std::endl;
 
-    while (solver4.getCurrentNodeId() != id_goal4) {
+    timeout_count = 0;
+    while (solver4.getCurrentNodeId() != id_goal4 || timeout_count > 100) {
         std::cout << mg4.coordByNodeId(solver4.getCurrentNodeId()) << std::endl;
         solver4.preSense();
         solver4.postSense(std::vector<Coordinates>());
+        timeout_count++;
     }
     std::cout << id_goal4 << std::endl;
 
