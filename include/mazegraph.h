@@ -57,12 +57,12 @@ public:
     virtual TNodeId getStartNodeId() const
     {
         Position p = maze.getStart();
-        return nodeIdByCoordinates({p, NoDirection});
+        return nodeIdByCoordinates({ p, NoDirection });
     }
     virtual TNodeId getGoalNodeId() const
     {
         Position p = maze.getGoal();
-        return nodeIdByCoordinates({p, NoDirection});
+        return nodeIdByCoordinates({ p, NoDirection });
     }
     const Maze<W>& getCMaze() const
     {
@@ -94,7 +94,7 @@ public:
     {
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
         }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
@@ -105,7 +105,7 @@ public:
     {
         if (id >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id: " << (int)id << __FILE__ << ":" << __LINE__ << std::endl;
         }
         std::array<int8_t, 4> diff = { -1, 1, W, -W };
         for (auto d : diff) {
@@ -118,7 +118,7 @@ public:
     {
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << id_from << ", " << id_to << " " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to:" << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
         }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
@@ -127,7 +127,7 @@ public:
         if (blocked) {
             maxcost = Base::INF;
         }
-        if ((abs((int)c1.pos.x - c2.pos.x) / 2 == 1) ^ (abs((int)c1.pos.y - c2.pos.y) / 2 == 1)) {
+        if ((abs((int)c1.pos.x - c2.pos.x) == 2 && abs((int)c1.pos.y - c2.pos.y) == 0) || (abs((int)c1.pos.y - c2.pos.y) == 2 && abs((int)c1.pos.x - c2.pos.x) == 0)) {
             return { true, std::max(TCost(1), maxcost) };
         }
         return { false, Base::INF };
@@ -135,8 +135,8 @@ public:
     std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
     {
         Position p;
-        p.x = id_from % W * 2;
-        p.y = id_from / W * 2;
+        p.x = (id_from % W) * 2;
+        p.y = (id_from / W) * 2;
         int diff = (int)id_to - id_from;
         if (diff == W) {
             p.y += 1;
@@ -157,6 +157,7 @@ public:
     {
         if (c.pos.x % 2 != 0 || c.pos.y % 2 != 0) {
             // wall or pillar
+            std::cerr << "Out of bounds!!! (pos: " << (int)c.pos.x << ", " << (int)c.pos.y << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return Base::ID_MAX;
         }
         return TNodeId(c.pos.x / 2 + c.pos.y / 2 * W);
@@ -165,7 +166,7 @@ public:
     {
         if (id >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
         }
         uint8_t x = id % W;
         uint8_t y = id / W;
@@ -187,7 +188,7 @@ public:
     {
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
         }
         Coordinates c1 = coordByNodeId(id_from);
         Coordinates c2 = coordByNodeId(id_to);
@@ -198,7 +199,7 @@ public:
     {
         if (id >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id: " << (int)id << __FILE__ << ":" << __LINE__ << std::endl;
         }
         std::array<int8_t, 8> diff = { -1, 1, W, -W, W - 1, -W + 1, 2 * W - 1, -2 * W + 1 };
         for (auto d : diff) {
@@ -211,7 +212,7 @@ public:
     {
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
         }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
@@ -261,7 +262,7 @@ public:
         // FIXME: may contain bugs
         if (id >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id: " << (int)id << __FILE__ << ":" << __LINE__ << std::endl;
         }
         Coordinates c;
         TNodeId tmp = id % (2 * W - 1);
@@ -276,6 +277,22 @@ public:
         }
         c.dir = NoDirection;
         return c;
+    }
+    TNodeId getStartNodeId() const
+    {
+        Position p = Base::maze.getStart();
+        if (p.x % 2 == 0 && p.y % 2 == 0) {
+            p.y++;
+        }
+        return nodeIdByCoordinates({ p, North });
+    }
+    virtual TNodeId getGoalNodeId() const
+    {
+        Position p = Base::maze.getGoal();
+        if (p.x % 2 == 0 && p.y % 2 == 0) {
+            p.y++;
+        }
+        return nodeIdByCoordinates({ p, North });
     }
     static constexpr TNodeId size = 2 * W * (W - 1);
 };

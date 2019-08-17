@@ -47,6 +47,14 @@ private:
     }
 
 public:
+    Maze()
+        : maze_data()
+        , check_data()
+        , start({ 0, 0 })
+        , goal({ 0, 0 })
+    {
+    }
+
     void resetData()
     {
         maze_data.reset();
