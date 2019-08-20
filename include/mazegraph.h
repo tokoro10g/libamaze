@@ -95,6 +95,7 @@ public:
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return Base::INF;
         }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
@@ -105,7 +106,8 @@ public:
     {
         if (id >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id: " << (int)id << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return;
         }
         std::array<int8_t, 4> diff = { -1, 1, W, -W };
         for (auto d : diff) {
@@ -119,6 +121,7 @@ public:
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to:" << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return { false, Base::INF };
         }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
@@ -167,6 +170,7 @@ public:
         if (id >= size) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return { { static_cast<uint8_t>(-1), static_cast<uint8_t>(-1) }, { 0 } };
         }
         uint8_t x = id % W;
         uint8_t y = id / W;
@@ -189,6 +193,7 @@ public:
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return Base::INF;
         }
         Coordinates c1 = coordByNodeId(id_from);
         Coordinates c2 = coordByNodeId(id_to);
@@ -200,6 +205,7 @@ public:
         if (id >= size) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id: " << (int)id << __FILE__ << ":" << __LINE__ << std::endl;
+            return;
         }
         std::array<int8_t, 8> diff = { -1, 1, W, -W, W - 1, -W + 1, 2 * W - 1, -2 * W + 1 };
         for (auto d : diff) {
@@ -213,6 +219,7 @@ public:
         if (id_from >= size || id_to >= size) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return { false, Base::INF };
         }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
@@ -262,7 +269,8 @@ public:
         // FIXME: may contain bugs
         if (id >= size) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id: " << (int)id << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return { { static_cast<uint8_t>(-1), static_cast<uint8_t>(-1) }, { 0 } };
         }
         Coordinates c;
         TNodeId tmp = id % (2 * W - 1);
