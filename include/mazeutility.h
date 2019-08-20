@@ -10,18 +10,18 @@ namespace Amaze {
 
 namespace Utility {
     template <uint8_t W>
-    bool loadMazeFromStream(Maze<W>& maze, std::istream& fs)
+    bool loadMazeFromStream(Maze<W>& maze, std::istream& is)
     {
         int type, w, h;
-        fs >> type;
-        fs >> w >> h;
+        is >> type;
+        is >> w >> h;
         if (W < w || W < h) {
             std::cerr << "Too large" << std::endl;
             return false;
         }
         if (type == 1) {
             int x, y;
-            fs >> x >> y;
+            is >> x >> y;
             Position p = { static_cast<uint8_t>(x * 2), static_cast<uint8_t>(y * 2) };
             maze.setGoal(p);
         } else {
@@ -32,7 +32,7 @@ namespace Utility {
             for (int cursorx = 0; cursorx < w; cursorx++) {
                 char ch;
                 uint8_t byte;
-                fs >> ch;
+                is >> ch;
                 if (ch >= '0' && ch <= '9') {
                     byte = ch - '0';
                 } else if (ch >= 'a' && ch <= 'f') {
