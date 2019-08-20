@@ -71,7 +71,7 @@ public:
 
     static constexpr TNodeId size = 0;
     static constexpr TCost INF = std::numeric_limits<TCost>::max();
-    static constexpr TNodeId ID_MAX = std::numeric_limits<TNodeId>::max();
+    static constexpr TNodeId INVALID_NODE = std::numeric_limits<TNodeId>::max();
 
 protected:
     const Maze<W>& maze;
@@ -158,7 +158,7 @@ public:
         if (c.pos.x % 2 != 0 || c.pos.y % 2 != 0) {
             // wall or pillar
             std::cerr << "Out of bounds!!! (pos: " << (int)c.pos.x << ", " << (int)c.pos.y << ") " << __FILE__ << ":" << __LINE__ << std::endl;
-            return Base::ID_MAX;
+            return Base::INVALID_NODE;
         }
         return TNodeId(c.pos.x / 2 + c.pos.y / 2 * W);
     }
@@ -246,7 +246,7 @@ public:
     {
         if (c.pos.x % 2 == c.pos.y % 2) {
             // cell or pillar
-            return Base::ID_MAX;
+            return Base::INVALID_NODE;
         }
         // FIXME: may contain bugs
         if (c.pos.y % 2 == 0) {
