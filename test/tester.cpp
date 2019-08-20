@@ -32,6 +32,34 @@ void senseFourWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, s
     }
 }
 
+template <uint8_t W>
+void senseSixWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, std::vector<Coordinates>& changed_coordinates)
+{
+    constexpr int8_t dx[8] = { 0, 1, 2, 1, 0, -1, -2, -1 };
+    constexpr int8_t dy[8] = { 2, 1, 0, -1, -2, -1, 0, 1 };
+    for (int i = 0; i < 8; i++) {
+        if (c.pos.x % 2 == 0 && c.pos.y % 2 == 1 && (i == 2 || i == 6)) {
+            continue;
+        } else if (c.pos.x % 2 == 1 && c.pos.y % 2 == 0 && (i == 0 || i == 4)) {
+            continue;
+        }
+        Position p = { static_cast<uint8_t>(c.pos.x + dx[i]), static_cast<uint8_t>(c.pos.y + dy[i]) };
+        if (p.x > 2 * W || p.y > 2 * W) {
+            continue;
+        }
+        if (maze.isCheckedWall(p)) {
+            continue;
+        }
+        maze.setCheckedWall(p, true);
+        if (reference_maze.isSetWall(p)) {
+            maze.setWall(p, true);
+            changed_coordinates.push_back({ p, NoDirection });
+        } else {
+            maze.setWall(p, false);
+        }
+    }
+}
+
 int main()
 {
     constexpr uint8_t max_maze_width = 32;
@@ -40,6 +68,8 @@ int main()
 
     Utility::printMaze(reference_maze);
     std::cout << std::endl;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
     FourWayStepMapGraph mg1(reference_maze);
     auto solver1 = DStarLite(mg1);
@@ -83,6 +113,8 @@ int main()
     std::cout << mg4.size << std::endl;
     std::cout << std::endl;
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
     std::cout << std::endl;
     std::cout << "=======Testing D* Lite for 4-way Graph=======" << std::endl;
     std::cout << std::endl;
@@ -100,6 +132,8 @@ int main()
     }
     std::cout << id_goal << std::endl;
 
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
     std::cout << std::endl;
     std::cout << "=======Testing D* Lite for 6-way Graph=======" << std::endl;
     std::cout << std::endl;
@@ -116,6 +150,8 @@ int main()
         solver4.postSense(std::vector<Coordinates>());
     }
     std::cout << id_goal4 << std::endl;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
     std::cout << std::endl;
     std::cout << "=======Testing Dynamic Search Using D* Lite for 4-way Graph=======" << std::endl;
@@ -160,5 +196,52 @@ int main()
         solver5.postSense(changed_coordinates);
     }
     std::cout << id_goal5 << std::endl;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::cout << std::endl;
+    std::cout << "=======Testing Dynamic Search Using D* Lite for 6-way Graph=======" << std::endl;
+    std::cout << std::endl;
+
+    Utility::loadEmptyMaze(goal_position.x, goal_position.y, maze);
+    maze.setWall({ 1, 0 }, true);
+    maze.setCheckedWall({ 0, 1 }, true);
+    maze.setCheckedWall({ 1, 0 }, true);
+    SixWayWallNodeGraph mg6(maze);
+    auto solver6 = DStarLite(mg6);
+
+    solver6.initialize();
+    Utility::printMaze(maze);
+    decltype(mg6)::NodeId id_goal6 = mg6.getGoalNodeId();
+    std::cout << "The start is " << mg6.getStartNodeId() << std::endl;
+    std::cout << "The goal is " << id_goal6 << std::endl;
+    std::cout << std::endl;
+
+    std::vector<Coordinates> temp1;
+    senseSixWay(maze, reference_maze, mg6.coordByNodeId(mg6.getStartNodeId()), temp1);
+
+    //for(int i=0;i<80;i++){
+    while (solver6.getCurrentNodeId() != id_goal6) {
+        //Utility::printMaze(maze);
+        uint16_t id = solver6.getCurrentNodeId();
+        //CellData cd = maze.getCell(id);
+        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
+        std::cout << mg6.coordByNodeId(id) << std::endl;
+        std::vector<Coordinates> changed_coordinates;
+
+        solver6.preSense();
+        id = solver6.getCurrentNodeId();
+        senseSixWay(maze, reference_maze, mg6.coordByNodeId(id), changed_coordinates);
+        //std::cout << "After sense: " << std::endl;
+        //cd = maze.getCell(id);
+        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
+        //std::cout << "Changed coordinates: ";
+        //for (auto c : changed_coordinates) {
+        //    std::cout << c << ", ";
+        //}
+        //std::cout << std::endl;
+        solver6.postSense(changed_coordinates);
+    }
+    std::cout << id_goal6 << std::endl;
     return 0;
 }
