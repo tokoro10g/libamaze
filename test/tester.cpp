@@ -15,6 +15,9 @@ void senseFourWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, s
     constexpr int8_t dy[4] = { 1, 0, -1, 0 };
     for (int i = 0; i < 4; i++) {
         Position p = { static_cast<uint8_t>(c.pos.x + dx[i]), static_cast<uint8_t>(c.pos.y + dy[i]) };
+        if (p.x > 2 * W || p.y > 2 * W) {
+            continue;
+        }
         if (maze.isCheckedWall(p)) {
             continue;
         }
@@ -121,6 +124,7 @@ int main()
     Maze<max_maze_width> maze;
     Position goal_position = reference_maze.getGoal();
     Utility::loadEmptyMaze(goal_position.x, goal_position.y, maze);
+    maze.setWall({ 1, 0 }, true);
     maze.setCheckedWall({ 0, 1 }, true);
     maze.setCheckedWall({ 1, 0 }, true);
     FourWayStepMapGraph mg5(maze);
