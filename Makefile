@@ -20,6 +20,10 @@ $(TARGET): $(OBJECTS)
 	@mkdir -p $(dir $(TARGET))
 	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
+$(BUILDDIR)/tester.o: test/tester.cpp
+	@mkdir -p $(BUILDDIR) 
+	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR) 
 	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
@@ -37,8 +41,8 @@ clean:
 # Tests
 test: $(TARGET_TEST)
 
-$(TARGET_TEST): $(OBJECTS)
-	$(CC) $(CFLAGS) test/tester.cpp $^ $(INC) $(LIB) -o $(TARGET_TEST)
+$(TARGET_TEST): $(OBJECTS) $(BUILDDIR)/tester.o
+	$(CC) $(CFLAGS) $^ $(INC) $(LIB) -o $(TARGET_TEST)
 
 .PHONY: clean
 
