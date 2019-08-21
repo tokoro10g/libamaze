@@ -35,7 +35,7 @@ public:
         , g()
         , rhs()
         , open_list()
-        , in_open_list()
+        , in_open_list(0)
     {
         g.fill(INF);
         rhs.fill(INF);
