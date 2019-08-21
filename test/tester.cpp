@@ -3,8 +3,8 @@
 #include "mazegraph.h"
 #include "mazeutility.h"
 #include <bitset>
-#include <fstream>
 #include <iostream>
+#include <sstream>
 
 using namespace Amaze;
 
@@ -14,7 +14,7 @@ void senseFourWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, s
     constexpr int8_t dx[4] = { 0, 1, 0, -1 };
     constexpr int8_t dy[4] = { 1, 0, -1, 0 };
     for (int i = 0; i < 4; i++) {
-        Position p = { static_cast<uint8_t>(c.pos.x + dx[i]), static_cast<uint8_t>(c.pos.y + dy[i]) };
+        Position p = { uint8_t(c.pos.x + dx[i]), uint8_t(c.pos.y + dy[i]) };
         if (p.x > 2 * W || p.y > 2 * W) {
             continue;
         }
@@ -24,7 +24,7 @@ void senseFourWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, s
         maze.setCheckedWall(p, true);
         if (reference_maze.isSetWall(p)) {
             maze.setWall(p, true);
-            Position pto = { static_cast<uint8_t>(p.x + dx[i]), static_cast<uint8_t>(p.y + dy[i]) };
+            Position pto = { uint8_t(p.x + dx[i]), uint8_t(p.y + dy[i]) };
             changed_coordinates.push_back({ pto, NoDirection });
         } else {
             maze.setWall(p, false);
@@ -43,7 +43,7 @@ void senseSixWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, st
         } else if (c.pos.x % 2 == 1 && c.pos.y % 2 == 0 && (i == 0 || i == 4)) {
             continue;
         }
-        Position p = { static_cast<uint8_t>(c.pos.x + dx[i]), static_cast<uint8_t>(c.pos.y + dy[i]) };
+        Position p = { uint8_t(c.pos.x + dx[i]), uint8_t(c.pos.y + dy[i]) };
         if (p.x > 2 * W || p.y > 2 * W) {
             continue;
         }
@@ -62,9 +62,48 @@ void senseSixWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, st
 
 int main()
 {
+    const std::string maze_data = "1\n"
+                                  "32\n"
+                                  "32\n"
+                                  "19\n"
+                                  "20\n"
+                                  "9 3 9 3 9 5 5 5 3 9 1 3 9 5 5 5 5 5 3 9 1 3 9 5 5 5 5 5 3 9 1 3\n"
+                                  "c 6 a a c 5 5 3 a c 4 6 c 5 5 5 5 3 a c 4 6 c 5 5 5 5 3 a c 4 6\n"
+                                  "9 5 6 a 9 5 5 6 a d 1 5 1 5 5 5 3 a c 5 5 5 5 5 5 5 5 6 c 5 5 3\n"
+                                  "c 1 7 a c 5 5 3 8 3 c 3 e 9 5 5 6 c 5 5 5 5 5 1 5 5 5 3 9 3 9 2\n"
+                                  "9 4 3 a 9 1 3 a a c 3 c 3 a 9 1 3 9 5 5 5 5 3 a 9 1 3 a a c 6 e\n"
+                                  "c 1 6 a 8 0 2 a 8 3 c 3 a a 8 0 2 a 9 5 5 5 6 a 8 0 2 a c 5 5 3\n"
+                                  "9 4 3 a c 4 6 a a c 3 c 2 a c 4 6 a c 5 5 5 3 a c 4 6 a b 9 3 a\n"
+                                  "c 1 6 c 1 5 7 a c 5 4 5 2 a d 5 5 2 9 5 5 5 6 c 5 5 1 6 8 6 c 6\n"
+                                  "d 4 3 9 4 5 5 2 9 5 5 5 2 a d 5 5 2 8 5 5 5 3 9 5 1 4 3 8 5 5 7\n"
+                                  "9 3 a a 9 3 9 2 a 9 1 3 a a 9 3 b a a 9 1 3 a c 1 4 1 6 a 9 1 3\n"
+                                  "8 2 a 8 2 8 2 a a 8 0 2 a a a a a a a 8 0 2 a 9 4 1 4 3 a 8 0 2\n"
+                                  "c 6 a a 8 2 8 2 a c 4 6 a a a a a a a 8 4 6 a c 1 4 1 6 a c 4 6\n"
+                                  "9 5 6 8 6 c 6 e 8 5 5 5 6 8 6 c 6 a c 4 5 5 4 5 4 5 4 7 c 5 5 3\n"
+                                  "c 1 7 8 5 5 5 3 8 5 5 5 7 c 5 5 5 6 d 1 5 1 5 1 5 5 5 3 9 5 1 6\n"
+                                  "d 0 7 a 9 1 3 a c 5 5 5 3 b 9 1 3 b d 0 5 0 7 a 9 1 3 a c 1 4 3\n"
+                                  "d 0 7 a 8 0 2 a 9 5 5 5 6 a 8 0 2 a 9 4 1 4 3 a 8 0 2 a 9 4 1 6\n"
+                                  "d 0 7 a c 4 6 a c 5 5 5 3 a c 4 6 a 8 5 0 5 2 a c 4 6 8 4 1 4 3\n"
+                                  "9 4 7 8 5 5 5 6 9 5 5 5 4 4 5 5 5 4 4 5 4 5 6 c 5 5 1 6 9 4 1 6\n"
+                                  "c 5 3 8 5 5 5 7 c 5 5 5 3 9 1 5 1 1 1 5 5 5 3 9 3 9 2 b 8 5 4 7\n"
+                                  "9 3 a c 5 5 5 3 b 9 1 3 a a e b e a a 9 1 3 8 2 8 2 8 2 a 9 1 3\n"
+                                  "8 2 a 9 5 5 5 6 a 8 0 2 a 8 1 4 1 2 a 8 0 2 a 8 2 8 2 a a 8 0 2\n"
+                                  "c 6 a c 5 5 5 3 a c 4 6 a a e b e a a c 4 6 8 2 8 2 8 2 a c 4 6\n"
+                                  "9 5 6 9 5 5 1 6 8 5 5 5 6 c 1 4 5 6 c 5 5 1 6 8 6 c 6 c 4 5 5 3\n"
+                                  "c 5 3 c 5 5 4 3 a 9 3 9 3 9 4 5 5 3 9 5 1 4 3 8 5 5 5 1 1 1 1 2\n"
+                                  "9 3 a b 9 1 3 a 8 2 8 2 8 2 9 1 3 a c 1 4 1 6 a 9 1 3 a a a a a\n"
+                                  "a a a a 8 0 2 a a 8 2 8 2 a 8 0 2 a 9 4 1 4 3 a 8 0 2 a a a a a\n"
+                                  "a c 6 a c 4 6 a 8 2 8 2 a a c 4 6 8 4 1 4 1 6 a c 4 6 a a a a a\n"
+                                  "8 1 7 8 5 5 5 2 e c 2 c 6 c 5 5 1 6 d 4 5 4 5 4 5 5 5 6 c 4 4 2\n"
+                                  "a c 3 c 5 5 3 a 9 5 4 5 3 9 3 9 2 b 9 5 5 5 1 1 5 1 5 3 b b b a\n"
+                                  "a b a 9 5 5 6 a a 9 1 3 a a 8 2 8 2 a 9 1 3 a a 9 2 9 0 0 0 0 2\n"
+                                  "a a a c 5 5 3 a a 8 0 2 a 8 2 8 2 a a 8 0 2 a 8 6 8 6 a a e e a\n"
+                                  "e e c 5 5 5 6 c 6 c 4 6 c 6 c 6 c 4 6 c 4 6 e c 5 4 5 4 4 5 5 6\n";
+    std::istringstream iss(maze_data);
+
     constexpr uint8_t max_maze_width = 32;
     Maze<max_maze_width> reference_maze;
-    Utility::loadMazeFromFile(reference_maze, "../micromouse_mazedat/maze2017halfexp.dat");
+    Utility::loadMazeFromStream(reference_maze, iss);
 
     Utility::printMaze(reference_maze);
     std::cout << std::endl;
@@ -73,9 +112,9 @@ int main()
 
     FourWayStepMapGraph mg1(reference_maze);
     auto solver1 = DStarLite(mg1);
-    auto e11 = mg1.getEdge({ 0, 2, NoDirection }, { 0, 2, NoDirection });
-    auto e12 = mg1.getEdge({ 0, 0, NoDirection }, { 0, 2, NoDirection });
-    auto e13 = mg1.getEdge({ 0, 0, NoDirection }, { 2, 0, NoDirection });
+    auto e11 = mg1.getEdge({ { 0, 2 }, NoDirection }, { { 0, 2 }, NoDirection });
+    auto e12 = mg1.getEdge({ { 0, 0 }, NoDirection }, { { 0, 2 }, NoDirection });
+    auto e13 = mg1.getEdge({ { 0, 0 }, NoDirection }, { { 2, 0 }, NoDirection });
     std::cout << (e11.first ? "true" : "false") << " " << (int)e11.second << std::endl;
     std::cout << (e12.first ? "true" : "false") << " " << (int)e12.second << std::endl;
     std::cout << (e13.first ? "true" : "false") << " " << (int)e13.second << std::endl;
@@ -84,18 +123,18 @@ int main()
     std::cout << std::endl;
 
     FourWayStepMapGraph<uint16_t> mg2(reference_maze);
-    auto e21 = mg2.getEdge({ 0, 2, NoDirection }, { 0, 2, NoDirection });
-    auto e22 = mg2.getEdge({ 0, 0, NoDirection }, { 0, 2, NoDirection });
-    auto e23 = mg2.getEdge({ 0, 0, NoDirection }, { 2, 0, NoDirection });
+    auto e21 = mg2.getEdge({ { 0, 2 }, NoDirection }, { { 0, 2 }, NoDirection });
+    auto e22 = mg2.getEdge({ { 0, 0 }, NoDirection }, { { 0, 2 }, NoDirection });
+    auto e23 = mg2.getEdge({ { 0, 0 }, NoDirection }, { { 2, 0 }, NoDirection });
     std::cout << (e21.first ? "true" : "false") << " " << (int)e21.second << std::endl;
     std::cout << (e22.first ? "true" : "false") << " " << (int)e22.second << std::endl;
     std::cout << (e23.first ? "true" : "false") << " " << (int)e23.second << std::endl;
     std::cout << std::endl;
 
     FourWayStepMapGraph<float> mg3(reference_maze);
-    auto e31 = mg3.getEdge({ 0, 2, NoDirection }, { 0, 2, NoDirection });
-    auto e32 = mg3.getEdge({ 0, 0, NoDirection }, { 0, 2, NoDirection });
-    auto e33 = mg3.getEdge({ 0, 0, NoDirection }, { 2, 0, NoDirection });
+    auto e31 = mg3.getEdge({ { 0, 2 }, NoDirection }, { { 0, 2 }, NoDirection });
+    auto e32 = mg3.getEdge({ { 0, 0 }, NoDirection }, { { 0, 2 }, NoDirection });
+    auto e33 = mg3.getEdge({ { 0, 0 }, NoDirection }, { { 2, 0 }, NoDirection });
     std::cout << (e31.first ? "true" : "false") << " " << e31.second << std::endl;
     std::cout << (e32.first ? "true" : "false") << " " << e32.second << std::endl;
     std::cout << (e33.first ? "true" : "false") << " " << e33.second << std::endl;
@@ -103,9 +142,9 @@ int main()
 
     SixWayWallNodeGraph mg4(reference_maze);
     auto solver4 = DStarLite(mg4);
-    auto e41 = mg4.getEdge({ 0, 3, South }, { 1, 2, East });
-    auto e42 = mg4.getEdge({ 0, 3, North }, { 0, 5, North });
-    auto e43 = mg4.getEdge({ 1, 2, East }, { 2, 3, North });
+    auto e41 = mg4.getEdge({ { 0, 3 }, South }, { { 1, 2 }, East });
+    auto e42 = mg4.getEdge({ { 0, 3 }, North }, { { 0, 5 }, North });
+    auto e43 = mg4.getEdge({ { 1, 2 }, East }, { { 2, 3 }, North });
     std::cout << (e41.first ? "true" : "false") << " " << (int)e41.second << std::endl;
     std::cout << (e42.first ? "true" : "false") << " " << (int)e42.second << std::endl;
     std::cout << (e43.first ? "true" : "false") << " " << (int)e43.second << std::endl;

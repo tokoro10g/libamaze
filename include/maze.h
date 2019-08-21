@@ -23,7 +23,7 @@ private:
             return;
         }
 
-        uint16_t idx = p.y * (2 * W - 1) + p.x;
+        uint16_t idx = uint16_t(p.y * (2 * W - 1) + p.x);
         if (is_checked) {
             check_data[idx] = val;
         } else {
@@ -38,7 +38,7 @@ private:
             return false;
         }
 
-        uint16_t idx = p.y * (2 * W - 1) + p.x;
+        uint16_t idx = uint16_t(p.y * (2 * W - 1) + p.x);
         if (is_checked) {
             return check_data[idx];
         } else {

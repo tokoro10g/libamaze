@@ -11,6 +11,7 @@ public:
         : mg(mg)
     {
     }
+    virtual ~Solver() {}
     virtual Coordinates getNextCoordinates() const
     {
         return mg.coordByNodeId(getNextNodeId());

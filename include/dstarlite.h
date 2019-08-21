@@ -32,6 +32,10 @@ public:
         , id_start(mg.getStartNodeId())
         , id_goal(mg.getGoalNodeId())
         , id_last(id_start)
+        , g()
+        , rhs()
+        , open_list()
+        , in_open_list()
     {
         g.fill(INF);
         rhs.fill(INF);
@@ -114,7 +118,7 @@ public:
             }
             make_heap(open_list.begin(), open_list.end(), KeyCompare());
             if (open_list.size() > max_heap_size) {
-                max_heap_size = open_list.size();
+                max_heap_size = NodeId(open_list.size());
             }
         }
         //std::cout << "The number of examined nodes in this round: " << examined_nodes << std::endl;
@@ -178,7 +182,7 @@ public:
             }
 
             if (!changed_coordinates.empty()) {
-                key_modifier += Base::mg.distance(id_last, id_start);
+                key_modifier = satSum(key_modifier, Base::mg.distance(id_last, id_start));
                 id_last = id_start;
                 std::vector<std::pair<NodeId, NodeId>> changed_edges;
                 Base::mg.affectedEdges(changed_coordinates, changed_edges);

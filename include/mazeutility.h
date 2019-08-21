@@ -22,7 +22,7 @@ namespace Utility {
         if (type == 1) {
             int x, y;
             is >> x >> y;
-            Position p = { static_cast<uint8_t>(x * 2), static_cast<uint8_t>(y * 2) };
+            Position p = { uint8_t(x * 2), uint8_t(y * 2) };
             maze.setGoal(p);
         } else {
             Position p = { 7 * 2, 7 * 2 };
@@ -34,9 +34,9 @@ namespace Utility {
                 uint8_t byte;
                 is >> ch;
                 if (ch >= '0' && ch <= '9') {
-                    byte = ch - '0';
+                    byte = uint8_t(ch - '0');
                 } else if (ch >= 'a' && ch <= 'f') {
-                    byte = ch + 0xa - 'a';
+                    byte = uint8_t(ch + 0xa - 'a');
                 } else if (ch == ' ' || ch == '\n' || ch == '\r') {
                     cursorx--;
                     continue;
@@ -46,22 +46,22 @@ namespace Utility {
                 }
 
                 Position p;
-                p.x = 2 * cursorx;
+                p.x = uint8_t(2 * cursorx);
                 if (cursory != 0) {
-                    p.y = 2 * cursory - 1;
+                    p.y = uint8_t(2 * cursory - 1);
                     maze.setWall(p, byte & 0x4);
                 }
                 if (cursory != h - 1) {
-                    p.y = 2 * cursory + 1;
+                    p.y = uint8_t(2 * cursory + 1);
                     maze.setWall(p, byte & 0x1);
                 }
-                p.y = 2 * cursory;
+                p.y = uint8_t(2 * cursory);
                 if (cursorx != 0) {
-                    p.x = 2 * cursorx - 1;
+                    p.x = uint8_t(2 * cursorx - 1);
                     maze.setWall(p, byte & 0x8);
                 }
                 if (cursorx != w - 1) {
-                    p.x = 2 * cursorx + 1;
+                    p.x = uint8_t(2 * cursorx + 1);
                     maze.setWall(p, byte & 0x2);
                 }
             }
@@ -91,7 +91,7 @@ namespace Utility {
     template <uint8_t W>
     void loadEmptyMaze(int x, int y, Maze<W>& maze)
     {
-        Position p = { static_cast<uint8_t>(x), static_cast<uint8_t>(y) };
+        Position p = { uint8_t(x), uint8_t(y) };
         maze.resetData();
         maze.setGoal(p);
     }
@@ -112,7 +112,7 @@ namespace Utility {
                         std::cout << "|";
 
                     for (int i = 0; i < m; i++) {
-                        if (j == m - 1 && (cursory == 0 || maze.isSetWall({ static_cast<uint8_t>(2 * cursorx), static_cast<uint8_t>(2 * cursory - 1) }))) {
+                        if (j == m - 1 && (cursory == 0 || maze.isSetWall({ uint8_t(2 * cursorx), uint8_t(2 * cursory - 1) }))) {
                             std::cout << "\x1b[4m"; // underline
                         }
                         std::cout << " ";
@@ -120,9 +120,9 @@ namespace Utility {
                     }
 
                     for (int i = 0; i < m; i++) {
-                        if (i == m - 1 && (cursorx == W - 1 || maze.isSetWall({ static_cast<uint8_t>(2 * cursorx + 1), static_cast<uint8_t>(2 * cursory) }))) {
+                        if (i == m - 1 && (cursorx == W - 1 || maze.isSetWall({ uint8_t(2 * cursorx + 1), uint8_t(2 * cursory) }))) {
                             std::cout << "|";
-                        } else if (j == m - 1 && (cursory == 0 || maze.isSetWall({ static_cast<uint8_t>(2 * cursorx), static_cast<uint8_t>(2 * cursory - 1) }))) {
+                        } else if (j == m - 1 && (cursory == 0 || maze.isSetWall({ uint8_t(2 * cursorx), uint8_t(2 * cursory - 1) }))) {
                             std::cout << "\x1b[4m";
                             std::cout << " ";
                             std::cout << "\x1b[0m";

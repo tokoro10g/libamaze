@@ -38,11 +38,11 @@ struct __attribute__((__packed__)) Position {
     }
     Difference operator-(const Position& other) const
     {
-        return { static_cast<int8_t>(this->x - other.x), static_cast<int8_t>(this->y - other.y) };
+        return { int8_t(this->x - other.x), int8_t(this->y - other.y) };
     }
     Position operator+(const Difference& diff) const
     {
-        return { static_cast<uint8_t>(this->x + diff.x), static_cast<uint8_t>(this->y + diff.y) };
+        return { uint8_t(this->x + diff.x), uint8_t(this->y + diff.y) };
     }
 };
 
@@ -72,7 +72,7 @@ T satSum(T a, T b)
     if (std::numeric_limits<T>::max() - a <= b) {
         return std::numeric_limits<T>::max();
     } else {
-        return a + b;
+        return T(a + b);
     }
 }
 
