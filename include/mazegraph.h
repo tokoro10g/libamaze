@@ -27,10 +27,13 @@ public:
         std::unordered_set<TNodeId> visited;
         for (Coordinates c : coordinates) {
             TNodeId id = nodeIdByCoordinates(c);
+            if (id == INVALID_NODE) {
+                continue;
+            }
             if (visited.find(id) == visited.end()) {
                 visited.insert(id);
                 std::vector<NodeId> v;
-                neighbors(nodeIdByCoordinates(c), v);
+                neighbors(id, v);
                 for (auto n : v) {
                     edges.push_back({ id, n });
                 }
@@ -138,6 +141,11 @@ public:
     }
     std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
     {
+        if (id_from >= size || id_to >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to:" << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return { false, Base::INF };
+        }
         Position p;
         p.x = uint8_t((id_from % W) * 2);
         p.y = uint8_t((id_from / W) * 2);
@@ -241,6 +249,11 @@ public:
     }
     std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
     {
+        if (id_from >= size || id_to >= size) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to:" << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return { false, Base::INF };
+        }
         Coordinates c1, c2;
         c1 = coordByNodeId(id_from);
         c2 = coordByNodeId(id_to);

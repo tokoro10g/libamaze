@@ -42,6 +42,9 @@ public:
     }
     void updateHeap(NodeId id, HeapKey k)
     {
+        if (id > TMazeGraph::size) {
+            return;
+        }
         for (auto& p : open_list) {
             if (p.second == id) {
                 p.first = k;
@@ -51,6 +54,9 @@ public:
     }
     void updateVertex(NodeId id)
     {
+        if (id > TMazeGraph::size) {
+            return;
+        }
         if (g[id] != rhs[id] && in_open_list[id]) {
             updateHeap(id, calculateKey(id));
         } else if (g[id] != rhs[id] && !in_open_list[id]) {
@@ -124,8 +130,11 @@ public:
         //std::cout << "The number of examined nodes in this round: " << examined_nodes << std::endl;
         //std::cout << "Maximum size of the open list: " << max_heap_size << std::endl;
     }
-    HeapKey calculateKey(NodeId id)
+    HeapKey calculateKey(NodeId id) const
     {
+        if (id > TMazeGraph::size) {
+            return { INF, INF };
+        }
         return { satSum(satSum(std::min(g[id], rhs[id]), Base::mg.distance(id_start, id)), key_modifier), std::min(g[id], rhs[id]) };
     }
     NodeId getNextNodeId() const

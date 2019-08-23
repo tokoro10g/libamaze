@@ -48,8 +48,8 @@ private:
 
 public:
     Maze()
-        : maze_data()
-        , check_data()
+        : maze_data(0)
+        , check_data(0)
         , start({ 0, 0 })
         , goal({ 0, 0 })
     {
