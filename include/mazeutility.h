@@ -158,9 +158,14 @@ std::ostream& operator<<(std::ostream& os, Direction d)
     }
     return os;
 }
+std::ostream& operator<<(std::ostream& os, Position p)
+{
+    os << "(" << (int)p.x << ", " << (int)p.y << ")";
+    return os;
+}
 std::ostream& operator<<(std::ostream& os, Coordinates c)
 {
-    os << "(" << (int)c.pos.x << ", " << (int)c.pos.y << ", " << c.dir << ")";
+    os << "(" << c.pos << ", " << c.dir << ")";
     return os;
 }
 
