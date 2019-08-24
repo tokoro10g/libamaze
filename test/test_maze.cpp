@@ -6,44 +6,77 @@
 #include "maze.h"
 #include "mazeutility.h"
 
+#include "cases_maze.h"
+
 using namespace Amaze;
 using namespace Amaze::Utility;
 
-const std::string maze_str1 = "0\n"
-                              "16\n"
-                              "16\n"
-                              "9 5 5 1 5 5 3 f f 9 5 5 1 5 5 3\n"
-                              "a f 9 2 f f c 5 5 6 f f a f f a\n"
-                              "a 9 6 a f f 9 3 9 5 5 3 a f f a\n"
-                              "8 4 5 2 f f a a a 9 5 6 8 5 5 2\n"
-                              "a f f c 5 3 a a a a 9 5 6 9 3 a\n"
-                              "e f f f f 8 6 c 6 c 2 f f a a a\n"
-                              "9 3 9 5 5 6 9 5 5 3 c 1 5 2 8 6\n"
-                              "a a a f f f 8 1 3 a d 4 3 a a f\n"
-                              "a a e f f f a c 6 8 5 5 6 a a f\n"
-                              "a 8 5 1 5 3 c 5 5 6 d 5 5 6 c 3\n"
-                              "a e 9 6 f a b f f 9 3 f f f f a\n"
-                              "a 9 6 d 7 a a f f a c 5 3 f f a\n"
-                              "8 6 9 5 5 6 a f f a f f 8 5 5 2\n"
-                              "a b a f f f c 5 5 6 f f a f f a\n"
-                              "a a a d 5 1 5 1 5 3 f f a f f a\n"
-                              "e e c 5 5 4 5 6 f c 5 5 4 5 5 6\n";
-
-TEST(maze_load, load_from_string_stream)
+TEST(maze_load, load_from_string_stream1)
 {
     std::istringstream iss(maze_str1);
     Maze<16> maze;
-    EXPECT_EQ(true, loadMazeFromStream(maze, iss));
+    ASSERT_TRUE(loadMazeFromStream(maze, iss));
+    printMaze(maze);
+    EXPECT_EQ(16, maze.getWidth());
+    EXPECT_EQ(Position({ 0, 0 }), maze.getStart());
     EXPECT_EQ(Position({ 14, 14 }), maze.getGoal());
     EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
+}
+
+TEST(maze_load, load_from_string_stream2)
+{
+    std::istringstream iss(maze_str2);
+    Maze<32> maze;
+    ASSERT_TRUE(loadMazeFromStream(maze, iss));
+    printMaze(maze);
+    EXPECT_EQ(32, maze.getWidth());
     EXPECT_EQ(Position({ 0, 0 }), maze.getStart());
+    EXPECT_EQ(Position({ 38, 40 }), maze.getGoal());
+    EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
 }
 
 TEST(maze_load, load_too_large_data)
 {
     std::istringstream iss(maze_str1);
     Maze<15> maze;
-    EXPECT_EQ(false, loadMazeFromStream(maze, iss));
+    ASSERT_FALSE(loadMazeFromStream(maze, iss));
+}
+
+TEST(maze_load, load_empty)
+{
+    Maze<16> maze;
+    loadEmptyMaze(14, 14, maze);
+    EXPECT_EQ(Position({ 0, 0 }), maze.getStart());
+    EXPECT_EQ(Position({ 14, 14 }), maze.getGoal());
+    for (uint8_t x = 0; x < 16 * 2; x += 2) {
+        for (uint8_t y = 0; y < 16 * 2; y += 2) {
+            EXPECT_EQ(false, maze.isSetWall({ x, y }));
+            EXPECT_EQ(false, maze.isCheckedWall({ x, y }));
+        }
+    }
+}
+
+TEST(maze_ops, set_toggle)
+{
+    std::istringstream iss(maze_str1);
+    Maze<16> maze;
+    ASSERT_TRUE(loadMazeFromStream(maze, iss));
+
+    EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
+    maze.toggleWall({ 1, 0 });
+    EXPECT_EQ(false, maze.isSetWall({ 1, 0 }));
+    maze.setWall({ 1, 0 }, true);
+    EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
+    maze.setWall({ 1, 0 }, false);
+    EXPECT_EQ(false, maze.isSetWall({ 1, 0 }));
+
+    EXPECT_EQ(false, maze.isCheckedWall({ 1, 0 }));
+    maze.toggleCheckedWall({ 1, 0 });
+    EXPECT_EQ(true, maze.isCheckedWall({ 1, 0 }));
+    maze.setCheckedWall({ 1, 0 }, false);
+    EXPECT_EQ(false, maze.isCheckedWall({ 1, 0 }));
+    maze.setCheckedWall({ 1, 0 }, true);
+    EXPECT_EQ(true, maze.isCheckedWall({ 1, 0 }));
 }
 
 GTEST_API_ int main(int argc, char** argv)
