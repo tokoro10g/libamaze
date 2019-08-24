@@ -1,11 +1,11 @@
 #pragma once
 
 #include "maze.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iostream>
 #include <limits>
-#include <unordered_set>
 #include <utility>
 
 namespace Amaze {
@@ -84,14 +84,14 @@ public:
 
     virtual void affectedEdges(const std::vector<Coordinates>& coordinates, std::vector<std::pair<TNodeId, TNodeId>>& edges) const
     {
-        std::unordered_set<TNodeId> visited;
+        std::vector<TNodeId> visited;
         for (Coordinates c : coordinates) {
             TNodeId id = nodeIdByCoordinates(c);
             if (id == INVALID_NODE) {
                 continue;
             }
-            if (visited.find(id) == visited.end()) {
-                visited.insert(id);
+            if (std::find(visited.begin(), visited.end(), id) == visited.end()) {
+                visited.push_back(id);
                 std::vector<NodeId> v;
                 neighbors(id, v);
                 for (auto n : v) {
@@ -346,10 +346,6 @@ public:
         }
         return getEdgeWithHypothesis(id_from, id_to, Base::maze.isSetWall(p));
     }
-    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
-    {
-        return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
-    }
     TNodeId nodeIdByCoordinates(Coordinates c) const
     {
         if (c.pos.x % 2 != 0 || c.pos.y % 2 != 0) {
@@ -464,10 +460,6 @@ public:
         c1 = coordByNodeId(id_from);
         c2 = coordByNodeId(id_to);
         return getEdgeWithHypothesis(id_from, id_to, Base::maze.isSetWall(c1.pos) || Base::maze.isSetWall(c2.pos));
-    }
-    std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
-    {
-        return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
     }
     TNodeId nodeIdByCoordinates(Coordinates c) const
     {
