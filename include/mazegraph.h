@@ -10,18 +10,78 @@
 
 namespace Amaze {
 
+/// \~japanese
+/// 迷路のグラフ表現を扱う抽象クラス．
+///
+/// \tparam TCost コストの型
+/// \tparam TNodeId ノードIDの型
+/// \tparam W 迷路の幅
+///
+/// \~english
+/// An abstract class for the graph representation of the maze.
+///
+/// \tparam TCost Type of the cost
+/// \tparam TNodeId Type of the node ID
+/// \tparam W Maze width
 template <typename TCost = uint8_t, typename TNodeId = uint16_t, uint8_t W = 32>
 class MazeGraph {
+protected:
+    /// \~japanese 迷路データ
+    /// \~english Maze data
+    const Maze<W>& maze;
+
 public:
     using Cost = TCost;
     using NodeId = TNodeId;
+
+    /// \~japanese グラフのサイズ
+    /// \~english Cardinality of the graph
+    static constexpr TNodeId size = 0;
+    /// \~japanese 無限コストとみなす値
+    /// \~english Cost value assumed to be infinity
+    static constexpr TCost INF = std::numeric_limits<TCost>::max();
+    /// \~japanese 無効なノードID
+    /// \~english ID for invalid nodes
+    static constexpr TNodeId INVALID_NODE = std::numeric_limits<TNodeId>::max();
+
     MazeGraph(const Maze<W>& maze)
         : maze(maze)
     {
     }
     virtual ~MazeGraph() {}
+
+    /// \~japanese
+    /// ノード \p id_from と \p id_to の間の楽観的距離を計算します．
+    ///
+    /// 戻り値は実際のグラフ上の2つのノード間の最短コストを超えてはなりません．
+    ///
+    /// \param[in] id_from, id_to ノードID
+    /// \returns 距離．ノードのIDが無効な場合は \link MazeGraph::INF INF \endlink を返します．
+    /// \warning 2つのノード間に経路が存在しない場合にも有効な値を返します．
+    ///
+    /// \~english
+    /// Calculates optimistic distance between nodes \p id_from and \p id_to.
+    ///
+    /// The return value must not exceed the minimum travelling cost through the graph.
+    ///
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
+    /// \returns distance; \link MazeGraph::INF INF \endlink when either node is invalid.
+    /// \warning Returns valid value even if there is no route between the two nodes.
     virtual TCost distance(TNodeId id_from, TNodeId id_to) const = 0;
+
+    /// \~japanese
+    /// ノード \p id の隣接ノードのIDを \p v に格納します．
+    ///
+    /// \param[in] id 原点とするノードのID
+    /// \param[out] v 隣接ノードのIDを格納する\p std::vector
+    ///
+    /// \~english
+    /// Fills \p v with neighbor IDs of the node \p id.
+    ///
+    /// \param[in] id Node ID of the source
+    /// \param[out] v \p std::vector filled with neighbors' IDs
     virtual void neighbors(TNodeId id, std::vector<TNodeId>& v) const = 0;
+
     virtual void affectedEdges(const std::vector<Coordinates>& coordinates, std::vector<std::pair<TNodeId, TNodeId>>& edges) const
     {
         std::unordered_set<TNodeId> visited;
@@ -40,59 +100,184 @@ public:
             }
         }
     }
-    std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const;
+
+    /// \~japanese
+    /// エッジがブロックされているかどうかを仮定してエッジの存在性とコストを計算します．
+    ///
+    /// \param[in] id_from, id_to エッジの両端ノードのID
+    /// \param[in] blocked \p id_from と \p id_to の間のエッジがブロックされていると仮定するとき \p true
+    /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::INF INF \endlink になります．
+    ///
+    /// \~english
+    /// Calculates the existence and cost of the edge based on the given assumption \p blocked.
+    ///
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
+    /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
+    /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::INF INF \endlink if the edge is blocked or either node is invalid.
+    virtual std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const = 0;
+    /// \~japanese
+    /// 迷路データに基づいてエッジの存在性とコストを計算します．
+    ///
+    /// このメソッドの戻り値は，\p id_from から \p id_to へ移動するときに訪れる壁の位置 \p p に対して<tt>getEdgeWithHypothesis(id_from, id_to, maze.isSetWall(p))</tt>と等価でなければなりません．
+    ///
+    /// \param[in] id_from, id_to エッジの両端ノードのID
+    /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::INF INF \endlink になります．
+    ///
+    /// \~english
+    /// Calculates the existence and cost of the edge according to the maze data.
+    ///
+    /// The return value must be consistent with that of <tt>getEdgeWithHypothesis(id_from, id_to, maze.isSetWall(p))</tt> where \p p is the position of the wall visited by travelling from \p id_from to \p id_to.
+    ///
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
+    /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::INF INF \endlink if the edge is blocked or either node is invalid.
     virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const = 0;
+    /// \~japanese
+    /// 迷路データに基づいてエッジの存在性とコストを計算します．
+    ///
+    /// \param[in] from, to エッジの両端ノードの座標
+    /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::INF INF \endlink になります．
+    ///
+    /// \~english
+    /// Calculates the existence and cost of the edge according to the maze data.
+    ///
+    /// \param[in] from, to Coordinates at the ends of the edge
+    /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::INF INF \endlink if the edge is blocked or either node is invalid.
     virtual std::pair<bool, TCost> getEdge(Coordinates from, Coordinates to) const
     {
         return getEdge(nodeIdByCoordinates(from), nodeIdByCoordinates(to));
     }
+    /// \~japanese
+    /// 迷路データに基づいてエッジの存在性を返します．
+    ///
+    /// \param[in] id_from, id_to エッジの両端ノードのID
+    /// \returns エッジの存在性を返します．
+    ///
+    /// \~english
+    /// Returns the existence of the edge according to the maze data.
+    ///
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
+    /// \returns the existence of the edge.
     virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const
     {
         std::pair<bool, TCost> e = getEdge(id_from, id_to);
         return e.first;
     }
+    /// \~japanese
+    /// 迷路データに基づいてエッジのコストを返します．
+    ///
+    /// \param[in] id_from, id_to エッジの両端ノードのID
+    /// \returns エッジのコストを返します．
+    ///
+    /// \~english
+    /// Returns the cost of the edge according to the maze data.
+    ///
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
+    /// \returns the cost of the edge.
     virtual TCost edgeCost(TNodeId id_from, TNodeId id_to) const
     {
         std::pair<bool, TCost> e = getEdge(id_from, id_to);
         return e.second;
     }
+
+    /// \~japanese
+    /// 座標から対応するノードのIDを計算します．
+    ///
+    /// \param[in] c 座標
+    /// \returns ノードのIDを返します．
+    ///
+    /// \~english
+    /// Returns the node ID corresponding to the coodinates.
+    ///
+    /// \param[in] c Coordinates
+    /// \returns the node ID.
     virtual TNodeId nodeIdByCoordinates(Coordinates c) const = 0;
+    /// \~japanese
+    /// ノードIDから対応する座標を計算します．
+    ///
+    /// \param[in] id ノードID
+    /// \returns 座標を返します．
+    ///
+    /// \~english
+    /// Returns the coodinates corresponding to the node ID.
+    ///
+    /// \param[in] id Node ID
+    /// \returns the coordinates.
     virtual Coordinates coordByNodeId(TNodeId id) const = 0;
+
+    /// \~japanese
+    /// スタートのノードIDを返します．
+    ///
+    /// \returns スタートのノードIDを返します．
+    ///
+    /// \~english
+    /// Returns the start node ID.
+    ///
+    /// \returns the start node ID.
     virtual TNodeId getStartNodeId() const
     {
         Position p = maze.getStart();
         return nodeIdByCoordinates({ p, NoDirection });
     }
+    /// \~japanese
+    /// ゴールのノードIDを返します．
+    ///
+    /// \returns ゴールのノードIDを返します．
+    ///
+    /// \~english
+    /// Returns the goal node ID.
+    ///
+    /// \returns the goal node ID.
     virtual TNodeId getGoalNodeId() const
     {
         Position p = maze.getGoal();
         return nodeIdByCoordinates({ p, NoDirection });
     }
+
+    /// \~japanese
+    /// \p maze の const 参照を返します．
+    ///
+    /// \returns \p maze の const 参照を返します．
+    ///
+    /// \~english
+    /// Returns the const reference of \p maze.
+    ///
+    /// \returns the const reference of \p maze.
     const Maze<W>& getCMaze() const
     {
         return maze;
     }
-
-    static constexpr TNodeId size = 0;
-    static constexpr TCost INF = std::numeric_limits<TCost>::max();
-    static constexpr TNodeId INVALID_NODE = std::numeric_limits<TNodeId>::max();
-
-protected:
-    const Maze<W>& maze;
 };
 
+/// \~japanese
+/// 迷路の4方向歩数マップによるグラフ表現．
+///
+/// このグラフ表現では区画の中心にノードを置き，区画どうしを結ぶ4方向のエッジを考えます．
+///
+/// \tparam TCost コストの型
+/// \tparam TNodeId ノードIDの型
+/// \tparam W 迷路の幅
+///
+/// \~english
+/// A 4-way step map graph representation of the maze.
+///
+/// This representation considers nodes at the center of cells and 4 edges from each node towards the adjacent cells.
+///
+/// \tparam TCost Type of the cost
+/// \tparam TNodeId Type of the node ID
+/// \tparam W Maze width
 template <typename TCost = uint8_t, typename TNodeId = uint16_t, uint8_t W = 32>
 class FourWayStepMapGraph : public MazeGraph<TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<TCost, TNodeId, W>;
+    using Base::getEdge;
+
+    /// \~japanese グラフのサイズ
+    /// \~english Cardinality of the graph
+    static constexpr TNodeId size = W * W;
 
     FourWayStepMapGraph(const Maze<W>& maze)
         : Base(maze)
     {
-    }
-    constexpr TNodeId maxNodeCount(uint8_t wh)
-    {
-        return wh * wh;
     }
     TCost distance(TNodeId id_from, TNodeId id_to) const
     {
@@ -185,13 +370,34 @@ public:
         uint8_t y = uint8_t(id / W);
         return { { uint8_t(x * 2), uint8_t(y * 2) }, { 0 } };
     }
-    static constexpr TNodeId size = W * W;
 };
 
+/// \~japanese
+/// 迷路の壁ノード6方向グラフ表現．
+///
+/// このグラフ表現では壁の座標にノードを置き，隣接する壁どうしをつなぐ6方向のエッジを考えます．
+///
+/// \tparam TCost コストの型
+/// \tparam TNodeId ノードIDの型
+/// \tparam W 迷路の幅
+///
+/// \~english
+/// A 6-way wall node graph representation of the maze.
+///
+/// This representation considers nodes at wall coordinates and 6 edges from each node towards adjacent walls.
+///
+/// \tparam TCost Type of the cost
+/// \tparam TNodeId Type of the node ID
+/// \tparam W Maze width
 template <typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
 class SixWayWallNodeGraph : public MazeGraph<TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<TCost, TNodeId, W>;
+    using Base::getEdge;
+
+    /// \~japanese グラフのサイズ
+    /// \~english Cardinality of the graph
+    static constexpr TNodeId size = 2 * W * (W - 1);
 
     SixWayWallNodeGraph(const Maze<W>& maze)
         : Base(maze)
@@ -316,7 +522,6 @@ public:
         }
         return nodeIdByCoordinates({ p, North });
     }
-    static constexpr TNodeId size = 2 * W * (W - 1);
 };
 
 }

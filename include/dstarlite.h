@@ -10,6 +10,22 @@
 
 namespace Amaze {
 
+/// \~japanese
+/// D* Liteソルバ
+///
+/// 実装は論文(http://idm-lab.org/bib/abstracts/papers/aaai02b.pdf)をもとにしています．
+///
+/// \tparam TMazeGraph MazeGraphを実装した型
+///
+/// \~english
+/// D* Lite solver
+///
+/// Implementation is based on the paper (http://idm-lab.org/bib/abstracts/papers/aaai02b.pdf).
+///
+/// \tparam TMazeGraph Class implements MazeGraph
+///
+/// \~
+/// Sven Koenig and Maxim Likhachev, "D* Lite", 2002.
 template <typename TMazeGraph>
 class DStarLite : public Solver<TMazeGraph> {
 public:
@@ -17,8 +33,41 @@ public:
     using NodeId = typename TMazeGraph::NodeId;
     using Cost = typename TMazeGraph::Cost;
     using HeapKey = std::pair<Cost, Cost>;
+
+private:
+    Cost key_modifier;
+
+    /// \~japanese 現在のスタートノードのID
+    /// \~english Current start node ID
+    NodeId id_start;
+    /// \~japanese ゴールノードのID
+    /// \~english Goal node ID
+    NodeId id_goal;
+    /// \~japanese 一手前のノードのID
+    /// \~english Last node ID
+    NodeId id_last;
+
+    /// g value
+    std::array<Cost, TMazeGraph::size> g;
+    /// rhs value
+    std::array<Cost, TMazeGraph::size> rhs;
+
+    /// Open list
+    std::vector<std::pair<HeapKey, NodeId>> open_list;
+    /// \~japanese Open listにノードが入っているかどうかのフラグ
+    /// \~english Flags whether nodes are in the open list
+    std::bitset<TMazeGraph::size> in_open_list;
+
+public:
+    /// \~japanese 無限コストとみなす値
+    /// \~english Cost value assumed to be infinity
     static constexpr Cost INF = TMazeGraph::INF;
 
+    /// \~japanese
+    /// ヒープ内のキー値のコンパレータ構造体．
+    ///
+    /// \~english
+    /// Comparator structure for the key value of the heap.
     struct KeyCompare {
         bool operator()(const std::pair<HeapKey, NodeId>& a, const std::pair<HeapKey, NodeId>& b) const
         {
@@ -40,6 +89,17 @@ public:
         g.fill(INF);
         rhs.fill(INF);
     }
+    /// \~japanese
+    /// ヒープ内の要素を更新します．
+    /// 
+    /// \param[in] id ノードID
+    /// \param[in] k 新しいキー値
+    ///
+    /// \~english
+    /// Updates an element in the heap.
+    /// 
+    /// \param[in] id Node ID
+    /// \param[in] k New key value
     void updateHeap(NodeId id, HeapKey k)
     {
         if (id > TMazeGraph::size) {
@@ -52,7 +112,20 @@ public:
             }
         }
     }
-    void updateVertex(NodeId id)
+    /// \~japanese
+    /// ノードに関するデータを更新します．
+    ///
+    /// \p g の値が \p rhs の値と異なる場合は変更/追加を行い，等しい場合にはヒープから削除します．
+    ///
+    /// \param[in] id ノードID
+    ///
+    /// \~english
+    /// Updates node data.
+    ///
+    /// If the value of \p g is different from \p rhs, then the element is updated or inserted. If they are equal, the element is erased from the heap.
+    ///
+    /// \param[in] id Node ID
+    void updateNode(NodeId id)
     {
         if (id > TMazeGraph::size) {
             return;
@@ -69,6 +142,12 @@ public:
             in_open_list.reset(id);
         }
     }
+
+    /// \~japanese
+    /// 現在のスタートからゴールまでの最短経路を計算します．
+    ///
+    /// \~english
+    /// Computes the shortest path from the current start node to the goal.
     void computeShortestPath()
     {
         NodeId examined_nodes = 0;
@@ -98,7 +177,7 @@ public:
                     if (rhs[sid] != 0) {
                         rhs[sid] = std::min(rhs[sid], satSum(Base::mg.edgeCost(uid, sid), g[uid]));
                     }
-                    updateVertex(sid);
+                    updateNode(sid);
                 }
             } else {
                 Cost gold = g[uid];
@@ -115,7 +194,7 @@ public:
                             rhs[sid] = mincost;
                         }
                     }
-                    updateVertex(sid);
+                    updateNode(sid);
                 };
                 std::vector<NodeId> v;
                 Base::mg.neighbors(uid, v);
@@ -130,6 +209,15 @@ public:
         //std::cout << "The number of examined nodes in this round: " << examined_nodes << std::endl;
         //std::cout << "Maximum size of the open list: " << max_heap_size << std::endl;
     }
+    /// \~japanese
+    /// ヒープに用いるキー値を計算します．
+    /// 
+    /// \param[in] id ノードID
+    ///
+    /// \~english
+    /// Calculates key value for the heap.
+    /// 
+    /// \param[in] id Node ID
     HeapKey calculateKey(NodeId id) const
     {
         if (id > TMazeGraph::size) {
@@ -222,7 +310,7 @@ public:
                             rhs[uid] = mincost;
                         }
                     }
-                    updateVertex(uid);
+                    updateNode(uid);
                     if (cold > INF) {
                         // TODO: probably unnecessary
                         if (rhs[vid] != 0) {
@@ -239,7 +327,7 @@ public:
                             rhs[vid] = mincost;
                         }
                     }
-                    updateVertex(vid);
+                    updateNode(vid);
                 }
                 make_heap(open_list.begin(), open_list.end(), KeyCompare());
                 computeShortestPath();
@@ -267,19 +355,6 @@ public:
         in_open_list.set(id_goal);
         computeShortestPath();
     }
-
-private:
-    Cost key_modifier;
-
-    NodeId id_start;
-    NodeId id_goal;
-    NodeId id_last;
-
-    std::array<Cost, TMazeGraph::size> g;
-    std::array<Cost, TMazeGraph::size> rhs;
-
-    std::vector<std::pair<HeapKey, NodeId>> open_list;
-    std::bitset<TMazeGraph::size> in_open_list;
 };
 
 }

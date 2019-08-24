@@ -6,30 +6,67 @@
 
 namespace Amaze {
 
-union __attribute__((__packed__)) Direction {
+/// \~japanese
+/// 方向を表す型．
+///
+/// \~english
+/// Direction.
+union Direction {
     uint8_t half : 4;
-    struct __attribute__((__packed__)) {
+    struct {
         unsigned NORTH : 1;
         unsigned EAST : 1;
         unsigned SOUTH : 1;
         unsigned WEST : 1;
-    } bits;
+    } __attribute__((__packed__)) bits;
     bool operator==(const Direction& other) const
     {
         return this->half == other.half;
     }
-};
+} __attribute__((__packed__));
 
-struct __attribute__((__packed__)) Difference {
+/// \~japanese
+/// 迷路内の位置の差分を表す型．
+///
+/// \~english
+/// Position difference in the maze.
+struct Difference {
     int8_t x;
     int8_t y;
     bool operator==(const Difference& other) const
     {
         return this->x == other.x && this->y == other.y;
     }
-};
+} __attribute__((__packed__));
 
-struct __attribute__((__packed__)) Position {
+/// \~japanese
+/// 迷路内の位置座標を表す型．
+/// 以下の図のように定義された座標系を用いる．
+/// \warning 区画数を基準とした座標ではないことに注意する．
+///
+/// \~english
+/// Position coordinates in the maze.
+/// The coordinate system is defined as in the following figure.
+/// \warning The coordinate system is not based on the cell count.
+///
+/// \~
+/// <pre>
+/// |             |             |             |
+/// +----(0,3)----+----(2,3)----+----(4,3)----+--
+/// |             |             |             |
+/// |             |             |             |
+/// |    (0,2)  (1,2)  (2,2)  (3,2)  (4,2)  (5,2)
+/// |             |             |             |
+/// |             |             |             |
+/// +----(0,1)----+----(2,1)----+----(4,1)----+--
+/// |             |             |             |
+/// |             |             |             |
+/// |    (0,0)  (1,0)  (2,0)  (3,0)  (4,0)  (5,0)
+/// |             |             |             |
+/// |             |             |             |
+/// +-------------+-------------+-------------+--
+/// </pre>
+struct Position {
     uint8_t x;
     uint8_t y;
     bool operator==(const Position& other) const
@@ -44,16 +81,21 @@ struct __attribute__((__packed__)) Position {
     {
         return { uint8_t(this->x + diff.x), uint8_t(this->y + diff.y) };
     }
-};
+} __attribute__((__packed__));
 
-struct __attribute__((__packed__)) Coordinates {
+/// \~japanese
+/// 迷路内の位置と方向を合わせた座標を表す型．
+///
+/// \~english
+/// Position and direction coordinates in the maze.
+struct Coordinates {
     Position pos;
     Direction dir;
     bool operator==(const Coordinates& other) const
     {
         return this->pos == other.pos && this->dir == other.dir;
     }
-};
+} __attribute__((__packed__));
 
 static constexpr Direction NoDirection = { 0x0 };
 static constexpr Direction Front = { 0x1 };
@@ -65,6 +107,17 @@ static constexpr Direction East = { 0x2 };
 static constexpr Direction South = { 0x4 };
 static constexpr Direction West = { 0x8 };
 
+/// \~japanese
+/// 型\p Tの最大値で飽和する和を返します．
+/// \tparam T 数値型
+/// \param a, b 和を取る数
+/// \returns \p a + \p b もしくは \p std::numeric_limits<T>::max()
+///
+/// \~english
+/// Returns sum saturated at the maximum value of the type \p T.
+/// \tparam T Numeric type
+/// \param a, b Numbers to be added
+/// \returns \p a + \p b or \p std::numeric_limits<T>::max()
 template <typename T>
 T satSum(T a, T b)
 {
