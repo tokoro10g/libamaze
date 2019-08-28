@@ -220,6 +220,31 @@ public:
     /// \param[in] id Node ID
     /// \returns the coordinates.
     virtual Coordinates coordByNodeId(TNodeId id) const = 0;
+    /// \~japanese
+    /// \p id_from から \p id_to へのエッジから，終点に対応する位置・姿勢座標を計算します．
+    ///
+    /// \param[in] id_from, id_to ノードID
+    /// \returns 座標を返します．
+    ///
+    /// \~english
+    /// Calculates the coodinates (position and direction) corresponding to the terminal node of the edge from \p id_from to \p id_to.
+    ///
+    /// \param[in] id_from, id_to Node ID
+    /// \returns the coordinates.
+    virtual Coordinates coordByEdge(TNodeId id_from, TNodeId id_to) const = 0;
+
+    /// \~japanese
+    /// 与えられたノードIDの順列が引き返しを行う動作かどうかを判別します．
+    ///
+    /// \param[in] seq ノードIDの配列
+    /// \returns 引き返しを行う場合 \p true を返します．
+    ///
+    /// \~english
+    /// Determines whether the sequence represents pull-back action.
+    ///
+    /// \param[in] seq Sequence of node IDs
+    /// \returns \p true if the sequence represents pull-back.
+    virtual bool isPullBackSequence(std::array<TNodeId, 3> seq) const = 0;
 
     /// \~japanese
     /// スタートのノードIDを返します．
@@ -394,6 +419,37 @@ public:
         uint8_t y = uint8_t(id / W);
         return { { uint8_t(x * 2), uint8_t(y * 2) }, { 0 } };
     }
+    Coordinates coordByEdge(TNodeId id_from, TNodeId id_to) const
+    {
+        if (!Base::edgeExist(id_from, id_to)) {
+            return kInvalidCoordinates;
+        }
+        Coordinates ret = coordByNodeId(id_to);
+        int diff = (int)id_to - id_from;
+        switch (diff) {
+        case W:
+            ret.dir = kNorth;
+            break;
+        case -W:
+            ret.dir = kSouth;
+            break;
+        case 1:
+            ret.dir = kEast;
+            break;
+        case -1:
+            ret.dir = kWest;
+            break;
+        default:
+            // TODO: handle error
+            break;
+        }
+        return ret;
+    }
+
+    bool isPullBackSequence(std::array<TNodeId, 3> seq) const
+    {
+        return (seq[0] == seq[2] && Base::edgeExist(seq[0], seq[1]));
+    }
 };
 
 /// \~japanese
@@ -529,6 +585,52 @@ public:
         c.dir = kNoDirection;
         return c;
     }
+    Coordinates coordByEdge(TNodeId id_from, TNodeId id_to) const
+    {
+        if (!Base::edgeExist(id_from, id_to)) {
+            return kInvalidCoordinates;
+        }
+        Coordinates c1, c2;
+        c1 = coordByNodeId(id_from);
+        c2 = coordByNodeId(id_to);
+        Coordinates ret = c2;
+        Difference d = c2.pos - c1.pos;
+        if (d.x == 0 && abs(d.y) == 2) {
+            if (d.y < 0) {
+                ret.dir = kSouth;
+            } else {
+                ret.dir = kNorth;
+            }
+        } else if (d.y == 0 && abs(d.x) == 2) {
+            if (d.x < 0) {
+                ret.dir = kWest;
+            } else {
+                ret.dir = kEast;
+            }
+        } else if (c1.pos.y % 2 == 0 /* from east node */ && abs(d.x) == 1 && abs(d.y) == 1) {
+            if (d.y < 0) {
+                ret.dir = kSouth;
+            } else {
+                ret.dir = kNorth;
+            }
+        } else if (c1.pos.x % 2 == 0 /* from north node */ && abs(d.x) == 1 && abs(d.y) == 1) {
+            if (d.x < 0) {
+                ret.dir = kWest;
+            } else {
+                ret.dir = kEast;
+            }
+        }
+        return ret;
+    }
+
+    bool isPullBackSequence(std::array<TNodeId, 3> seq) const
+    {
+        if (!Base::edgeExist(seq[0], seq[1]) || !Base::edgeExist(seq[1], seq[2])) {
+            return false;
+        }
+        return (seq[0] == seq[2] || Base::edgeExist(seq[0], seq[2]));
+    }
+
     TNodeId getStartNodeId() const
     {
         Position p = Base::maze.getStart();
