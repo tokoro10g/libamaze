@@ -141,16 +141,16 @@ namespace Utility {
 
 std::ostream& operator<<(std::ostream& os, Direction d)
 {
-    if (d.bits.NORTH) {
+    if (d.bits.north) {
         os << 'N';
     }
-    if (d.bits.EAST) {
+    if (d.bits.east) {
         os << 'E';
     }
-    if (d.bits.WEST) {
+    if (d.bits.west) {
         os << 'W';
     }
-    if (d.bits.SOUTH) {
+    if (d.bits.south) {
         os << 'S';
     }
     if (d.half == 0) {

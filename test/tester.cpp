@@ -25,7 +25,7 @@ void senseFourWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, s
         if (reference_maze.isSetWall(p)) {
             maze.setWall(p, true);
             Position pto = { uint8_t(p.x + dx[i]), uint8_t(p.y + dy[i]) };
-            changed_coordinates.push_back({ pto, NoDirection });
+            changed_coordinates.push_back({ pto, kNoDirection });
         } else {
             maze.setWall(p, false);
         }
@@ -53,7 +53,7 @@ void senseSixWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, st
         maze.setCheckedWall(p, true);
         if (reference_maze.isSetWall(p)) {
             maze.setWall(p, true);
-            changed_coordinates.push_back({ p, NoDirection });
+            changed_coordinates.push_back({ p, kNoDirection });
         } else {
             maze.setWall(p, false);
         }
@@ -112,29 +112,29 @@ int main()
 
     FourWayStepMapGraph mg1(reference_maze);
     auto solver1 = DStarLite(mg1);
-    auto e11 = mg1.getEdge({ { 0, 2 }, NoDirection }, { { 0, 2 }, NoDirection });
-    auto e12 = mg1.getEdge({ { 0, 0 }, NoDirection }, { { 0, 2 }, NoDirection });
-    auto e13 = mg1.getEdge({ { 0, 0 }, NoDirection }, { { 2, 0 }, NoDirection });
+    auto e11 = mg1.getEdge({ { 0, 2 }, kNoDirection }, { { 0, 2 }, kNoDirection });
+    auto e12 = mg1.getEdge({ { 0, 0 }, kNoDirection }, { { 0, 2 }, kNoDirection });
+    auto e13 = mg1.getEdge({ { 0, 0 }, kNoDirection }, { { 2, 0 }, kNoDirection });
     std::cout << (e11.first ? "true" : "false") << " " << (int)e11.second << std::endl;
     std::cout << (e12.first ? "true" : "false") << " " << (int)e12.second << std::endl;
     std::cout << (e13.first ? "true" : "false") << " " << (int)e13.second << std::endl;
     std::cout << std::endl;
-    std::cout << mg1.size << std::endl;
+    std::cout << mg1.kSize << std::endl;
     std::cout << std::endl;
 
-    FourWayStepMapGraph<uint16_t> mg2(reference_maze);
-    auto e21 = mg2.getEdge({ { 0, 2 }, NoDirection }, { { 0, 2 }, NoDirection });
-    auto e22 = mg2.getEdge({ { 0, 0 }, NoDirection }, { { 0, 2 }, NoDirection });
-    auto e23 = mg2.getEdge({ { 0, 0 }, NoDirection }, { { 2, 0 }, NoDirection });
+    FourWayStepMapGraph<true, uint16_t> mg2(reference_maze);
+    auto e21 = mg2.getEdge({ { 0, 2 }, kNoDirection }, { { 0, 2 }, kNoDirection });
+    auto e22 = mg2.getEdge({ { 0, 0 }, kNoDirection }, { { 0, 2 }, kNoDirection });
+    auto e23 = mg2.getEdge({ { 0, 0 }, kNoDirection }, { { 2, 0 }, kNoDirection });
     std::cout << (e21.first ? "true" : "false") << " " << (int)e21.second << std::endl;
     std::cout << (e22.first ? "true" : "false") << " " << (int)e22.second << std::endl;
     std::cout << (e23.first ? "true" : "false") << " " << (int)e23.second << std::endl;
     std::cout << std::endl;
 
-    FourWayStepMapGraph<float> mg3(reference_maze);
-    auto e31 = mg3.getEdge({ { 0, 2 }, NoDirection }, { { 0, 2 }, NoDirection });
-    auto e32 = mg3.getEdge({ { 0, 0 }, NoDirection }, { { 0, 2 }, NoDirection });
-    auto e33 = mg3.getEdge({ { 0, 0 }, NoDirection }, { { 2, 0 }, NoDirection });
+    FourWayStepMapGraph<true, float> mg3(reference_maze);
+    auto e31 = mg3.getEdge({ { 0, 2 }, kNoDirection }, { { 0, 2 }, kNoDirection });
+    auto e32 = mg3.getEdge({ { 0, 0 }, kNoDirection }, { { 0, 2 }, kNoDirection });
+    auto e33 = mg3.getEdge({ { 0, 0 }, kNoDirection }, { { 2, 0 }, kNoDirection });
     std::cout << (e31.first ? "true" : "false") << " " << e31.second << std::endl;
     std::cout << (e32.first ? "true" : "false") << " " << e32.second << std::endl;
     std::cout << (e33.first ? "true" : "false") << " " << e33.second << std::endl;
@@ -142,14 +142,14 @@ int main()
 
     SixWayWallNodeGraph mg4(reference_maze);
     auto solver4 = DStarLite(mg4);
-    auto e41 = mg4.getEdge({ { 0, 3 }, South }, { { 1, 2 }, East });
-    auto e42 = mg4.getEdge({ { 0, 3 }, North }, { { 0, 5 }, North });
-    auto e43 = mg4.getEdge({ { 1, 2 }, East }, { { 2, 3 }, North });
+    auto e41 = mg4.getEdge({ { 0, 3 }, kSouth }, { { 1, 2 }, kEast });
+    auto e42 = mg4.getEdge({ { 0, 3 }, kNorth }, { { 0, 5 }, kNorth });
+    auto e43 = mg4.getEdge({ { 1, 2 }, kEast }, { { 2, 3 }, kNorth });
     std::cout << (e41.first ? "true" : "false") << " " << (int)e41.second << std::endl;
     std::cout << (e42.first ? "true" : "false") << " " << (int)e42.second << std::endl;
     std::cout << (e43.first ? "true" : "false") << " " << (int)e43.second << std::endl;
     std::cout << std::endl;
-    std::cout << mg4.size << std::endl;
+    std::cout << mg4.kSize << std::endl;
     std::cout << std::endl;
 
     //////////////////////////////////////////////////////////////////////////////////////////////

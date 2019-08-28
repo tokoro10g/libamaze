@@ -14,10 +14,10 @@ namespace Amaze {
 union Direction {
     uint8_t half : 4;
     struct {
-        unsigned NORTH : 1;
-        unsigned EAST : 1;
-        unsigned SOUTH : 1;
-        unsigned WEST : 1;
+        unsigned north : 1;
+        unsigned east : 1;
+        unsigned south : 1;
+        unsigned west : 1;
     } __attribute__((__packed__)) bits;
     bool operator==(const Direction& other) const
     {
@@ -97,15 +97,17 @@ struct Coordinates {
     }
 } __attribute__((__packed__));
 
-static constexpr Direction NoDirection = { 0x0 };
-static constexpr Direction Front = { 0x1 };
-static constexpr Direction Right = { 0x2 };
-static constexpr Direction Back = { 0x4 };
-static constexpr Direction Left = { 0x8 };
-static constexpr Direction North = { 0x1 };
-static constexpr Direction East = { 0x2 };
-static constexpr Direction South = { 0x4 };
-static constexpr Direction West = { 0x8 };
+static constexpr Direction kNoDirection = { 0x0 };
+static constexpr Direction kFront = { 0x1 };
+static constexpr Direction kRight = { 0x2 };
+static constexpr Direction kBack = { 0x4 };
+static constexpr Direction kLeft = { 0x8 };
+static constexpr Direction kNorth = { 0x1 };
+static constexpr Direction kEast = { 0x2 };
+static constexpr Direction kSouth = { 0x4 };
+static constexpr Direction kWest = { 0x8 };
+
+static constexpr Coordinates kInvalidCoordinates = { { uint8_t(-1), uint8_t(-1) }, { 0 } };
 
 /// \~japanese
 /// 型\p Tの最大値で飽和する和を返します．

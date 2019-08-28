@@ -18,8 +18,8 @@ TEST(fourwaygraph, unit)
     ASSERT_TRUE(loadMazeFromStream(maze, iss));
     FourWayStepMapGraph mg(maze);
     uint16_t id_from, id_to;
-    EXPECT_EQ(0, id_from = mg.nodeIdByCoordinates({ { 0, 0 }, NoDirection }));
-    EXPECT_EQ(16, id_to = mg.nodeIdByCoordinates({ { 0, 2 }, NoDirection }));
+    EXPECT_EQ(0, id_from = mg.nodeIdByCoordinates({ { 0, 0 }, kNoDirection }));
+    EXPECT_EQ(16, id_to = mg.nodeIdByCoordinates({ { 0, 2 }, kNoDirection }));
     EXPECT_EQ(1, mg.distance(id_from, id_to));
     EXPECT_EQ(1, mg.distance(id_from + 1, id_to));
 

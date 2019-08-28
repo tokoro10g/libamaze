@@ -21,11 +21,15 @@ protected:
     const TMazeGraph& mg;
 
 public:
+    using NodeId = typename TMazeGraph::NodeId;
+    using Cost = typename TMazeGraph::Cost;
+
     Solver(const TMazeGraph& mg)
         : mg(mg)
     {
     }
     virtual ~Solver() {}
+
     /// \~japanese
     /// 次に訪れるノードの座標を返します．
     /// \returns 次の座標
@@ -55,7 +59,7 @@ public:
     /// \~english
     /// Returns the ID of the node the solver is going to visit next.
     /// \returns next ID.
-    virtual typename TMazeGraph::NodeId getNextNodeId() const = 0;
+    virtual NodeId getNextNodeId() const = 0;
     /// \~japanese
     /// 現在のノードのIDを返します．
     /// \returns 現在のID
@@ -63,7 +67,32 @@ public:
     /// \~english
     /// Returns the ID of the current node.
     /// \returns current ID.
-    virtual typename TMazeGraph::NodeId getCurrentNodeId() const = 0;
+    virtual NodeId getCurrentNodeId() const = 0;
+
+    /// \~japanese
+    /// 現在のグラフの情報から最短経路を構成します．
+    /// \param[in] id_from, id_to 経路の始点と終点
+    /// \param[out] path 経路を格納する \p std::vector
+    /// \returns 成功した場合 \p true を返します．
+    ///
+    /// \~english
+    /// Reconstructs the shortest path based on the current graph data.
+    /// \param[in] id_from, id_to Start and end of the path
+    /// \param[out] path \p std::vector to return the path
+    /// \returns \p true if success
+    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<Coordinates>& path) const = 0;
+    /// \~japanese
+    /// 現在のグラフの情報から最短経路を構成します．
+    /// \param[in] id_from, id_to 経路の始点と終点
+    /// \param[out] path 経路を格納する \p std::vector
+    /// \returns 成功した場合 \p true を返します．
+    ///
+    /// \~english
+    /// Reconstructs the shortest path based on the current graph data.
+    /// \param[in] id_from, id_to Start and end of the path
+    /// \param[out] path \p std::vector to return the path
+    /// \returns \p true if success
+    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<NodeId>& path) const = 0;
 
     /// \~japanese
     /// 壁センシング前の処理を行います．
