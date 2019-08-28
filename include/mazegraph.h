@@ -13,6 +13,7 @@ namespace Amaze {
 /// \~japanese
 /// 迷路のグラフ表現を扱う抽象クラス．
 ///
+/// \tparam kExplore 探索用のグラフのとき \p true
 /// \tparam TCost コストの型
 /// \tparam TNodeId ノードIDの型
 /// \tparam W 迷路の幅
@@ -20,10 +21,11 @@ namespace Amaze {
 /// \~english
 /// An abstract class for the graph representation of the maze.
 ///
+/// \tparam kExplore \p true if explore mode
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <typename TCost = uint8_t, typename TNodeId = uint16_t, uint8_t W = 32>
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
 class MazeGraph {
 protected:
     /// \~japanese 迷路データ
@@ -280,10 +282,10 @@ public:
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <typename TCost = uint8_t, typename TNodeId = uint16_t, uint8_t W = 32>
-class FourWayStepMapGraph : public MazeGraph<TCost, TNodeId, W> {
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
+class FourWayStepMapGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
-    using Base = MazeGraph<TCost, TNodeId, W>;
+    using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
     using Base::getEdge;
 
     /// \~japanese グラフのサイズ
@@ -367,6 +369,9 @@ public:
             // TODO: handle error
             break;
         }
+        if (!kExplore && !Base::maze.isCheckedWall(p)) {
+            return { false, Base::kInf };
+        }
         return getEdgeWithHypothesis(id_from, id_to, Base::maze.isSetWall(p));
     }
     TNodeId nodeIdByCoordinates(Coordinates c) const
@@ -408,10 +413,10 @@ public:
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
-class SixWayWallNodeGraph : public MazeGraph<TCost, TNodeId, W> {
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
+class SixWayWallNodeGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
-    using Base = MazeGraph<TCost, TNodeId, W>;
+    using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
     using Base::getEdge;
 
     /// \~japanese グラフのサイズ
