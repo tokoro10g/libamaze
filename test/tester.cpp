@@ -171,6 +171,13 @@ int main()
     }
     std::cout << id_goal << std::endl;
 
+    std::vector<decltype(id_goal)> path1;
+    solver1.reconstructPath(mg1.getStartNodeId(), mg1.getGoalNodeId(), path1);
+    for (auto p : path1) {
+        std::cout << p << ", ";
+    }
+    std::cout << std::endl;
+
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     std::cout << std::endl;
@@ -212,17 +219,21 @@ int main()
     std::cout << "The goal is " << id_goal5 << std::endl;
     std::cout << std::endl;
 
-    //for(int i=0;i<80;i++){
+    uint16_t id_last = solver5.getCurrentNodeId();
+    //for(int i=0;i<160;i++){
     while (solver5.getCurrentNodeId() != id_goal5) {
         //Utility::printMaze(maze);
         uint16_t id = solver5.getCurrentNodeId();
+        if (id == id_last) {
+            std::cout << mg5.coordByNodeId(id) << std::endl;
+        } else {
+            std::cout << mg5.coordByEdge(id_last, id) << std::endl;
+        }
         //CellData cd = maze.getCell(id);
         //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
-        std::cout << mg5.coordByNodeId(id) << std::endl;
         std::vector<Coordinates> changed_coordinates;
 
         solver5.preSense();
-        id = solver5.getCurrentNodeId();
         senseFourWay(maze, reference_maze, mg5.coordByNodeId(id), changed_coordinates);
         //std::cout << "After sense: " << std::endl;
         //cd = maze.getCell(id);
@@ -233,8 +244,31 @@ int main()
         //}
         //std::cout << std::endl;
         solver5.postSense(changed_coordinates);
+        id_last = id;
     }
+    std::vector<Coordinates> changed_coordinates;
+    senseFourWay(maze, reference_maze, mg5.coordByNodeId(id_goal5), changed_coordinates);
     std::cout << id_goal5 << std::endl;
+
+    FourWayStepMapGraph<false> mg5_fast_run(maze);
+    auto solver5_fast_run = DStarLite(mg5_fast_run);
+    solver5_fast_run.initialize();
+
+    Utility::printMaze(maze);
+    std::vector<decltype(id_goal5)> path5;
+    solver5_fast_run.reconstructPath(mg5_fast_run.getStartNodeId(), mg5_fast_run.getGoalNodeId(), path5);
+    for (auto p : path5) {
+        std::cout << p << ", ";
+    }
+    std::cout << std::endl;
+
+    //for(int i=0;i<10;i++){
+    //while (solver5_fast_run.getCurrentNodeId() != id_goal5) {
+    //    std::cout << mg5_fast_run.coordByNodeId(solver5_fast_run.getCurrentNodeId()) << ": " << (int)solver5_fast_run.getCurrentNodeId() << std::endl;
+    //    solver5_fast_run.preSense();
+    //    solver5_fast_run.postSense(std::vector<Coordinates>());
+    //}
+    //std::cout << id_goal << std::endl;
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -259,17 +293,21 @@ int main()
     std::vector<Coordinates> temp1;
     senseSixWay(maze, reference_maze, mg6.coordByNodeId(mg6.getStartNodeId()), temp1);
 
+    id_last = solver6.getCurrentNodeId();
     //for(int i=0;i<80;i++){
     while (solver6.getCurrentNodeId() != id_goal6) {
         //Utility::printMaze(maze);
         uint16_t id = solver6.getCurrentNodeId();
+        if (id == id_last) {
+            std::cout << mg6.coordByNodeId(id) << std::endl;
+        } else {
+            std::cout << mg6.coordByEdge(id_last, id) << std::endl;
+        }
         //CellData cd = maze.getCell(id);
         //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
-        std::cout << mg6.coordByNodeId(id) << std::endl;
         std::vector<Coordinates> changed_coordinates;
 
         solver6.preSense();
-        id = solver6.getCurrentNodeId();
         senseSixWay(maze, reference_maze, mg6.coordByNodeId(id), changed_coordinates);
         //std::cout << "After sense: " << std::endl;
         //cd = maze.getCell(id);
@@ -280,6 +318,7 @@ int main()
         //}
         //std::cout << std::endl;
         solver6.postSense(changed_coordinates);
+        id_last = id;
     }
     std::cout << id_goal6 << std::endl;
     return 0;
