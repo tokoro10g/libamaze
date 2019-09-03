@@ -84,16 +84,17 @@ struct Position {
 } __attribute__((__packed__));
 
 /// \~japanese
-/// 迷路内の位置と方向を合わせた座標を表す型．
+/// 迷路内の位置と方向，フラグを含むエージェントの状態を表す型．
 ///
 /// \~english
-/// Position and direction coordinates in the maze.
-struct Coordinates {
+/// State of the agent including position, direction, and flags in the maze.
+struct AgentState {
     Position pos;
     Direction dir;
-    bool operator==(const Coordinates& other) const
+    uint8_t attribute;
+    bool operator==(const AgentState& other) const
     {
-        return this->pos == other.pos && this->dir == other.dir;
+        return this->pos == other.pos && this->dir == other.dir && this->attribute == other.attribute;
     }
 } __attribute__((__packed__));
 
@@ -107,7 +108,7 @@ static constexpr Direction kEast = { 0x2 };
 static constexpr Direction kSouth = { 0x4 };
 static constexpr Direction kWest = { 0x8 };
 
-static constexpr Coordinates kInvalidCoordinates = { { uint8_t(-1), uint8_t(-1) }, { 0 } };
+static constexpr AgentState kInvalidAgentState = { { uint8_t(-1), uint8_t(-1) }, kNoDirection, 0 };
 
 /// \~japanese
 /// 型\p Tの最大値で飽和する和を返します．

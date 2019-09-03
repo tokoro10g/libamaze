@@ -26,24 +26,24 @@ private:
     /// \~japanese 壁チェックデータ
     /// \~english Checked wall data
     MazeData check_data;
-    /// \~japanese スタート座標
-    /// \~english Start coordinates
+    /// \~japanese スタート位置
+    /// \~english Start position
     Position start;
-    /// \~japanese ゴール座標
-    /// \~english Goal coordinates
+    /// \~japanese ゴール位置
+    /// \~english Goal position
     Position goal;
 
     /// \~japanese
     /// 迷路データを操作する内部関数．
     ///
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     /// \param[in] is_checked 壁チェックデータを操作するとき \p true
     /// \param[in] val 変更後の値
     ///
     /// \~english
     /// Internal function which manipulates maze data.
     ///
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     /// \param[in] is_checked \p true if modifying wall check data
     /// \param[in] val New value
     void setInternal(Position p, bool is_checked, bool val)
@@ -65,13 +65,13 @@ private:
     /// \~japanese
     /// 迷路データを得る内部関数．
     ///
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     /// \param[in] is_checked 壁チェックデータを得るとき \p true
     ///
     /// \~english
     /// Internal function which queries maze data.
     ///
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     /// \param[in] is_checked \p true if querying wall check data
     bool isSetInternal(Position p, bool is_checked) const
     {
@@ -100,11 +100,11 @@ public:
 
     /// \~japanese
     /// 迷路データをリセットします．
-    /// スタート・ゴール座標の情報はリセットしません．
+    /// スタート・ゴール位置の情報はリセットしません．
     ///
     /// \~english
     /// Resets maze data.
-    /// Does not reset start and goal coordinates.
+    /// Does not reset start and goal positions.
     void resetData()
     {
         maze_data.reset();
@@ -112,10 +112,10 @@ public:
     }
 
     /// \~japanese
-    /// スタート・ゴール座標を含む迷路データをリセットします．
+    /// スタート・ゴール位置を含む迷路データをリセットします．
     ///
     /// \~english
-    /// Resets maze data including start and goal coordinates.
+    /// Resets maze data including start and goal positions.
     void resetAll()
     {
         resetData();
@@ -133,76 +133,76 @@ public:
     uint8_t getWidth() const { return W; }
 
     /// \~japanese
-    /// スタート座標を返します．
-    /// \returns 座標
+    /// スタート位置を返します．
+    /// \returns 位置
     ///
     /// \~english
-    /// Returns start coordinates.
-    /// \returns coordinates.
+    /// Returns start position.
+    /// \returns position.
     Position getStart() const { return start; }
     /// \~japanese
-    /// スタート座標を設定します．
-    /// \param[in] p 座標
+    /// スタート位置を設定します．
+    /// \param[in] p 位置
     ///
     /// \~english
-    /// Sets start coordinates.
-    /// \param[in] p Coordinates
+    /// Sets start position.
+    /// \param[in] p Position
     void setStart(Position p) { start = p; }
     /// \~japanese
-    /// ゴール座標を返します．
-    /// \returns 座標
+    /// ゴール位置を返します．
+    /// \returns 位置
     ///
     /// \~english
-    /// Returns goal coordinates.
-    /// \returns coordinates.
+    /// Returns goal position.
+    /// \returns position.
     Position getGoal() const { return goal; }
     /// \~japanese
-    /// ゴール座標を設定します．
-    /// \param[in] p 座標
+    /// ゴール位置を設定します．
+    /// \param[in] p 位置
     ///
     /// \~english
-    /// Sets goal coordinates.
-    /// \param[in] p Coordinates
+    /// Sets goal position.
+    /// \param[in] p Position
     void setGoal(Position p) { goal = p; }
 
     /// \~japanese
     /// 壁データの値を設定します．
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     /// \param[in] is_set 壁が存在するとき \p true
     ///
     /// \~english
     /// Sets wall data.
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     /// \param[in] is_set \p true if the wall exists
     void setWall(Position p, bool is_set) { setInternal(p, false, is_set); }
     /// \~japanese
     /// 壁チェックデータの値を設定します．
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     /// \param[in] is_set チェック済みのとき \p true
     ///
     /// \~english
     /// Sets checked wall data.
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     /// \param[in] is_set \p true if the wall is checked
     void setCheckedWall(Position p, bool is_set) { setInternal(p, true, is_set); }
     /// \~japanese
     /// 壁データの値をトグルします．
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     ///
     /// \~english
     /// Toggles wall data.
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     void toggleWall(Position p)
     {
         setWall(p, !isSetWall(p));
     }
     /// \~japanese
     /// 壁チェックデータの値をトグルします．
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     ///
     /// \~english
     /// Toggles checked wall data.
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     void toggleCheckedWall(Position p)
     {
         setCheckedWall(p, !isCheckedWall(p));
@@ -210,23 +210,23 @@ public:
 
     /// \~japanese
     /// 壁が存在するかどうかを返します．
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     /// \returns 壁が存在するとき \p true
     ///
     /// \~english
     /// Returns whether the wall exists.
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     /// \returns \p true if the wall exists.
     bool isSetWall(Position p) const { return isSetInternal(p, false); }
     /// \~japanese
     /// 壁がチェック済みかどうかを返します．
-    /// \param[in] p 座標
+    /// \param[in] p 位置
     /// \returns 壁がチェック済みのとき \p true
     ///
     /// \~english
     /// Returns whether the wall is checked.
     ///
-    /// \param[in] p Coordinates
+    /// \param[in] p Position
     /// \returns \p true if the wall is checked.
     bool isCheckedWall(Position p) const { return isSetInternal(p, true); }
 };

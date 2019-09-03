@@ -51,9 +51,9 @@ private:
     /// \~japanese 現在のノードのID
     /// \~english Current node ID
     NodeId id_current;
-    /// \~japanese ゴールノードのID
-    /// \~english Goal node ID
-    NodeId id_goal;
+    /// \~japanese 終点ノードのID
+    /// \~english Destination node ID
+    NodeId id_destination;
     /// \~japanese 一手前のノードのID
     /// \~english Last node ID
     NodeId id_last;
@@ -78,10 +78,10 @@ public:
 
     DStarLite(const TMazeGraph& mg)
         : Solver<TMazeGraph>(mg)
-        , key_modifier(0)
         , id_current(mg.getStartNodeId())
-        , id_goal(mg.getGoalNodeId())
+        , id_destination(mg.getGoalNodeId())
         , id_last(id_current)
+        , key_modifier(0)
         , g()
         , rhs()
         , open_list()
@@ -151,10 +151,10 @@ public:
     }
 
     /// \~japanese
-    /// 現在のノードからゴールまでの最短経路を計算します．
+    /// 現在のノードから終点ノードまでの最短経路を計算します．
     ///
     /// \~english
-    /// Computes the shortest path from the current node to the goal.
+    /// Computes the shortest path from the current node to the destination node.
     void computeShortestPath()
     {
         NodeId examined_nodes = 0;
@@ -239,6 +239,10 @@ public:
     {
         return id_current;
     }
+    NodeId getDestinationNodeId() const
+    {
+        return id_destination;
+    }
 
     std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const
     {
@@ -256,17 +260,17 @@ public:
         return { argmin, mincost };
     }
 
-    bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<Coordinates>& path) const
+    bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<AgentState>& path) const
     {
         while (id_from != id_to) {
-            path.push_back(Base::mg.coordByNodeId(id_from));
+            path.push_back(Base::mg.agentStateByNodeId(id_from));
             auto n = lowestNeighbor(id_from);
             if (n.second == kInf) {
                 return false;
             }
             id_from = n.first;
         }
-        path.push_back(Base::mg.coordByNodeId(id_to));
+        path.push_back(Base::mg.agentStateByNodeId(id_to));
         return true;
     }
     bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<NodeId>& path) const
@@ -284,13 +288,13 @@ public:
     }
 
     void preSense() {}
-    void postSense(const std::vector<Coordinates>& changed_coordinates)
+    void postSense(const std::vector<Position>& changed_positions)
     {
         //TODO: Implement
         if (rhs[id_current] == 0) {
-            // reached the goal
+            // reached the destination
             // TODO: implement
-            std::cout << "Reached the goal" << std::endl;
+            std::cout << "Reached the destination" << std::endl;
         } else {
             if (rhs[id_current] == kInf) {
                 // no route
@@ -299,11 +303,11 @@ public:
                 return;
             }
 
-            if (!changed_coordinates.empty()) {
+            if (!changed_positions.empty()) {
                 key_modifier = satSum(key_modifier, Base::mg.distance(id_last, id_current));
                 id_last = id_current;
                 std::vector<std::pair<NodeId, NodeId>> changed_edges;
-                Base::mg.affectedEdges(changed_coordinates, changed_edges);
+                Base::mg.affectedEdges(changed_positions, changed_edges);
                 for (auto e : changed_edges) {
                     Cost cold;
                     if (Base::mg.edgeCost(e.first, e.second) == kInf) {
@@ -370,26 +374,26 @@ public:
     {
         resetCostsAndLists();
         id_current = Base::mg.getStartNodeId();
-        id_goal = Base::mg.getGoalNodeId();
+        id_destination = Base::mg.getGoalNodeId();
         id_last = id_current;
     }
     void initialize()
     {
         reset();
-        rhs[id_goal] = 0;
-        open_list.insert({ { Base::mg.distance(id_current, id_goal), 0 }, id_goal });
-        in_open_list.set(id_goal);
+        rhs[id_destination] = 0;
+        open_list.insert({ { Base::mg.distance(id_current, id_destination), 0 }, id_destination });
+        in_open_list.set(id_destination);
         computeShortestPath();
     }
-    void changeGoal(NodeId id)
+    void changeDestination(NodeId id)
     {
         resetCostsAndLists();
         // id_current = id_current
-        id_goal = id;
+        id_destination = id;
         id_last = id_current;
-        rhs[id_goal] = 0;
-        open_list.insert({ { Base::mg.distance(id_current, id_goal), 0 }, id_goal });
-        in_open_list.set(id_goal);
+        rhs[id_destination] = 0;
+        open_list.insert({ { Base::mg.distance(id_current, id_destination), 0 }, id_destination });
+        in_open_list.set(id_destination);
         computeShortestPath();
     }
 };

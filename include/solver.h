@@ -31,26 +31,37 @@ public:
     virtual ~Solver() {}
 
     /// \~japanese
-    /// 次に訪れるノードの座標を返します．
-    /// \returns 次の座標
+    /// 次に訪れるノードのエージェント状態を返します．
+    /// \returns 次のエージェント状態
     ///
     /// \~english
-    /// Returns the coordinates of the node the solver is going to visit next.
-    /// \returns next coordinates.
-    virtual Coordinates getNextCoordinates() const
+    /// Returns the agent state of the node the solver is going to visit next.
+    /// \returns next agent state.
+    virtual AgentState getNextAgentState() const
     {
-        return mg.coordByNodeId(getNextNodeId());
+        return mg.agentStateByNodeId(getNextNodeId());
     }
     /// \~japanese
-    /// 現在のノードの座標を返します．
-    /// \returns 現在の座標
+    /// 現在のノードのエージェント状態を返します．
+    /// \returns 現在のエージェント状態
     ///
     /// \~english
-    /// Returns the coordinates of the current node.
-    /// \returns current coordinates.
-    virtual Coordinates getCurrentCoordinates() const
+    /// Returns the agent state of the current node.
+    /// \returns current agent state.
+    virtual AgentState getCurrentAgentState() const
     {
-        return mg.coordByNodeId(getCurrentNodeId());
+        return mg.agentStateByNodeId(getCurrentNodeId());
+    }
+    /// \~japanese
+    /// 終点のノードのエージェント状態を返します．
+    /// \returns 終点のエージェント状態
+    ///
+    /// \~english
+    /// Returns the agent state of the destination node.
+    /// \returns agent state at the destination.
+    virtual AgentState getDestinationAgentState() const
+    {
+        return mg.agentStateByNodeId(getDestinationNodeId());
     }
     /// \~japanese
     /// 次に訪れるノードのIDを返します．
@@ -68,6 +79,14 @@ public:
     /// Returns the ID of the current node.
     /// \returns current ID.
     virtual NodeId getCurrentNodeId() const = 0;
+    /// \~japanese
+    /// 終点ノードのIDを返します．
+    /// \returns 次のID
+    ///
+    /// \~english
+    /// Returns the ID of the destination node.
+    /// \returns next ID.
+    virtual NodeId getDestinationNodeId() const = 0;
 
     /// \~japanese
     /// 現在のグラフの情報から最短経路を構成します．
@@ -80,7 +99,7 @@ public:
     /// \param[in] id_from, id_to Start and end of the path
     /// \param[out] path \p std::vector to return the path
     /// \returns \p true if success
-    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<Coordinates>& path) const = 0;
+    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<AgentState>& path) const = 0;
     /// \~japanese
     /// 現在のグラフの情報から最短経路を構成します．
     /// \param[in] id_from, id_to 経路の始点と終点
@@ -103,12 +122,12 @@ public:
     /// \~japanese
     /// 壁センシング後の処理を行います．
     ///
-    /// \param [in] sensed_coordinates センシングした壁等の座標
+    /// \param [in] sensed_positions センシングした壁等の位置
     ///
     /// \~english
     /// Performs post-sensing routines.
-    /// \param [in] sensed_coordinates Coordinates of sensed walls etc.
-    virtual void postSense(const std::vector<Coordinates>& sensed_coordinates) = 0;
+    /// \param [in] sensed_positions Positions of sensed walls etc.
+    virtual void postSense(const std::vector<Position>& sensed_positions) = 0;
 
     /// \~japanese
     /// ソルバの内部状態をすべて初期値クリアします．
@@ -123,11 +142,11 @@ public:
     /// Initializes internal variables to be ready for a new search from the start.
     virtual void initialize() = 0;
     /// \~japanese
-    /// ゴールを変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
+    /// 終点を変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
     ///
     /// \~english
-    /// Changes goal coordinates and initializes internal variables to be ready for a new search originated from the current node.
-    virtual void changeGoal(NodeId id) = 0;
+    /// Changes destination and initializes internal variables to be ready for a new search originated from the current node.
+    virtual void changeDestination(NodeId id) = 0;
 };
 
 }

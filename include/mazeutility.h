@@ -160,12 +160,12 @@ std::ostream& operator<<(std::ostream& os, Direction d)
 }
 std::ostream& operator<<(std::ostream& os, Position p)
 {
-    os << "(" << (int)p.x << ", " << (int)p.y << ")";
+    os << "(" << int(p.x) << ", " << int(p.y) << ")";
     return os;
 }
-std::ostream& operator<<(std::ostream& os, Coordinates c)
+std::ostream& operator<<(std::ostream& os, AgentState as)
 {
-    os << "(" << c.pos << ", " << c.dir << ")";
+    os << "(" << as.pos << ", " << as.dir << ", " << int(as.attribute) << ")";
     return os;
 }
 
