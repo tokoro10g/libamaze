@@ -198,13 +198,13 @@ public:
     /// \~japanese
     /// エージェントの状態から対応するノードのIDを計算します．
     ///
-    /// \param[in] c エージェントの状態
+    /// \param[in] as エージェントの状態
     /// \returns ノードのIDを返します．
     ///
     /// \~english
     /// Calculates the node ID corresponding to the agent state.
     ///
-    /// \param[in] p Agent state
+    /// \param[in] as Agent state
     /// \returns the node ID.
     virtual TNodeId nodeIdByAgentState(AgentState as) const = 0;
     /// \~japanese
@@ -217,7 +217,7 @@ public:
     /// Calculates the node ID corresponding to the coodinates.
     ///
     /// \param[in] p Position
-    /// \param[out] the list of node ID.
+    /// \param[out] ids the list of node ID.
     virtual void nodeIdsByPosition(Position p, std::vector<NodeId>& ids) const = 0;
     /// \~japanese
     /// ノードIDから対応するエージェントの状態を計算します．
