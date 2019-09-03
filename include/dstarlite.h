@@ -48,8 +48,6 @@ public:
     };
 
 private:
-    Cost key_modifier;
-
     /// \~japanese 現在のノードのID
     /// \~english Current node ID
     NodeId id_current;
@@ -60,6 +58,8 @@ private:
     /// \~english Last node ID
     NodeId id_last;
 
+    /// Key modifier
+    Cost key_modifier;
     /// g value
     std::array<Cost, TMazeGraph::kSize> g;
     /// rhs value
