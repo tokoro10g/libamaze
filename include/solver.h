@@ -120,8 +120,14 @@ public:
     /// ソルバの内部状態を探索開始直前の状態に初期化します．
     ///
     /// \~english
-    /// Initializes internal variables to be ready for new search from the start.
+    /// Initializes internal variables to be ready for a new search from the start.
     virtual void initialize() = 0;
+    /// \~japanese
+    /// ゴールを変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
+    ///
+    /// \~english
+    /// Changes goal coordinates and initializes internal variables to be ready for a new search originated from the current node.
+    virtual void changeGoal(NodeId id) = 0;
 };
 
 }

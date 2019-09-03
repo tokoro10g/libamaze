@@ -6,6 +6,7 @@
 #include <bitset>
 #include <iostream>
 #include <limits>
+#include <set>
 #include <vector>
 
 namespace Amaze {
@@ -34,6 +35,18 @@ public:
     using Cost = typename Base::Cost;
     using HeapKey = std::pair<Cost, Cost>;
 
+    /// \~japanese
+    /// ヒープ内のキー値のコンパレータ構造体．
+    ///
+    /// \~english
+    /// Comparator structure for the key value of the heap.
+    struct KeyCompare {
+        bool operator()(const std::pair<HeapKey, NodeId>& a, const std::pair<HeapKey, NodeId>& b) const
+        {
+            return a.first < b.first;
+        }
+    };
+
 private:
     Cost key_modifier;
 
@@ -53,7 +66,7 @@ private:
     std::array<Cost, TMazeGraph::kSize> rhs;
 
     /// Open list
-    std::vector<std::pair<HeapKey, NodeId>> open_list;
+    std::multiset<std::pair<HeapKey, NodeId>, KeyCompare> open_list;
     /// \~japanese Open listにノードが入っているかどうかのフラグ
     /// \~english Flags whether nodes are in the open list
     std::bitset<TMazeGraph::kSize> in_open_list;
@@ -62,18 +75,6 @@ public:
     /// \~japanese 無限コストとみなす値
     /// \~english Cost value assumed to be infinity
     static constexpr Cost kInf = TMazeGraph::kInf;
-
-    /// \~japanese
-    /// ヒープ内のキー値のコンパレータ構造体．
-    ///
-    /// \~english
-    /// Comparator structure for the key value of the heap.
-    struct KeyCompare {
-        bool operator()(const std::pair<HeapKey, NodeId>& a, const std::pair<HeapKey, NodeId>& b) const
-        {
-            return a.first > b.first;
-        }
-    };
 
     DStarLite(const TMazeGraph& mg)
         : Solver<TMazeGraph>(mg)
@@ -105,9 +106,12 @@ public:
         if (id > TMazeGraph::kSize) {
             return;
         }
-        for (auto& p : open_list) {
+        for (auto it = open_list.begin(); it != open_list.end(); it++) {
+            std::pair<HeapKey, NodeId> p = *it;
             if (p.second == id) {
+                open_list.erase(it);
                 p.first = k;
+                open_list.insert(p);
                 return;
             }
         }
@@ -133,11 +137,14 @@ public:
         if (g[id] != rhs[id] && in_open_list[id]) {
             updateHeap(id, calculateKey(id));
         } else if (g[id] != rhs[id] && !in_open_list[id]) {
-            open_list.push_back({ calculateKey(id), id });
-            push_heap(open_list.begin(), open_list.end(), KeyCompare());
+            open_list.insert({ calculateKey(id), id });
             in_open_list.set(id);
         } else if (g[id] == rhs[id] && in_open_list[id]) {
             auto it = find_if(open_list.begin(), open_list.end(), [=](auto p) { return p.second == id; });
+            if (it == open_list.end()) {
+                // should not reach here
+                return;
+            }
             open_list.erase(it);
             in_open_list.reset(id);
         }
@@ -152,9 +159,9 @@ public:
     {
         NodeId examined_nodes = 0;
         NodeId max_heap_size = 0;
-        while (!open_list.empty() && (open_list.front().first < calculateKey(id_current) || rhs[id_current] > g[id_current])) {
-            auto uid = open_list.front().second;
-            auto kold = open_list.front().first;
+        while (!open_list.empty() && (open_list.begin()->first < calculateKey(id_current) || rhs[id_current] > g[id_current])) {
+            auto uid = open_list.begin()->second;
+            auto kold = open_list.begin()->first;
             auto knew = calculateKey(uid);
             //std::cout<<(int)kold.first<<","<<(int)kold.second<<" "<<(int)knew.first<<","<<(int)knew.second<<std::endl;
             //std::cout<<uid<<": "<<(int)g[uid]<<","<<(int)rhs[uid]<<std::endl;
@@ -163,8 +170,7 @@ public:
                 updateHeap(uid, knew);
             } else if (g[uid] > rhs[uid]) {
                 g[uid] = rhs[uid];
-                pop_heap(open_list.begin(), open_list.end(), KeyCompare());
-                open_list.pop_back();
+                open_list.erase(open_list.begin());
                 if (!in_open_list.test(uid)) {
                     // this node is counted twice
                     continue;
@@ -201,7 +207,6 @@ public:
                 for_each(v.begin(), v.end(), f);
                 f(uid);
             }
-            make_heap(open_list.begin(), open_list.end(), KeyCompare());
             if (open_list.size() > max_heap_size) {
                 max_heap_size = NodeId(open_list.size());
             }
@@ -278,25 +283,7 @@ public:
         return true;
     }
 
-    void preSense()
-    {
-        /*
-        if (rhs[id_current] == 0) {
-            // reached the goal
-            // TODO: implement
-            std::cout << "Reached the goal" << std::endl;
-        } else {
-            if (rhs[id_current] == kInf) {
-                // no route
-                // TODO: implement
-                std::cerr << "No route" << std::endl;
-                return;
-            }
-            id_current = lowestNeighbor(id_current).first;
-        }
-        return;
-        */
-    }
+    void preSense() {}
     void postSense(const std::vector<Coordinates>& changed_coordinates)
     {
         //TODO: Implement
@@ -363,18 +350,15 @@ public:
                     }
                     updateNode(vid);
                 }
-                make_heap(open_list.begin(), open_list.end(), KeyCompare());
                 computeShortestPath();
             }
             id_current = lowestNeighbor(id_current).first;
         }
     }
-    void reset()
+
+    void resetCostsAndLists()
     {
         key_modifier = Cost(0);
-        id_current = Base::mg.getStartNodeId();
-        id_goal = Base::mg.getGoalNodeId();
-        id_last = id_current;
 
         g.fill(kInf);
         rhs.fill(kInf);
@@ -382,11 +366,29 @@ public:
         open_list.clear();
         in_open_list.reset();
     }
+    void reset()
+    {
+        resetCostsAndLists();
+        id_current = Base::mg.getStartNodeId();
+        id_goal = Base::mg.getGoalNodeId();
+        id_last = id_current;
+    }
     void initialize()
     {
         reset();
         rhs[id_goal] = 0;
-        open_list.push_back({ { Base::mg.distance(id_current, id_goal), 0 }, id_goal });
+        open_list.insert({ { Base::mg.distance(id_current, id_goal), 0 }, id_goal });
+        in_open_list.set(id_goal);
+        computeShortestPath();
+    }
+    void changeGoal(NodeId id)
+    {
+        resetCostsAndLists();
+        // id_current = id_current
+        id_goal = id;
+        id_last = id_current;
+        rhs[id_goal] = 0;
+        open_list.insert({ { Base::mg.distance(id_current, id_goal), 0 }, id_goal });
         in_open_list.set(id_goal);
         computeShortestPath();
     }
