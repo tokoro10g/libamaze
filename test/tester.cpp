@@ -5,8 +5,10 @@
 #include <bitset>
 #include <iostream>
 #include <sstream>
+#include <chrono>
 
 using namespace Amaze;
+using namespace std::chrono;
 
 template <uint8_t W>
 void senseFourWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, std::vector<Coordinates>& changed_coordinates)
@@ -62,6 +64,7 @@ void senseSixWay(Maze<W>& maze, const Maze<W>& reference_maze, Coordinates c, st
 
 int main()
 {
+    high_resolution_clock::time_point tstart = high_resolution_clock::now();
     const std::string maze_data = "1\n"
                                   "32\n"
                                   "32\n"
@@ -111,46 +114,12 @@ int main()
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     FourWayStepMapGraph mg1(reference_maze);
-    auto solver1 = DStarLite(mg1);
-    auto e11 = mg1.getEdge({ { 0, 2 }, kNoDirection }, { { 0, 2 }, kNoDirection });
-    auto e12 = mg1.getEdge({ { 0, 0 }, kNoDirection }, { { 0, 2 }, kNoDirection });
-    auto e13 = mg1.getEdge({ { 0, 0 }, kNoDirection }, { { 2, 0 }, kNoDirection });
-    std::cout << (e11.first ? "true" : "false") << " " << (int)e11.second << std::endl;
-    std::cout << (e12.first ? "true" : "false") << " " << (int)e12.second << std::endl;
-    std::cout << (e13.first ? "true" : "false") << " " << (int)e13.second << std::endl;
-    std::cout << std::endl;
-    std::cout << mg1.kSize << std::endl;
-    std::cout << std::endl;
-
     FourWayStepMapGraph<true, uint16_t> mg2(reference_maze);
-    auto e21 = mg2.getEdge({ { 0, 2 }, kNoDirection }, { { 0, 2 }, kNoDirection });
-    auto e22 = mg2.getEdge({ { 0, 0 }, kNoDirection }, { { 0, 2 }, kNoDirection });
-    auto e23 = mg2.getEdge({ { 0, 0 }, kNoDirection }, { { 2, 0 }, kNoDirection });
-    std::cout << (e21.first ? "true" : "false") << " " << (int)e21.second << std::endl;
-    std::cout << (e22.first ? "true" : "false") << " " << (int)e22.second << std::endl;
-    std::cout << (e23.first ? "true" : "false") << " " << (int)e23.second << std::endl;
-    std::cout << std::endl;
-
     FourWayStepMapGraph<true, float> mg3(reference_maze);
-    auto e31 = mg3.getEdge({ { 0, 2 }, kNoDirection }, { { 0, 2 }, kNoDirection });
-    auto e32 = mg3.getEdge({ { 0, 0 }, kNoDirection }, { { 0, 2 }, kNoDirection });
-    auto e33 = mg3.getEdge({ { 0, 0 }, kNoDirection }, { { 2, 0 }, kNoDirection });
-    std::cout << (e31.first ? "true" : "false") << " " << e31.second << std::endl;
-    std::cout << (e32.first ? "true" : "false") << " " << e32.second << std::endl;
-    std::cout << (e33.first ? "true" : "false") << " " << e33.second << std::endl;
-    std::cout << std::endl;
-
     SixWayWallNodeGraph mg4(reference_maze);
+
+    auto solver1 = DStarLite(mg1);
     auto solver4 = DStarLite(mg4);
-    auto e41 = mg4.getEdge({ { 0, 3 }, kSouth }, { { 1, 2 }, kEast });
-    auto e42 = mg4.getEdge({ { 0, 3 }, kNorth }, { { 0, 5 }, kNorth });
-    auto e43 = mg4.getEdge({ { 1, 2 }, kEast }, { { 2, 3 }, kNorth });
-    std::cout << (e41.first ? "true" : "false") << " " << (int)e41.second << std::endl;
-    std::cout << (e42.first ? "true" : "false") << " " << (int)e42.second << std::endl;
-    std::cout << (e43.first ? "true" : "false") << " " << (int)e43.second << std::endl;
-    std::cout << std::endl;
-    std::cout << mg4.kSize << std::endl;
-    std::cout << std::endl;
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -220,29 +189,17 @@ int main()
     std::cout << std::endl;
 
     uint16_t id_last = solver5.getCurrentNodeId();
-    //for(int i=0;i<160;i++){
     while (solver5.getCurrentNodeId() != id_goal5) {
-        //Utility::printMaze(maze);
         uint16_t id = solver5.getCurrentNodeId();
         if (id == id_last) {
             std::cout << mg5.coordByNodeId(id) << std::endl;
         } else {
             std::cout << mg5.coordByEdge(id_last, id) << std::endl;
         }
-        //CellData cd = maze.getCell(id);
-        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
         std::vector<Coordinates> changed_coordinates;
 
         solver5.preSense();
         senseFourWay(maze, reference_maze, mg5.coordByNodeId(id), changed_coordinates);
-        //std::cout << "After sense: " << std::endl;
-        //cd = maze.getCell(id);
-        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
-        //std::cout << "Changed coordinates: ";
-        //for (auto c : changed_coordinates) {
-        //    std::cout << c << ", ";
-        //}
-        //std::cout << std::endl;
         solver5.postSense(changed_coordinates);
         id_last = id;
     }
@@ -261,14 +218,6 @@ int main()
         std::cout << p << ", ";
     }
     std::cout << std::endl;
-
-    //for(int i=0;i<10;i++){
-    //while (solver5_fast_run.getCurrentNodeId() != id_goal5) {
-    //    std::cout << mg5_fast_run.coordByNodeId(solver5_fast_run.getCurrentNodeId()) << ": " << (int)solver5_fast_run.getCurrentNodeId() << std::endl;
-    //    solver5_fast_run.preSense();
-    //    solver5_fast_run.postSense(std::vector<Coordinates>());
-    //}
-    //std::cout << id_goal << std::endl;
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -294,32 +243,22 @@ int main()
     senseSixWay(maze, reference_maze, mg6.coordByNodeId(mg6.getStartNodeId()), temp1);
 
     id_last = solver6.getCurrentNodeId();
-    //for(int i=0;i<80;i++){
     while (solver6.getCurrentNodeId() != id_goal6) {
-        //Utility::printMaze(maze);
         uint16_t id = solver6.getCurrentNodeId();
         if (id == id_last) {
             std::cout << mg6.coordByNodeId(id) << std::endl;
         } else {
             std::cout << mg6.coordByEdge(id_last, id) << std::endl;
         }
-        //CellData cd = maze.getCell(id);
-        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
         std::vector<Coordinates> changed_coordinates;
 
         solver6.preSense();
         senseSixWay(maze, reference_maze, mg6.coordByNodeId(id), changed_coordinates);
-        //std::cout << "After sense: " << std::endl;
-        //cd = maze.getCell(id);
-        //std::cout << id << " " << mg5.coordByNodeId(id) << ": " << std::bitset<8>(cd.byte).to_string() << std::endl;
-        //std::cout << "Changed coordinates: ";
-        //for (auto c : changed_coordinates) {
-        //    std::cout << c << ", ";
-        //}
-        //std::cout << std::endl;
         solver6.postSense(changed_coordinates);
         id_last = id;
     }
     std::cout << id_goal6 << std::endl;
+    high_resolution_clock::time_point tend = high_resolution_clock::now();
+    std::cout << "Time elapsed: " << (float)duration_cast<microseconds>(tend - tstart).count() / 1000.f << " ms" << std::endl;
     return 0;
 }
