@@ -4,7 +4,7 @@
 #include <limits>
 
 #include "cases_maze.h"
-#include "mazegraph.h"
+#include "fourwaystepmapgraph.h"
 #include "mazeutility.h"
 
 using namespace Amaze;
