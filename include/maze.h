@@ -30,8 +30,8 @@ private:
     /// \~english Start position
     Position start;
     /// \~japanese ゴール位置
-    /// \~english Goal position
-    Position goal;
+    /// \~english Goal positions
+    std::vector<Position> goals;
 
     /// \~japanese
     /// 迷路データを操作する内部関数．
@@ -94,7 +94,7 @@ public:
         : maze_data(0)
         , check_data(0)
         , start({ 0, 0 })
-        , goal({ 0, 0 })
+        , goals()
     {
     }
 
@@ -120,7 +120,7 @@ public:
     {
         resetData();
         start = { 0, 0 };
-        goal = { 0, 0 };
+        clearGoals();
     }
 
     /// \~japanese
@@ -150,20 +150,34 @@ public:
     void setStart(Position p) { start = p; }
     /// \~japanese
     /// ゴール位置を返します．
-    /// \returns 位置
+    /// \param[out] positions 位置
     ///
     /// \~english
-    /// Returns goal position.
-    /// \returns position.
-    Position getGoal() const { return goal; }
+    /// Returns goal positions.
+    /// \param[out] positions positions.
+    void getGoals(std::vector<Position>& positions) const { positions.insert(positions.end(), goals.begin(), goals.end()); }
     /// \~japanese
     /// ゴール位置を設定します．
     /// \param[in] p 位置
     ///
     /// \~english
-    /// Sets goal position.
+    /// Adds goal position.
     /// \param[in] p Position
-    void setGoal(Position p) { goal = p; }
+    void addGoal(const Position p) { goals.push_back(p); }
+    /// \~japanese
+    /// ゴール位置を設定します．
+    /// \param[in] p 位置
+    ///
+    /// \~english
+    /// Adds goal positions.
+    /// \param[in] positions Positions
+    void addGoals(const std::vector<Position>& positions) { goals.insert(goals.end(), positions.begin(), positions.end()); }
+    /// \~japanese
+    /// ゴール位置をクリアします．
+    ///
+    /// \~english
+    /// Clears goal positions.
+    void clearGoals() { goals.clear(); }
 
     /// \~japanese
     /// 壁データの値を設定します．

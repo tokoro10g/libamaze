@@ -22,11 +22,18 @@ namespace Utility {
         if (type == 1) {
             int x, y;
             is >> x >> y;
-            Position p = { uint8_t(x * 2), uint8_t(y * 2) };
-            maze.setGoal(p);
+            const int goal_width = 2;
+            for (int i = 0; i < goal_width * 2 + 1; i++) {
+                for (int j = 0; j < goal_width * 2 + 1; j++) {
+                    maze.addGoal({ uint8_t(x * 2 - 1 + i), uint8_t(y * 2 - 1 + j) });
+                }
+            }
         } else {
-            Position p = { 7 * 2, 7 * 2 };
-            maze.setGoal(p);
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < 5; j++) {
+                    maze.addGoal({ uint8_t(13 + i), uint8_t(13 + j) });
+                }
+            }
         }
         for (int cursory = h - 1; cursory >= 0; cursory--) {
             for (int cursorx = 0; cursorx < w; cursorx++) {
@@ -93,7 +100,14 @@ namespace Utility {
     {
         Position p = { uint8_t(x), uint8_t(y) };
         maze.resetData();
-        maze.setGoal(p);
+        maze.clearGoals();
+        maze.addGoal(p);
+    }
+    template <uint8_t W>
+    void loadEmptyMaze(Maze<W>& maze)
+    {
+        maze.resetData();
+        maze.clearGoals();
     }
 
     template <uint8_t W>

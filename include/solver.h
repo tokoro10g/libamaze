@@ -59,9 +59,13 @@ public:
     /// \~english
     /// Returns the agent state of the destination node.
     /// \returns agent state at the destination.
-    virtual AgentState getDestinationAgentState() const
+    virtual void getDestinationAgentStates(std::vector<AgentState>& states) const
     {
-        return mg.agentStateByNodeId(getDestinationNodeId());
+        std::vector<NodeId> ids;
+        getDestinationNodeIds(ids);
+        for (auto id : ids) {
+            states.push_back(mg.agentStateByNodeId(id));
+        }
     }
     /// \~japanese
     /// 次に訪れるノードのIDを返します．
@@ -86,7 +90,7 @@ public:
     /// \~english
     /// Returns the ID of the destination node.
     /// \returns next ID.
-    virtual NodeId getDestinationNodeId() const = 0;
+    virtual void getDestinationNodeIds(std::vector<NodeId>& ids) const = 0;
 
     /// \~japanese
     /// 現在のグラフの情報から最短経路を構成します．
@@ -99,7 +103,22 @@ public:
     /// \param[in] id_from, id_to Start and end of the path
     /// \param[out] path \p std::vector to return the path
     /// \returns \p true if success
-    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<AgentState>& path) const = 0;
+    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<AgentState>& path) const
+    {
+        return reconstructPath(id_from, std::vector(1, id_to), path);
+    }
+    /// \~japanese
+    /// 現在のグラフの情報から最短経路を構成します．
+    /// \param[in] id_from, id_to 経路の始点と終点
+    /// \param[out] path 経路を格納する \p std::vector
+    /// \returns 成功した場合 \p true を返します．
+    ///
+    /// \~english
+    /// Reconstructs the shortest path based on the current graph data.
+    /// \param[in] id_from, ids_to Start and end of the path
+    /// \param[out] path \p std::vector to return the path
+    /// \returns \p true if success
+    virtual bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<AgentState>& path) const = 0;
     /// \~japanese
     /// 現在のグラフの情報から最短経路を構成します．
     /// \param[in] id_from, id_to 経路の始点と終点
@@ -111,7 +130,22 @@ public:
     /// \param[in] id_from, id_to Start and end of the path
     /// \param[out] path \p std::vector to return the path
     /// \returns \p true if success
-    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<NodeId>& path) const = 0;
+    virtual bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<NodeId>& path) const
+    {
+        return reconstructPath(id_from, std::vector(1, id_to), path);
+    }
+    /// \~japanese
+    /// 現在のグラフの情報から最短経路を構成します．
+    /// \param[in] id_from, id_to 経路の始点と終点
+    /// \param[out] path 経路を格納する \p std::vector
+    /// \returns 成功した場合 \p true を返します．
+    ///
+    /// \~english
+    /// Reconstructs the shortest path based on the current graph data.
+    /// \param[in] id_from, ids_to Start and end of the path
+    /// \param[out] path \p std::vector to return the path
+    /// \returns \p true if success
+    virtual bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<NodeId>& path) const = 0;
 
     /// \~japanese
     /// 壁センシング前の処理を行います．
@@ -146,7 +180,16 @@ public:
     ///
     /// \~english
     /// Changes destination and initializes internal variables to be ready for a new search originated from the current node.
-    virtual void changeDestination(NodeId id) = 0;
+    virtual void changeDestinations(const std::vector<NodeId>& ids) = 0;
+    /// \~japanese
+    /// 終点を変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
+    ///
+    /// \~english
+    /// Changes destination and initializes internal variables to be ready for a new search originated from the current node.
+    virtual void changeDestination(NodeId id)
+    {
+        changeDestinations(std::vector(1, id));
+    }
 };
 
 }

@@ -53,7 +53,7 @@ private:
     NodeId id_current;
     /// \~japanese 終点ノードのID
     /// \~english Destination node ID
-    NodeId id_destination;
+    std::vector<NodeId> ids_destination;
     /// \~japanese 一手前のノードのID
     /// \~english Last node ID
     NodeId id_last;
@@ -79,7 +79,7 @@ public:
     DStarLite(const TMazeGraph& mg)
         : Solver<TMazeGraph>(mg)
         , id_current(mg.getStartNodeId())
-        , id_destination(mg.getGoalNodeId())
+        , ids_destination()
         , id_last(id_current)
         , key_modifier(0)
         , g()
@@ -87,9 +87,11 @@ public:
         , open_list()
         , in_open_list(0)
     {
+        mg.getGoalNodeIds(ids_destination);
         g.fill(kInf);
         rhs.fill(kInf);
     }
+    ~DStarLite() {}
     /// \~japanese
     /// ヒープ内の要素を更新します．
     ///
@@ -239,9 +241,9 @@ public:
     {
         return id_current;
     }
-    NodeId getDestinationNodeId() const
+    void getDestinationNodeIds(std::vector<NodeId>& ids) const
     {
-        return id_destination;
+        ids.insert(ids.end(), ids_destination.begin(), ids_destination.end());
     }
 
     std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const
@@ -252,7 +254,7 @@ public:
         Base::mg.neighbors(id, v);
         for (auto spid : v) {
             Cost cost = satSum(Base::mg.edgeCost(id, spid), g[spid]);
-            if (mincost > cost) {
+            if (mincost >= cost) {
                 mincost = cost;
                 argmin = spid;
             }
@@ -260,9 +262,9 @@ public:
         return { argmin, mincost };
     }
 
-    bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<AgentState>& path) const
+    bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<AgentState>& path) const
     {
-        while (id_from != id_to) {
+        while (std::find(ids_to.begin(), ids_to.end(), id_from) == ids_to.end()) {
             path.push_back(Base::mg.agentStateByNodeId(id_from));
             auto n = lowestNeighbor(id_from);
             if (n.second == kInf) {
@@ -270,12 +272,12 @@ public:
             }
             id_from = n.first;
         }
-        path.push_back(Base::mg.agentStateByNodeId(id_to));
+        path.push_back(Base::mg.agentStateByNodeId(id_from));
         return true;
     }
-    bool reconstructPath(NodeId id_from, NodeId id_to, std::vector<NodeId>& path) const
+    bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<NodeId>& path) const
     {
-        while (id_from != id_to) {
+        while (std::find(ids_to.begin(), ids_to.end(), id_from) == ids_to.end()) {
             path.push_back(id_from);
             auto n = lowestNeighbor(id_from);
             if (n.second == kInf) {
@@ -283,7 +285,7 @@ public:
             }
             id_from = n.first;
         }
-        path.push_back(id_to);
+        path.push_back(id_from);
         return true;
     }
 
@@ -374,26 +376,32 @@ public:
     {
         resetCostsAndLists();
         id_current = Base::mg.getStartNodeId();
-        id_destination = Base::mg.getGoalNodeId();
+        ids_destination.clear();
+        Base::mg.getGoalNodeIds(ids_destination);
         id_last = id_current;
     }
     void initialize()
     {
         reset();
-        rhs[id_destination] = 0;
-        open_list.insert({ { Base::mg.distance(id_current, id_destination), 0 }, id_destination });
-        in_open_list.set(id_destination);
+        for (auto id : ids_destination) {
+            rhs[id] = 0;
+            open_list.insert({ { Base::mg.distance(id_current, id), 0 }, id });
+            in_open_list.set(id);
+        }
         computeShortestPath();
     }
-    void changeDestination(NodeId id)
+    void changeDestinations(const std::vector<NodeId>& ids)
     {
         resetCostsAndLists();
         // id_current = id_current
-        id_destination = id;
+        ids_destination.clear();
+        ids_destination.insert(ids_destination.end(), ids.begin(), ids.end());
         id_last = id_current;
-        rhs[id_destination] = 0;
-        open_list.insert({ { Base::mg.distance(id_current, id_destination), 0 }, id_destination });
-        in_open_list.set(id_destination);
+        for (auto id : ids_destination) {
+            rhs[id] = 0;
+            open_list.insert({ { Base::mg.distance(id_current, id), 0 }, id });
+            in_open_list.set(id);
+        }
         computeShortestPath();
     }
 };

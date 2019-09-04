@@ -278,16 +278,22 @@ public:
     /// \~japanese
     /// ゴールのノードIDを返します．
     ///
-    /// \returns ゴールのノードIDを返します．
+    /// \param[out] ids ゴールのノードID
     ///
     /// \~english
-    /// Returns the goal node ID.
+    /// Returns the goal node IDs.
     ///
-    /// \returns the goal node ID.
-    virtual TNodeId getGoalNodeId() const
+    /// \param[out] ids the goal node IDs
+    virtual void getGoalNodeIds(std::vector<TNodeId>& ids) const
     {
-        Position p = maze.getGoal();
-        return nodeIdByAgentState({ p, kNoDirection, 0 });
+        std::vector<Position> positions;
+        maze.getGoals(positions);
+        for (auto p : positions) {
+            TNodeId id = nodeIdByAgentState({ p, kNoDirection, 0 });
+            if (id != kInvalidNode) {
+                ids.push_back(id);
+            }
+        }
     }
 
     /// \~japanese
@@ -658,14 +664,6 @@ public:
     TNodeId getStartNodeId() const
     {
         Position p = Base::maze.getStart();
-        if (p.x % 2 == 0 && p.y % 2 == 0) {
-            p.y++;
-        }
-        return nodeIdByAgentState({ p, kNoDirection, 0 });
-    }
-    virtual TNodeId getGoalNodeId() const
-    {
-        Position p = Base::maze.getGoal();
         if (p.x % 2 == 0 && p.y % 2 == 0) {
             p.y++;
         }
