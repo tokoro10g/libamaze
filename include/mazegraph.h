@@ -547,7 +547,7 @@ public:
         // FIXME: may contain bugs
         if (abs((int)as1.pos.x - as2.pos.x) == 1 && abs((int)as1.pos.y - as2.pos.y) == 1 && as1.pos.x % 2 != as1.pos.y % 2) {
             return { true, std::max(TCost(2), maxcost) };
-        } else if ((abs((int)as1.pos.x - as2.pos.x) == 2 && as1.pos.x % 2 == 1 && as1.pos.y % 2 == 0) || (abs((int)as1.pos.y - as2.pos.y) == 2 && as1.pos.x % 2 == 0 && as1.pos.y % 2 == 1)) {
+        } else if ((abs((int)as1.pos.x - as2.pos.x) == 2 && as1.pos.y == as2.pos.y && as1.pos.x % 2 == 1 && as1.pos.y % 2 == 0) || (abs((int)as1.pos.y - as2.pos.y) == 2 && as1.pos.x == as2.pos.x && as1.pos.x % 2 == 0 && as1.pos.y % 2 == 1)) {
             return { true, std::max(TCost(3), maxcost) };
         }
         return { false, Base::kInf };
