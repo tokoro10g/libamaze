@@ -54,11 +54,11 @@ public:
     }
     /// \~japanese
     /// 終点のノードのエージェント状態を返します．
-    /// \returns 終点のエージェント状態
+    /// \param[out] states 終点のエージェント状態のリスト
     ///
     /// \~english
-    /// Returns the agent state of the destination node.
-    /// \returns agent state at the destination.
+    /// Returns the agent states of the destination nodes.
+    /// \param[out] states List of agent states at the destinations.
     virtual void getDestinationAgentStates(std::vector<AgentState>& states) const
     {
         std::vector<NodeId> ids;
@@ -85,11 +85,11 @@ public:
     virtual NodeId getCurrentNodeId() const = 0;
     /// \~japanese
     /// 終点ノードのIDを返します．
-    /// \returns 次のID
+    /// \param[out] ids 終点のIDのリスト
     ///
     /// \~english
     /// Returns the ID of the destination node.
-    /// \returns next ID.
+    /// \param[out] ids List of destination IDs.
     virtual void getDestinationNodeIds(std::vector<NodeId>& ids) const = 0;
 
     /// \~japanese
@@ -115,7 +115,7 @@ public:
     ///
     /// \~english
     /// Reconstructs the shortest path based on the current graph data.
-    /// \param[in] id_from, ids_to Start and end of the path
+    /// \param[in] id_from, ids_to Start and ends of the path
     /// \param[out] path \p std::vector to return the path
     /// \returns \p true if success
     virtual bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<AgentState>& path) const = 0;
@@ -142,7 +142,7 @@ public:
     ///
     /// \~english
     /// Reconstructs the shortest path based on the current graph data.
-    /// \param[in] id_from, ids_to Start and end of the path
+    /// \param[in] id_from, ids_to Start and ends of the path
     /// \param[out] path \p std::vector to return the path
     /// \returns \p true if success
     virtual bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<NodeId>& path) const = 0;
@@ -177,15 +177,19 @@ public:
     virtual void initialize() = 0;
     /// \~japanese
     /// 終点を変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
+    /// \param[in] ids 終点のノードIDのリスト
     ///
     /// \~english
     /// Changes destination and initializes internal variables to be ready for a new search originated from the current node.
+    /// \param[in] ids List of node IDs at the destinations
     virtual void changeDestinations(const std::vector<NodeId>& ids) = 0;
     /// \~japanese
     /// 終点を変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
+    /// \param[in] id 終点のノードID
     ///
     /// \~english
     /// Changes destination and initializes internal variables to be ready for a new search originated from the current node.
+    /// \param[in] id Node ID at the destination
     virtual void changeDestination(NodeId id)
     {
         changeDestinations(std::vector(1, id));

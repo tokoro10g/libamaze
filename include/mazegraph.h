@@ -144,7 +144,7 @@ public:
     ///
     /// The return value must be consistent with that of <tt>getEdgeWithHypothesis(id_from, id_to, maze.isSetWall(p))</tt> where \p p is the position of the wall visited by travelling from \p id_from to \p id_to.
     ///
-    /// \param[in] id_from, id_to node IDs at the ends of the edge
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
     virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const = 0;
     /// \~japanese
@@ -156,7 +156,7 @@ public:
     /// \~english
     /// Calculates the existence and cost of the edge according to the maze data.
     ///
-    /// \param[in] from, to agent states at the ends of the edge
+    /// \param[in] from, to Agent states at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
     virtual std::pair<bool, TCost> getEdge(AgentState from, AgentState to) const
     {
@@ -171,7 +171,7 @@ public:
     /// \~english
     /// Returns the existence of the edge according to the maze data.
     ///
-    /// \param[in] id_from, id_to node IDs at the ends of the edge
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns the existence of the edge.
     virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const
     {
@@ -214,23 +214,23 @@ public:
     /// \param[out] ids ノードのIDのリストが格納されます
     ///
     /// \~english
-    /// Calculates the node ID corresponding to the coodinates.
+    /// Calculates the node ID corresponding to the position.
     ///
     /// \param[in] p Position
-    /// \param[out] ids the list of node ID.
+    /// \param[out] ids List of node ID.
     virtual void nodeIdsByPosition(Position p, std::vector<NodeId>& ids) const = 0;
     /// \~japanese
     /// ノードIDから対応するエージェントの状態を計算します．
     ///
-    /// ノードIDのみから方向が一意に定まらない場合は，方向を \p Amaze::kNoDirection に設定します．
+    /// ノードIDのみから方向や\p attribute が一意に定まらない場合は，方向を \p Amaze::kNoDirection に，\p attribute を0に設定します．
     ///
     /// \param[in] id ノードID
     /// \returns エージェントの状態を返します．
     ///
     /// \~english
-    /// Calculates the coodinates corresponding to the node ID.
+    /// Calculates the agent state corresponding to the node ID.
     ///
-    /// The direction is set to \p Amaze::kNoDirection if it is not uniquely determined by the node ID.
+    /// The direction is set to \p Amaze::kNoDirection if it is not uniquely determined by the node ID. \p attribute is also default to 0.
     ///
     /// \param[in] id Node ID
     /// \returns the agent state.
@@ -276,14 +276,14 @@ public:
         return nodeIdByAgentState({ p, kNoDirection, 0 });
     }
     /// \~japanese
-    /// ゴールのノードIDを返します．
+    /// ゴールのノードIDのリストを返します．
     ///
-    /// \param[out] ids ゴールのノードID
+    /// \param[out] ids ゴールのノードIDのリスト
     ///
     /// \~english
-    /// Returns the goal node IDs.
+    /// Returns the list of goal node IDs.
     ///
-    /// \param[out] ids the goal node IDs
+    /// \param[out] ids List of goal node IDs
     virtual void getGoalNodeIds(std::vector<TNodeId>& ids) const
     {
         std::vector<Position> positions;
@@ -424,7 +424,7 @@ public:
     {
         if (as.pos.x % 2 != 0 || as.pos.y % 2 != 0) {
             // wall or pillar
-            std::cerr << "Out of bounds!!! (pos: " << (int)as.pos.x << ", " << (int)as.pos.y << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            //std::cerr << "Invalid state!!! (pos: " << (int)as.pos.x << ", " << (int)as.pos.y << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return Base::kInvalidNode;
         }
         return TNodeId(as.pos.x / 2 + as.pos.y / 2 * W);

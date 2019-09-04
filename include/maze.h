@@ -149,28 +149,28 @@ public:
     /// \param[in] p Position
     void setStart(Position p) { start = p; }
     /// \~japanese
-    /// ゴール位置を返します．
-    /// \param[out] positions 位置
+    /// ゴール位置のリストを返します．
+    /// \param[out] positions 位置のリスト
     ///
     /// \~english
     /// Returns goal positions.
-    /// \param[out] positions positions.
+    /// \param[out] positions List of positions.
     void getGoals(std::vector<Position>& positions) const { positions.insert(positions.end(), goals.begin(), goals.end()); }
     /// \~japanese
-    /// ゴール位置を設定します．
+    /// ゴール位置を追加します．
     /// \param[in] p 位置
     ///
     /// \~english
     /// Adds goal position.
-    /// \param[in] p Position
+    /// \param[in] p Goal position
     void addGoal(const Position p) { goals.push_back(p); }
     /// \~japanese
-    /// ゴール位置を設定します．
-    /// \param[in] p 位置
+    /// ゴール位置を追加します．
+    /// \param[in] positions 位置のリスト
     ///
     /// \~english
     /// Adds goal positions.
-    /// \param[in] positions Positions
+    /// \param[in] positions List of positions
     void addGoals(const std::vector<Position>& positions) { goals.insert(goals.end(), positions.begin(), positions.end()); }
     /// \~japanese
     /// ゴール位置をクリアします．
