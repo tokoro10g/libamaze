@@ -1,7 +1,9 @@
 #include "dstarlite.h"
+#include "fourwaystepmapgraph.h"
 #include "maze.h"
-#include "mazegraph.h"
 #include "mazeutility.h"
+#include "sixwaywallnodegraph.h"
+#include "sixwaywallnodeturncostgraph.h"
 #include <bitset>
 #include <chrono>
 #include <iostream>
@@ -119,7 +121,7 @@ int main()
     FourWayStepMapGraph mg1(reference_maze);
     FourWayStepMapGraph<true, uint16_t> mg2(reference_maze);
     FourWayStepMapGraph<true, float> mg3(reference_maze);
-    SixWayWallNodeGraph mg4(reference_maze);
+    SixWayWallNodeTurnCostGraph mg4(reference_maze);
 
     auto solver1 = DStarLite(mg1);
     auto solver4 = DStarLite(mg4);
@@ -176,6 +178,8 @@ int main()
         solver4.postSense(std::vector<Position>());
     }
     std::cout << solver4.getCurrentNodeId() << std::endl;
+
+    //return 0;
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -246,7 +250,7 @@ int main()
         std::vector<Position> changed_positions;
 
         solver5.preSense();
-        senseSixWay(maze, reference_maze, mg5.agentStateByNodeId(id), changed_positions);
+        senseFourWay(maze, reference_maze, mg5.agentStateByNodeId(id), changed_positions);
         solver5.postSense(changed_positions);
         id_last = id;
     }
@@ -277,7 +281,7 @@ int main()
     maze.setWall({ 1, 0 }, true);
     maze.setCheckedWall({ 0, 1 }, true);
     maze.setCheckedWall({ 1, 0 }, true);
-    SixWayWallNodeGraph mg6(maze);
+    SixWayWallNodeTurnCostGraph mg6(maze);
     auto solver6 = DStarLite(mg6);
 
     solver6.initialize();
@@ -292,6 +296,7 @@ int main()
     std::cout << std::endl;
 
     id_last = solver6.getCurrentNodeId();
+    //for(int i=0;i<40;i++){
     while (std::find(goal_ids6.begin(), goal_ids6.end(), solver6.getCurrentNodeId()) == goal_ids6.end()) {
         uint16_t id = solver6.getCurrentNodeId();
         if (id == id_last) {
