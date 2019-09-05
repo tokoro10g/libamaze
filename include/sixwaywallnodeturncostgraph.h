@@ -91,16 +91,16 @@ public:
                 return { true, std::max(TCost(2), maxcost) };
             }
             if (as1.pos.x == as2.pos.x && as1.pos.y == as2.pos.y && !(as2.attribute & 0x1)) {
-                return { true, std::max(TCost(3), maxcost) };
+                return { true, std::max(TCost(1), maxcost) };
             }
         } else {
             if ((abs((int)as1.pos.x - as2.pos.x) == 2 && as1.pos.y == as2.pos.y && as1.pos.x % 2 == 1 && as1.pos.y % 2 == 0) || (abs((int)as1.pos.y - as2.pos.y) == 2 && as1.pos.x == as2.pos.x && as1.pos.x % 2 == 0 && as1.pos.y % 2 == 1)) {
                 if (!(as2.attribute & 0x1)) {
-                    return { true, std::max(TCost(3), maxcost) };
+                    return { true, std::max(TCost(2), maxcost) };
                 }
             }
             if (as1.pos.x == as2.pos.x && as1.pos.y == as2.pos.y && (as2.attribute & 0x1)) {
-                return { true, std::max(TCost(3), maxcost) };
+                return { true, std::max(TCost(1), maxcost) };
             }
         }
         return { false, Base::kInf };
