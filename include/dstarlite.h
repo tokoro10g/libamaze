@@ -57,6 +57,7 @@ private:
     /// \~japanese 一手前のノードのID
     /// \~english Last node ID
     NodeId id_last;
+    NodeId id_last_modified;
 
     /// Key modifier
     Cost key_modifier;
@@ -81,6 +82,7 @@ public:
         , id_current(mg.getStartNodeId())
         , ids_destination()
         , id_last(id_current)
+        , id_last_modified(id_current)
         , key_modifier(0)
         , g()
         , rhs()
@@ -241,6 +243,10 @@ public:
     {
         return id_current;
     }
+    NodeId getLastNodeId() const
+    {
+        return id_last;
+    }
     void getDestinationNodeIds(std::vector<NodeId>& ids) const
     {
         ids.insert(ids.end(), ids_destination.begin(), ids_destination.end());
@@ -264,28 +270,31 @@ public:
 
     bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<AgentState>& path) const
     {
-        while (std::find(ids_to.begin(), ids_to.end(), id_from) == ids_to.end()) {
-            path.push_back(Base::mg.agentStateByNodeId(id_from));
-            auto n = lowestNeighbor(id_from);
+        path.push_back(Base::mg.agentStateByNodeId(id_from));
+        NodeId id_current_on_path = id_from;
+        NodeId id_last_on_path = id_from;
+        while (std::find(ids_to.begin(), ids_to.end(), id_current_on_path) == ids_to.end()) {
+            auto n = lowestNeighbor(id_current_on_path);
             if (n.second == kInf) {
                 return false;
             }
-            id_from = n.first;
+            id_last_on_path = id_current_on_path;
+            id_current_on_path = n.first;
+            path.push_back(Base::mg.agentStateByEdge(id_last_on_path, id_current_on_path));
         }
-        path.push_back(Base::mg.agentStateByNodeId(id_from));
         return true;
     }
     bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<NodeId>& path) const
     {
+        path.push_back(id_from);
         while (std::find(ids_to.begin(), ids_to.end(), id_from) == ids_to.end()) {
-            path.push_back(id_from);
             auto n = lowestNeighbor(id_from);
             if (n.second == kInf) {
                 return false;
             }
             id_from = n.first;
+            path.push_back(id_from);
         }
-        path.push_back(id_from);
         return true;
     }
 
@@ -306,8 +315,8 @@ public:
             }
 
             if (!changed_positions.empty()) {
-                key_modifier = satSum(key_modifier, Base::mg.distance(id_last, id_current));
-                id_last = id_current;
+                key_modifier = satSum(key_modifier, Base::mg.distance(id_last_modified, id_current));
+                id_last_modified = id_current;
                 std::vector<std::pair<NodeId, NodeId>> changed_edges;
                 Base::mg.affectedEdges(changed_positions, changed_edges);
                 for (auto e : changed_edges) {
@@ -358,6 +367,7 @@ public:
                 }
                 computeShortestPath();
             }
+            id_last = id_current;
             id_current = lowestNeighbor(id_current).first;
         }
     }
@@ -379,6 +389,7 @@ public:
         ids_destination.clear();
         Base::mg.getGoalNodeIds(ids_destination);
         id_last = id_current;
+        id_last_modified = id_current;
     }
     void initialize()
     {
@@ -397,6 +408,7 @@ public:
         ids_destination.clear();
         ids_destination.insert(ids_destination.end(), ids.begin(), ids.end());
         id_last = id_current;
+        id_last_modified = id_current;
         for (auto id : ids_destination) {
             rhs[id] = 0;
             open_list.insert({ { Base::mg.distance(id_current, id), 0 }, id });

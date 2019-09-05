@@ -50,7 +50,11 @@ public:
     /// \returns current agent state.
     virtual AgentState getCurrentAgentState() const
     {
-        return mg.agentStateByNodeId(getCurrentNodeId());
+        if(getLastNodeId() == getCurrentNodeId()){
+            return mg.agentStateByNodeId(getCurrentNodeId());
+        } else {
+            return mg.agentStateByEdge(getLastNodeId(), getCurrentNodeId());
+        }
     }
     /// \~japanese
     /// 終点のノードのエージェント状態を返します．
@@ -83,6 +87,14 @@ public:
     /// Returns the ID of the current node.
     /// \returns current ID.
     virtual NodeId getCurrentNodeId() const = 0;
+    /// \~japanese
+    /// 1ステップ前のノードのIDを返します．
+    /// \returns 1ステップ前のID
+    ///
+    /// \~english
+    /// Returns the ID of the last node.
+    /// \returns last ID.
+    virtual NodeId getLastNodeId() const = 0;
     /// \~japanese
     /// 終点ノードのIDを返します．
     /// \param[out] ids 終点のIDのリスト

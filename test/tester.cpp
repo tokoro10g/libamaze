@@ -143,7 +143,7 @@ int main()
     std::cout << std::endl;
 
     while (std::find(goal_ids.begin(), goal_ids.end(), solver1.getCurrentNodeId()) == goal_ids.end()) {
-        std::cout << mg1.agentStateByNodeId(solver1.getCurrentNodeId()) << ": " << (int)solver1.getCurrentNodeId() << std::endl;
+        std::cout << solver1.getCurrentAgentState() << ": " << (int)solver1.getCurrentNodeId() << std::endl;
         solver1.preSense();
         solver1.postSense(std::vector<Position>());
     }
@@ -173,7 +173,7 @@ int main()
     std::cout << std::endl;
 
     while (std::find(goal_ids4.begin(), goal_ids4.end(), solver4.getCurrentNodeId()) == goal_ids4.end()) {
-        std::cout << mg4.agentStateByNodeId(solver4.getCurrentNodeId()) << ": " << (int)solver4.getCurrentNodeId() << std::endl;
+        std::cout << solver4.getCurrentAgentState() << ": " << (int)solver4.getCurrentNodeId() << std::endl;
         solver4.preSense();
         solver4.postSense(std::vector<Position>());
     }
@@ -207,23 +207,16 @@ int main()
     }
     std::cout << std::endl;
 
-    uint16_t id_last = solver5.getCurrentNodeId();
     while (std::find(goal_ids5.begin(), goal_ids5.end(), solver5.getCurrentNodeId()) == goal_ids5.end()) {
-        uint16_t id = solver5.getCurrentNodeId();
-        if (id == id_last) {
-            std::cout << mg5.agentStateByNodeId(id) << std::endl;
-        } else {
-            std::cout << mg5.agentStateByEdge(id_last, id) << std::endl;
-        }
+        std::cout << solver5.getCurrentAgentState() << std::endl;
         std::vector<Position> changed_positions;
 
         solver5.preSense();
-        senseFourWay(maze, reference_maze, mg5.agentStateByNodeId(id), changed_positions);
+        senseFourWay(maze, reference_maze, solver5.getCurrentAgentState(), changed_positions);
         solver5.postSense(changed_positions);
-        id_last = id;
     }
     std::vector<Position> changed_positions;
-    senseFourWay(maze, reference_maze, mg5.agentStateByNodeId(solver5.getCurrentNodeId()), changed_positions);
+    senseFourWay(maze, reference_maze, solver5.getCurrentAgentState(), changed_positions);
     std::cout << solver5.getCurrentNodeId() << std::endl;
 
     //Utility::printMaze(maze);
@@ -237,24 +230,17 @@ int main()
     }
     std::cout << std::endl;
 
-    //id_last = solver6.getCurrentNodeId();
     //for(int i=0;i<20;i++){
     while (std::find(goal_ids5.begin(), goal_ids5.end(), solver5.getCurrentNodeId()) == goal_ids5.end()) {
         //Utility::printMaze(maze);
-        uint16_t id = solver5.getCurrentNodeId();
-        if (id == id_last) {
-            std::cout << mg5.agentStateByNodeId(id) << std::endl;
-        } else {
-            std::cout << mg5.agentStateByEdge(id_last, id) << std::endl;
-        }
+        std::cout << solver5.getCurrentAgentState() << std::endl;
         std::vector<Position> changed_positions;
 
         solver5.preSense();
-        senseFourWay(maze, reference_maze, mg5.agentStateByNodeId(id), changed_positions);
+        senseFourWay(maze, reference_maze, solver5.getCurrentAgentState(), changed_positions);
         solver5.postSense(changed_positions);
-        id_last = id;
     }
-    std::cout << mg5.agentStateByEdge(id_last, solver5.getCurrentNodeId()) << std::endl;
+    std::cout << solver5.getCurrentAgentState() << std::endl;
 
     FourWayStepMapGraph<false> mg5_fast_run(maze);
     auto solver5_fast_run = DStarLite(mg5_fast_run);
@@ -295,25 +281,17 @@ int main()
     }
     std::cout << std::endl;
 
-    id_last = solver6.getCurrentNodeId();
     //for(int i=0;i<40;i++){
     while (std::find(goal_ids6.begin(), goal_ids6.end(), solver6.getCurrentNodeId()) == goal_ids6.end()) {
-        uint16_t id = solver6.getCurrentNodeId();
-        if (id == id_last) {
-            std::cout << mg6.agentStateByNodeId(id) << std::endl;
-        } else {
-            std::cout << mg6.agentStateByEdge(id_last, id) << std::endl;
-        }
+        std::cout << solver6.getCurrentAgentState() << std::endl;
         std::vector<Position> changed_positions;
 
         solver6.preSense();
-        senseSixWay(maze, reference_maze, mg6.agentStateByNodeId(id), changed_positions);
+        senseSixWay(maze, reference_maze, solver6.getCurrentAgentState(), changed_positions);
         solver6.postSense(changed_positions);
-        id_last = id;
     }
-    std::cout << mg6.agentStateByEdge(id_last, solver6.getCurrentNodeId()) << std::endl;
-
-    //Utility::printMaze(maze);
+    std::cout << solver6.getCurrentAgentState() << std::endl;
+    Utility::printMaze(maze);
 
     solver6.changeDestination(mg6.getStartNodeId());
     goal_ids6.clear();
@@ -324,24 +302,40 @@ int main()
     }
     std::cout << std::endl;
 
-    //id_last = solver6.getCurrentNodeId();
     //for(int i=0;i<40;i++){
     while (std::find(goal_ids6.begin(), goal_ids6.end(), solver6.getCurrentNodeId()) == goal_ids6.end()) {
         //Utility::printMaze(maze);
-        uint16_t id = solver6.getCurrentNodeId();
-        if (id == id_last) {
-            std::cout << mg6.agentStateByNodeId(id) << std::endl;
-        } else {
-            std::cout << mg6.agentStateByEdge(id_last, id) << std::endl;
-        }
+        std::cout << solver6.getCurrentAgentState() << std::endl;
         std::vector<Position> changed_positions;
 
         solver6.preSense();
-        senseSixWay(maze, reference_maze, mg6.agentStateByNodeId(id), changed_positions);
+        senseSixWay(maze, reference_maze, solver6.getCurrentAgentState(), changed_positions);
         solver6.postSense(changed_positions);
-        id_last = id;
     }
-    std::cout << mg6.agentStateByEdge(id_last, solver6.getCurrentNodeId()) << std::endl;
+    std::cout << solver6.getCurrentAgentState() << std::endl;
+    Utility::printMaze(maze);
+
+    goal_ids6.clear();
+    mg6.getGoalNodeIds(goal_ids6);
+    solver6.changeDestinations(goal_ids6);
+    std::cout << "Now the goals are ";
+    for (auto id_goal : goal_ids6) {
+        std::cout << id_goal << ", ";
+    }
+    std::cout << std::endl;
+
+    //for(int i=0;i<40;i++){
+    while (std::find(goal_ids6.begin(), goal_ids6.end(), solver6.getCurrentNodeId()) == goal_ids6.end()) {
+        //Utility::printMaze(maze);
+        std::cout << solver6.getCurrentAgentState() << std::endl;
+        std::vector<Position> changed_positions;
+
+        solver6.preSense();
+        senseSixWay(maze, reference_maze, solver6.getCurrentAgentState(), changed_positions);
+        solver6.postSense(changed_positions);
+    }
+    std::cout << solver6.getCurrentAgentState() << std::endl;
+    Utility::printMaze(maze);
 
     high_resolution_clock::time_point tend = high_resolution_clock::now();
     std::cout << "Time elapsed: " << (float)duration_cast<microseconds>(tend - tstart).count() / 1000.f << " ms" << std::endl;
