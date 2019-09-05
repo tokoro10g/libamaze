@@ -16,3 +16,4 @@ include_directories(
 
 enable_testing()
 add_subdirectory(test)
+add_subdirectory(samples)
