@@ -58,7 +58,7 @@ namespace Utility {
                     p.y = uint8_t(2 * cursory - 1);
                     maze.setWall(p, byte & 0x4);
                 }
-                if (cursory != h - 1) {
+                if (cursory != W - 1) {
                     p.y = uint8_t(2 * cursory + 1);
                     maze.setWall(p, byte & 0x1);
                 }
@@ -67,7 +67,7 @@ namespace Utility {
                     p.x = uint8_t(2 * cursorx - 1);
                     maze.setWall(p, byte & 0x8);
                 }
-                if (cursorx != w - 1) {
+                if (cursorx != W - 1) {
                     p.x = uint8_t(2 * cursorx + 1);
                     maze.setWall(p, byte & 0x2);
                 }
