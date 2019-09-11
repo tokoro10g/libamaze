@@ -1,8 +1,8 @@
 #include "dstarlite.h"
-#include "sixwaywallnodeturncostgraph.h"
 #include "maze.h"
 #include "mazeutility.h"
 #include "sample_agent.h"
+#include "sixwaywallnodegraph.h"
 #include <iostream>
 #include <vector>
 
@@ -22,10 +22,10 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
 
     /// \~japanese
-    ///
+    /// 迷路グラフを定義し，スタートとゴールの状態を表示します．
     /// \~english
-    ///
-    SixWayWallNodeTurnCostGraph mg(reference_maze);
+    /// Define a maze graph and display agent states of the start and goals.
+    SixWayWallNodeGraph mg(reference_maze);
     const uint16_t id_start = mg.getStartNodeId();
     std::vector<uint16_t> goals;
     mg.getGoalNodeIds(goals);
@@ -37,9 +37,9 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
 
     /// \~japanese
-    ///
+    /// ソルバを初期化して最短経路を導出します．
     /// \~english
-    ///
+    /// Initialize solver and calculate the shortest path.
     auto solver = DStarLite(mg);
     solver.initialize();
 

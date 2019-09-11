@@ -21,29 +21,29 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
 
     /// \~japanese
-    ///
+    /// 迷路グラフを定義し，スタートとゴールの状態を表示します．
     /// \~english
-    ///
-    FourWayStepMapGraph mg1(reference_maze);
-    const uint16_t id_start = mg1.getStartNodeId();
+    /// Define a maze graph and display agent states of the start and goals.
+    FourWayStepMapGraph mg(reference_maze);
+    const uint16_t id_start = mg.getStartNodeId();
     std::vector<uint16_t> goals;
-    mg1.getGoalNodeIds(goals);
-    std::cout << "The start is " << mg1.agentStateByNodeId(id_start) << std::endl;
+    mg.getGoalNodeIds(goals);
+    std::cout << "The start is " << mg.agentStateByNodeId(id_start) << std::endl;
     std::cout << "The goals are ";
     for (uint16_t id_goal : goals) {
-        std::cout << mg1.agentStateByNodeId(id_goal) << ", ";
+        std::cout << mg.agentStateByNodeId(id_goal) << ", ";
     }
     std::cout << std::endl;
 
     /// \~japanese
-    ///
+    /// ソルバを初期化して最短経路を導出します．
     /// \~english
-    ///
-    auto solver1 = DStarLite(mg1);
-    solver1.initialize();
+    /// Initialize solver and calculate the shortest path.
+    auto solver = DStarLite(mg);
+    solver.initialize();
 
     std::vector<AgentState> path;
-    solver1.reconstructPath(id_start, goals, path);
+    solver.reconstructPath(id_start, goals, path);
     for (AgentState as : path) {
         std::cout << as << std::endl;
     }
