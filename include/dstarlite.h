@@ -184,35 +184,41 @@ public:
                 }
                 in_open_list.reset(uid);
 
-                std::vector<NodeId> v;
-                Base::mg.neighbors(uid, v);
-                for (auto sid : v) {
+                std::vector<std::pair<NodeId, Cost>> v;
+                Base::mg.neighborEdges(uid, v);
+                for (auto p : v) {
+                    NodeId sid = p.first;
+                    Cost scost = p.second;
                     if (rhs[sid] != 0) {
-                        rhs[sid] = std::min(rhs[sid], satSum(Base::mg.edgeCost(uid, sid), g[uid]));
+                        rhs[sid] = std::min(rhs[sid], satSum(scost, g[uid]));
                     }
                     updateNode(sid);
                 }
             } else {
                 Cost gold = g[uid];
                 g[uid] = kInf;
-                auto f = [&](NodeId sid) {
-                    if (rhs[sid] == satSum(Base::mg.edgeCost(sid, uid), gold)) {
+                auto f = [&](auto edge) {
+                    NodeId sid = edge.first;
+                    Cost scost = edge.second;
+                    if (rhs[sid] == satSum(scost, gold)) {
                         if (rhs[sid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<NodeId> v;
-                            Base::mg.neighbors(sid, v);
-                            for (auto spid : v) {
-                                mincost = std::min(mincost, satSum(Base::mg.edgeCost(spid, sid), g[spid]));
+                            std::vector<std::pair<NodeId, Cost>> v;
+                            Base::mg.neighborEdges(sid, v);
+                            for (auto p : v) {
+                                NodeId spid = p.first;
+                                Cost spcost = p.second;
+                                mincost = std::min(mincost, satSum(spcost, g[spid]));
                             }
                             rhs[sid] = mincost;
                         }
                     }
                     updateNode(sid);
                 };
-                std::vector<NodeId> v;
-                Base::mg.neighbors(uid, v);
+                std::vector<std::pair<NodeId, Cost>> v;
+                Base::mg.neighborEdges(uid, v);
                 for_each(v.begin(), v.end(), f);
-                f(uid);
+                f({uid, 0});
             }
             if (open_list.size() > max_heap_size) {
                 max_heap_size = NodeId(open_list.size());
@@ -259,10 +265,12 @@ public:
     {
         NodeId argmin = id;
         Cost mincost = kInf;
-        std::vector<NodeId> v;
-        Base::mg.neighbors(id, v);
-        for (auto spid : v) {
-            Cost cost = satSum(Base::mg.edgeCost(id, spid), g[spid]);
+        std::vector<std::pair<NodeId, Cost>> v;
+        Base::mg.neighborEdges(id, v);
+        for (auto edge : v) {
+            NodeId spid = edge.first;
+            Cost spcost = edge.second;
+            Cost cost = satSum(spcost, g[spid]);
             if (mincost >= cost) {
                 mincost = cost;
                 argmin = spid;
