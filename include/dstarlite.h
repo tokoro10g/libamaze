@@ -41,9 +41,15 @@ public:
     /// \~english
     /// Comparator structure for the key value of the heap.
     struct KeyCompare {
-        bool operator()(const std::pair<HeapKey, NodeId>& a, const std::pair<HeapKey, NodeId>& b) const
+        bool operator()(const std::pair<HeapKey, NodeId>& lhs, const std::pair<HeapKey, NodeId>& rhs) const
         {
-            return a.first < b.first;
+            if (lhs.first < rhs.first) {
+                return true;
+            } else if (lhs.first == rhs.first && lhs.second > rhs.second) {
+                return true;
+            } else {
+                return false;
+            }
         }
     };
 
@@ -67,7 +73,7 @@ private:
     std::array<Cost, TMazeGraph::kSize> rhs;
 
     /// Open list
-    std::multiset<std::pair<HeapKey, NodeId>, KeyCompare> open_list;
+    std::set<std::pair<HeapKey, NodeId>, KeyCompare> open_list;
     /// \~japanese Open listにノードが入っているかどうかのフラグ
     /// \~english Flags whether nodes are in the open list
     std::bitset<TMazeGraph::kSize> in_open_list;
@@ -110,15 +116,12 @@ public:
         if (id > TMazeGraph::kSize) {
             return;
         }
-        for (auto it = open_list.begin(); it != open_list.end(); it++) {
-            std::pair<HeapKey, NodeId> p = *it;
-            if (p.second == id) {
-                open_list.erase(it);
-                p.first = k;
-                open_list.insert(p);
-                return;
-            }
+        auto it = find_if(open_list.begin(), open_list.end(), [=](auto p) { return p.second == id; });
+        if (it == open_list.end() || it->first == k) {
+            return;
         }
+        open_list.erase(it);
+        open_list.insert({k, id});
     }
     /// \~japanese
     /// ノードに関するデータを更新します．
@@ -192,7 +195,7 @@ public:
             } else {
                 Cost gold = g[uid];
                 g[uid] = kInf;
-                auto f = [=](NodeId sid) {
+                auto f = [&](NodeId sid) {
                     if (rhs[sid] == satSum(Base::mg.edgeCost(sid, uid), gold)) {
                         if (rhs[sid] != 0) {
                             Cost mincost = kInf;
