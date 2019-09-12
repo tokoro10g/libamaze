@@ -85,6 +85,19 @@ public:
     virtual void neighbors(TNodeId id, std::vector<TNodeId>& v) const = 0;
 
     /// \~japanese
+    /// ノード \p id の隣接ノードのIDとコストを \p v に格納します．
+    ///
+    /// \param[in] id 原点とするノードのID
+    /// \param[out] v 隣接ノードのIDを格納する\p std::vector
+    ///
+    /// \~english
+    /// Fills \p v with neighbor IDs and costs of the node \p id.
+    ///
+    /// \param[in] id Node ID of the source
+    /// \param[out] v \p std::vector filled with neighbors' IDs
+    virtual void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const = 0;
+
+    /// \~japanese
     /// 与えた位置への迷路情報の変更の影響を受けるエッジを列挙します．
     ///
     /// \param[in] positions 位置のリスト
