@@ -197,7 +197,7 @@ public:
             } else {
                 Cost gold = g[uid];
                 g[uid] = kInf;
-                auto f = [&](auto edge) {
+                auto f = [&](std::pair<NodeId, Cost> edge) {
                     NodeId sid = edge.first;
                     Cost scost = edge.second;
                     if (rhs[sid] == satSum(scost, gold)) {
@@ -349,10 +349,12 @@ public:
                     } else if (rhs[uid] == satSum(cold, g[vid])) {
                         if (rhs[uid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<NodeId> v;
-                            Base::mg.neighbors(uid, v);
-                            for (auto spid : v) {
-                                mincost = std::min(mincost, satSum(Base::mg.edgeCost(spid, uid), g[spid]));
+                            std::vector<std::pair<NodeId,Cost>> v;
+                            Base::mg.neighborEdges(uid, v);
+                            for (auto edge : v) {
+                                NodeId spid = edge.first;
+                                Cost spcost = edge.second;
+                                mincost = std::min(mincost, satSum(spcost, g[spid]));
                             }
                             rhs[uid] = mincost;
                         }
@@ -366,10 +368,12 @@ public:
                     } else if (rhs[vid] == satSum(cold, g[uid])) {
                         if (rhs[vid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<NodeId> v;
-                            Base::mg.neighbors(vid, v);
-                            for (auto spid : v) {
-                                mincost = std::min(mincost, satSum(Base::mg.edgeCost(spid, vid), g[spid]));
+                            std::vector<std::pair<NodeId,Cost>> v;
+                            Base::mg.neighborEdges(vid, v);
+                            for (auto edge : v) {
+                                NodeId spid = edge.first;
+                                Cost spcost = edge.second;
+                                mincost = std::min(mincost, satSum(spcost, g[spid]));
                             }
                             rhs[vid] = mincost;
                         }

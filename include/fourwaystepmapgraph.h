@@ -61,6 +61,25 @@ public:
             }
         }
     }
+    void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const
+    {
+        if (id >= kSize) {
+            // TODO: implement exception handling
+            std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            return;
+        }
+        std::array<int8_t, 4> diff { { -1, 1, W, -W } };
+        for (auto d : diff) {
+            if(id < -d || id + d >= kSize){
+                continue;
+            }
+            std::pair<bool, TNodeId> edge = getEdge(id, TNodeId(id + d));
+            if (id + d >= 0 && id + d < kSize && edge.first) {
+                v.push_back({TNodeId(id + d), edge.second});
+            }
+        }
+    }
+
     std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const
     {
         if (id_from >= kSize || id_to >= kSize) {
