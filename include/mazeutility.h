@@ -4,6 +4,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <string>
 
 namespace Amaze {
@@ -113,6 +114,16 @@ namespace Utility {
     template <uint8_t W>
     void printMaze(const Maze<W>& maze, const int m = 1)
     {
+        std::vector<Position> goals;
+        maze.getGoals(goals);
+        std::set<std::pair<int, int>> goal_cells;
+
+        for (auto p : goals) {
+            if (p.x % 2 == 0 && p.y % 2 == 0) {
+                goal_cells.insert({ p.x / 2, p.y / 2 });
+            }
+        }
+
         std::cout << "_";
         for (int i = 0; i < W * m; i++) {
             std::cout << "__";
@@ -129,7 +140,13 @@ namespace Utility {
                         if (j == m - 1 && (cursory == 0 || maze.isSetWall({ uint8_t(2 * cursorx), uint8_t(2 * cursory - 1) }))) {
                             std::cout << "\x1b[4m"; // underline
                         }
-                        std::cout << " ";
+                        if (j == m / 2 && i == m / 2 && goal_cells.find({ cursorx, cursory }) != goal_cells.end()) {
+                            std::cout << "G";
+                        } else if (j == m / 2 && i == m / 2 && maze.getStart().x / 2 == cursorx && maze.getStart().y / 2 == cursory) {
+                            std::cout << "S";
+                        } else {
+                            std::cout << " ";
+                        }
                         std::cout << "\x1b[0m";
                     }
 
