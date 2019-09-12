@@ -25,6 +25,7 @@ template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = ui
 class FourWayStepMapGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
+    using Base::getEdgeWithHypothesis;
     using Base::getEdge;
 
     /// \~japanese グラフのサイズ
@@ -47,20 +48,6 @@ public:
         as2 = agentStateByNodeId(id_to);
         return TCost(std::max(abs((int)as1.pos.x - as2.pos.x) / 2, abs((int)as1.pos.y - as2.pos.y) / 2));
     }
-    void neighbors(TNodeId id, std::vector<TNodeId>& v) const
-    {
-        if (id >= kSize) {
-            // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
-            return;
-        }
-        std::array<int8_t, 4> diff { { -1, 1, W, -W } };
-        for (auto d : diff) {
-            if (id + d >= 0 && id + d < kSize && Base::edgeExist(id, TNodeId(id + d))) {
-                v.push_back(TNodeId(id + d));
-            }
-        }
-    }
     void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const
     {
         if (id >= kSize) {
@@ -80,16 +67,13 @@ public:
         }
     }
 
-    std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const
+    std::pair<bool, TCost> getEdgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const
     {
-        if (id_from >= kSize || id_to >= kSize) {
-            // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to:" << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+        if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
+            std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return { false, Base::kInf };
         }
-        AgentState as1, as2;
-        as1 = agentStateByNodeId(id_from);
-        as2 = agentStateByNodeId(id_to);
+
         TCost maxcost = 0;
         if (blocked) {
             maxcost = Base::kInf;
@@ -99,38 +83,20 @@ public:
         }
         return { false, Base::kInf };
     }
-    std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
+    std::pair<bool, TCost> getEdge(AgentState as1, AgentState as2) const
     {
-        if (id_from >= kSize || id_to >= kSize) {
-            // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to:" << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+        if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
+            std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return { false, Base::kInf };
         }
-        Position p;
-        p.x = uint8_t((id_from % W) * 2);
-        p.y = uint8_t((id_from / W) * 2);
-        int diff = (int)id_to - id_from;
-        switch (diff) {
-        case W:
-            p.y++;
-            break;
-        case -W:
-            p.y--;
-            break;
-        case 1:
-            p.x++;
-            break;
-        case -1:
-            p.x--;
-            break;
-        default:
-            // TODO: handle error
-            break;
-        }
+        Difference d = as2.pos - as1.pos;
+        d.x /= 2;
+        d.y /= 2;
+        Position p = as1.pos + d;
         if (!kExplore && !Base::maze.isCheckedWall(p)) {
             return { false, Base::kInf };
         }
-        return getEdgeWithHypothesis(id_from, id_to, Base::maze.isSetWall(p));
+        return getEdgeWithHypothesis(as1, as2, Base::maze.isSetWall(p));
     }
     TNodeId nodeIdByAgentState(AgentState as) const
     {

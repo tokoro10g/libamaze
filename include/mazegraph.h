@@ -82,19 +82,26 @@ public:
     ///
     /// \param[in] id Node ID of the source
     /// \param[out] v \p std::vector filled with neighbors' IDs
-    virtual void neighbors(TNodeId id, std::vector<TNodeId>& v) const = 0;
+    virtual void neighbors(TNodeId id, std::vector<TNodeId>& v) const
+    {
+        std::vector<std::pair<TNodeId, TCost>> edges;
+        neighborEdges(id, edges);
+        for (auto edge : edges) {
+            v.push_back(edge.first);
+        }
+    }
 
     /// \~japanese
-    /// ノード \p id の隣接ノードのIDとコストを \p v に格納します．
+    /// ノード \p id からのエッジを \p v に格納します．
     ///
     /// \param[in] id 原点とするノードのID
-    /// \param[out] v 隣接ノードのIDを格納する\p std::vector
+    /// \param[out] v エッジを格納する\p std::vector
     ///
     /// \~english
-    /// Fills \p v with neighbor IDs and costs of the node \p id.
+    /// Fills \p v with edges from the node \p id.
     ///
     /// \param[in] id Node ID of the source
-    /// \param[out] v \p std::vector filled with neighbors' IDs
+    /// \param[out] v \p std::vector filled with edges
     virtual void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const = 0;
 
     /// \~japanese
@@ -143,7 +150,24 @@ public:
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const = 0;
+    virtual std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const
+    {
+        return getEdgeWithHypothesis(agentStateByNodeId(id_from), agentStateByNodeId(id_to), blocked);
+    }
+    /// \~japanese
+    /// エッジがブロックされているかどうかを仮定してエッジの存在性とコストを計算します．
+    ///
+    /// \param[in] id_from, id_to エッジの両端ノードのID
+    /// \param[in] blocked \p id_from と \p id_to の間のエッジがブロックされていると仮定するとき \p true
+    /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::kInf kInf \endlink になります．
+    ///
+    /// \~english
+    /// Calculates the existence and cost of the edge based on the given assumption \p blocked.
+    ///
+    /// \param[in] id_from, id_to Node IDs at the ends of the edge
+    /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
+    /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
+    virtual std::pair<bool, TCost> getEdgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const = 0;
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性とコストを計算します．
     ///
@@ -159,7 +183,10 @@ public:
     ///
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const = 0;
+    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
+    {
+        return getEdge(agentStateByNodeId(id_from), agentStateByNodeId(id_to));
+    }
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性とコストを計算します．
     ///
@@ -171,10 +198,7 @@ public:
     ///
     /// \param[in] from, to Agent states at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdge(AgentState from, AgentState to) const
-    {
-        return getEdge(nodeIdByAgentState(from), nodeIdByAgentState(to));
-    }
+    virtual std::pair<bool, TCost> getEdge(AgentState from, AgentState to) const = 0;
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性を返します．
     ///
