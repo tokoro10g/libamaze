@@ -3,6 +3,7 @@
 #include "mazeutility.h"
 #include "sample_agent.h"
 #include "sixwaywallnodegraph.h"
+#include "sixwaywallnodeturncostgraph.h"
 #include <iostream>
 #include <vector>
 
@@ -32,7 +33,11 @@ int main(int argc, char* argv[])
     /// 迷路グラフを定義し，スタートとゴールの状態を表示します．
     /// \~english
     /// Define a maze graph and display agent states of the start and goals.
+#if 1
+    SixWayWallNodeTurnCostGraph mg(maze);
+#else
     SixWayWallNodeGraph mg(maze);
+#endif
     auto solver = DStarLite(mg);
 
     Utility::printMaze(maze);
