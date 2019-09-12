@@ -121,7 +121,7 @@ public:
             return;
         }
         open_list.erase(it);
-        open_list.insert({k, id});
+        open_list.insert({ k, id });
     }
     /// \~japanese
     /// ノードに関するデータを更新します．
@@ -218,7 +218,7 @@ public:
                 std::vector<std::pair<NodeId, Cost>> v;
                 Base::mg.neighborEdges(uid, v);
                 for_each(v.begin(), v.end(), f);
-                f({uid, 0});
+                f({ uid, 0 });
             }
             if (open_list.size() > max_heap_size) {
                 max_heap_size = NodeId(open_list.size());
@@ -349,7 +349,7 @@ public:
                     } else if (rhs[uid] == satSum(cold, g[vid])) {
                         if (rhs[uid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId,Cost>> v;
+                            std::vector<std::pair<NodeId, Cost>> v;
                             Base::mg.neighborEdges(uid, v);
                             for (auto edge : v) {
                                 NodeId spid = edge.first;
@@ -368,7 +368,7 @@ public:
                     } else if (rhs[vid] == satSum(cold, g[uid])) {
                         if (rhs[vid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId,Cost>> v;
+                            std::vector<std::pair<NodeId, Cost>> v;
                             Base::mg.neighborEdges(vid, v);
                             for (auto edge : v) {
                                 NodeId spid = edge.first;

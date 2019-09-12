@@ -25,8 +25,8 @@ template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = ui
 class SixWayWallNodeTurnCostGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
-    using Base::getEdgeWithHypothesis;
     using Base::getEdge;
+    using Base::getEdgeWithHypothesis;
 
     /// \~japanese グラフのサイズ
     /// \~english Cardinality of the graph
@@ -43,7 +43,7 @@ public:
             std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return Base::kInf;
         }
-        if(id_from == id_to){
+        if (id_from == id_to) {
             return 0;
         }
         AgentState as1 = agentStateByNodeId(id_from);
@@ -76,14 +76,14 @@ public:
             as_tmp.pos.y = uint8_t(as_tmp.pos.y + dy[i]);
             std::pair<bool, TNodeId> edge = getEdge(as, as_tmp);
             if (edge.first) {
-                v.push_back({nodeIdByAgentState(as_tmp), edge.second});
+                v.push_back({ nodeIdByAgentState(as_tmp), edge.second });
             }
         }
         AgentState as_tmp = as;
         as_tmp.attribute ^= 0x1;
         std::pair<bool, TNodeId> edge = getEdge(as, as_tmp);
         if (edge.first) {
-            v.push_back({nodeIdByAgentState(as_tmp), edge.second});
+            v.push_back({ nodeIdByAgentState(as_tmp), edge.second });
         }
     }
 

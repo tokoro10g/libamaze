@@ -25,8 +25,8 @@ template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = ui
 class FourWayStepMapGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
-    using Base::getEdgeWithHypothesis;
     using Base::getEdge;
+    using Base::getEdgeWithHypothesis;
 
     /// \~japanese グラフのサイズ
     /// \~english Cardinality of the graph
@@ -57,12 +57,12 @@ public:
         }
         std::array<int8_t, 4> diff { { -1, 1, W, -W } };
         for (auto d : diff) {
-            if(id < -d || id + d >= kSize){
+            if (id < -d || id + d >= kSize) {
                 continue;
             }
             std::pair<bool, TNodeId> edge = getEdge(id, TNodeId(id + d));
             if (id + d >= 0 && id + d < kSize && edge.first) {
-                v.push_back({TNodeId(id + d), edge.second});
+                v.push_back({ TNodeId(id + d), edge.second });
             }
         }
     }

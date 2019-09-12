@@ -1,13 +1,13 @@
 #include "dstarlite.h"
+#include "fourwaystepmapgraph.h"
 #include "maze.h"
 #include "mazeutility.h"
 #include "sample_agent.h"
-#include "fourwaystepmapgraph.h"
 #include "sixwaywallnodegraph.h"
 #include "sixwaywallnodeturncostgraph.h"
+#include <chrono>
 #include <iostream>
 #include <vector>
-#include <chrono>
 
 using namespace Amaze;
 using namespace std::chrono;
@@ -44,14 +44,14 @@ int main(int argc, char* argv[])
     /// \~english
     /// Initialize solver and calculate the shortest path.
     auto solver_four = DStarLite(mg_four);
-    auto solver_six= DStarLite(mg_six);
+    auto solver_six = DStarLite(mg_six);
     auto solver_six_cost = DStarLite(mg_six_cost);
     high_resolution_clock::time_point tstart, tend;
 
 #if 1
     std::cout << "FourWayStepMapGraph: " << std::endl;
     tstart = high_resolution_clock::now();
-    for(int k=0;k<100;k++){
+    for (int k = 0; k < 100; k++) {
         solver_four.initialize();
     }
     tend = high_resolution_clock::now();
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 #if 1
     std::cout << "SixWayWallNodeGraph: " << std::endl;
     tstart = high_resolution_clock::now();
-    for(int k=0;k<100;k++){
+    for (int k = 0; k < 100; k++) {
         solver_six.initialize();
     }
     tend = high_resolution_clock::now();
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 #if 1
     std::cout << "SixWayWallNodeTurnCostGraph: " << std::endl;
     tstart = high_resolution_clock::now();
-    for(int k=0;k<100;k++){
+    for (int k = 0; k < 100; k++) {
         solver_six_cost.initialize();
     }
     tend = high_resolution_clock::now();

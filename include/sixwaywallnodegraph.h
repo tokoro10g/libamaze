@@ -25,8 +25,8 @@ template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = ui
 class SixWayWallNodeGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
-    using Base::getEdgeWithHypothesis;
     using Base::getEdge;
+    using Base::getEdgeWithHypothesis;
 
     /// \~japanese グラフのサイズ
     /// \~english Cardinality of the graph

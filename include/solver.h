@@ -50,7 +50,7 @@ public:
     /// \returns current agent state.
     virtual AgentState getCurrentAgentState() const
     {
-        if(getLastNodeId() == getCurrentNodeId()){
+        if (getLastNodeId() == getCurrentNodeId()) {
             return mg.agentStateByNodeId(getCurrentNodeId());
         } else {
             return mg.agentStateByEdge(getLastNodeId(), getCurrentNodeId());
