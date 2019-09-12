@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <limits>
 #include <utility>
+#include <ostream>
 
 namespace Amaze {
 
@@ -130,6 +131,36 @@ T satSum(T a, T b)
     } else {
         return T(a + b);
     }
+}
+
+std::ostream& operator<<(std::ostream& os, Direction d)
+{
+    if (d.bits.north) {
+        os << 'N';
+    }
+    if (d.bits.east) {
+        os << 'E';
+    }
+    if (d.bits.west) {
+        os << 'W';
+    }
+    if (d.bits.south) {
+        os << 'S';
+    }
+    if (d.half == 0) {
+        os << '0';
+    }
+    return os;
+}
+std::ostream& operator<<(std::ostream& os, Position p)
+{
+    os << "(" << int(p.x) << ", " << int(p.y) << ")";
+    return os;
+}
+std::ostream& operator<<(std::ostream& os, AgentState as)
+{
+    os << "(" << as.pos << ", " << as.dir << ", " << int(as.attribute) << ")";
+    return os;
 }
 
 }
