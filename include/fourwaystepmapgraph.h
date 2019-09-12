@@ -46,7 +46,7 @@ public:
         AgentState as1, as2;
         as1 = agentStateByNodeId(id_from);
         as2 = agentStateByNodeId(id_to);
-        return TCost(std::max(abs((int)as1.pos.x - as2.pos.x) / 2, abs((int)as1.pos.y - as2.pos.y) / 2));
+        return TCost(abs((int)as1.pos.x - as2.pos.x) / 2 + abs((int)as1.pos.y - as2.pos.y) / 2);
     }
     void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const
     {
