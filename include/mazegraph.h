@@ -140,6 +140,20 @@ public:
     /// \~japanese
     /// エッジがブロックされているかどうかを仮定してエッジの存在性とコストを計算します．
     ///
+    /// \param[in] from, to エッジの両端の状態
+    /// \param[in] blocked \p id_from と \p id_to の間のエッジがブロックされていると仮定するとき \p true
+    /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::kInf kInf \endlink になります．
+    ///
+    /// \~english
+    /// Calculates the existence and cost of the edge based on the given assumption \p blocked.
+    ///
+    /// \param[in] from, to Agent states at the ends of the edge
+    /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
+    /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
+    virtual std::pair<bool, TCost> getEdgeWithHypothesis(AgentState from, AgentState to, bool blocked) const = 0;
+    /// \~japanese
+    /// エッジがブロックされているかどうかを仮定してエッジの存在性とコストを計算します．
+    ///
     /// \param[in] id_from, id_to エッジの両端ノードのID
     /// \param[in] blocked \p id_from と \p id_to の間のエッジがブロックされていると仮定するとき \p true
     /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::kInf kInf \endlink になります．
@@ -155,19 +169,17 @@ public:
         return getEdgeWithHypothesis(agentStateByNodeId(id_from), agentStateByNodeId(id_to), blocked);
     }
     /// \~japanese
-    /// エッジがブロックされているかどうかを仮定してエッジの存在性とコストを計算します．
+    /// 迷路データに基づいてエッジの存在性とコストを計算します．
     ///
-    /// \param[in] id_from, id_to エッジの両端ノードのID
-    /// \param[in] blocked \p id_from と \p id_to の間のエッジがブロックされていると仮定するとき \p true
+    /// \param[in] from, to エッジの両端ノードのエージェント状態
     /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::kInf kInf \endlink になります．
     ///
     /// \~english
-    /// Calculates the existence and cost of the edge based on the given assumption \p blocked.
+    /// Calculates the existence and cost of the edge according to the maze data.
     ///
-    /// \param[in] id_from, id_to Node IDs at the ends of the edge
-    /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
+    /// \param[in] from, to Agent states at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const = 0;
+    virtual std::pair<bool, TCost> getEdge(AgentState from, AgentState to) const = 0;
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性とコストを計算します．
     ///
@@ -187,18 +199,6 @@ public:
     {
         return getEdge(agentStateByNodeId(id_from), agentStateByNodeId(id_to));
     }
-    /// \~japanese
-    /// 迷路データに基づいてエッジの存在性とコストを計算します．
-    ///
-    /// \param[in] from, to エッジの両端ノードのエージェント状態
-    /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::kInf kInf \endlink になります．
-    ///
-    /// \~english
-    /// Calculates the existence and cost of the edge according to the maze data.
-    ///
-    /// \param[in] from, to Agent states at the ends of the edge
-    /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdge(AgentState from, AgentState to) const = 0;
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性を返します．
     ///
