@@ -11,6 +11,11 @@ using namespace Amaze;
 
 int main(int argc, char* argv[])
 {
+    if (argc < 2) {
+        std::cout << "usage:" << std::endl;
+        std::cout << argv[0] << " filename" << std::endl;
+        return -1;
+    }
     /// \~japanese
     /// \p Maze クラスのテンプレートパラメータには，迷路の幅・高さの最大値を指定します．
     /// \~english

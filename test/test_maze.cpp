@@ -54,10 +54,10 @@ TEST(maze_load, load_empty)
     std::vector<Position> positions;
     maze.getGoals(positions);
     EXPECT_EQ(Position({ 14, 14 }), positions[0]);
-    for (uint8_t x = 0; x < 16 * 2; x += 2) {
-        for (uint8_t y = 0; y < 16 * 2; y += 2) {
-            EXPECT_EQ(false, maze.isSetWall({ x, y }));
-            EXPECT_EQ(false, maze.isCheckedWall({ x, y }));
+    for (int x = 0; x < 16 * 2; x += 2) {
+        for (int y = 0; y < 16 * 2; y += 2) {
+            EXPECT_EQ(false, maze.isSetWall({ uint8_t(x), uint8_t(y) }));
+            EXPECT_EQ(false, maze.isCheckedWall({ uint8_t(x), uint8_t(y) }));
         }
     }
 }

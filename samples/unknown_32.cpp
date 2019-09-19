@@ -12,7 +12,7 @@
 using namespace Amaze;
 using namespace std::chrono;
 
-int main(int argc, char* argv[])
+int main()
 {
     /// \~japanese
     /// \p Maze クラスのテンプレートパラメータには，迷路の幅・高さの最大値を指定します．
