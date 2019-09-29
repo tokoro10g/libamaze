@@ -21,7 +21,7 @@ namespace Amaze {
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth>
 class SixWayWallNodeGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
@@ -32,7 +32,7 @@ public:
     /// \~english Cardinality of the graph
     static constexpr TNodeId kSize = 2 * W * (W - 1);
 
-    SixWayWallNodeGraph(const Maze<W>& maze)
+    explicit SixWayWallNodeGraph(const Maze<W>& maze)
         : Base(maze)
     {
     }
@@ -48,12 +48,13 @@ public:
         // FIXME: may contain miscalculaions
         return TCost(abs((int)as1.pos.x - as2.pos.x) + abs((int)as1.pos.y - as2.pos.y));
     }
-    void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const
+    std::vector<std::pair<TNodeId, TCost>> neighborEdges(TNodeId id) const
     {
+        std::vector<std::pair<TNodeId, TCost>> v;
         if (id >= kSize) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
-            return;
+            return v; // should be empty
         }
         constexpr int8_t dx[8] = { 0, 1, 2, 1, 0, -1, -2, -1 };
         constexpr int8_t dy[8] = { 2, 1, 0, -1, -2, -1, 0, 1 };
@@ -75,6 +76,7 @@ public:
                 v.push_back({ nodeIdByAgentState(as_tmp), edge.second });
             }
         }
+        return v;
     }
     std::pair<bool, TCost> getEdgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const
     {
@@ -122,9 +124,11 @@ public:
             return TNodeId(as.pos.y / 2 * (2 * W - 1) + as.pos.x / 2 + W - 1);
         }
     }
-    void nodeIdsByPosition(Position p, std::vector<TNodeId>& ids) const
+    std::vector<TNodeId> nodeIdsByPosition(Position p) const
     {
+        std::vector<TNodeId> ids;
         ids.push_back(nodeIdByAgentState({ p, kNoDirection, 0 }));
+        return ids;
     }
     AgentState agentStateByNodeId(TNodeId id) const
     {
@@ -187,6 +191,31 @@ public:
         return ret;
     }
 
+    std::vector<Position> nextWalls(AgentState as) const
+    {
+        std::vector<Position> positions;
+        if(as.dir == kNorth){
+            positions.push_back(as.pos + Difference{0, 2});
+            positions.push_back(as.pos + Difference{1, 1});
+            positions.push_back(as.pos + Difference{-1, 1});
+        } else if(as.dir == kEast){
+            positions.push_back(as.pos + Difference{2, 0});
+            positions.push_back(as.pos + Difference{1, 1});
+            positions.push_back(as.pos + Difference{1, -1});
+        } else if(as.dir == kSouth){
+            positions.push_back(as.pos + Difference{0, -2});
+            positions.push_back(as.pos + Difference{1, -1});
+            positions.push_back(as.pos + Difference{-1, -1});
+        } else if(as.dir == kWest){
+            positions.push_back(as.pos + Difference{-2, 0});
+            positions.push_back(as.pos + Difference{-1, 1});
+            positions.push_back(as.pos + Difference{-1, -1});
+        } else {
+            return std::vector<Position>();
+        }
+        return positions;
+    }
+
     bool isPullBackSequence(std::array<TNodeId, 3> seq) const
     {
         if (!Base::edgeExist(seq[0], seq[1]) || !Base::edgeExist(seq[1], seq[2])) {
@@ -204,4 +233,5 @@ public:
         return nodeIdByAgentState({ p, kNoDirection, 0 });
     }
 };
-}
+
+} // namespace Amaze

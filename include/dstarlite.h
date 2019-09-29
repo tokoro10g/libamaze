@@ -83,7 +83,7 @@ public:
     /// \~english Cost value assumed to be infinity
     static constexpr Cost kInf = TMazeGraph::kInf;
 
-    DStarLite(const TMazeGraph& mg)
+    explicit DStarLite(const TMazeGraph& mg)
         : Solver<TMazeGraph>(mg)
         , id_current(mg.getStartNodeId())
         , ids_destination()
@@ -95,11 +95,10 @@ public:
         , open_list()
         , in_open_list(0)
     {
-        mg.getGoalNodeIds(ids_destination);
+        ids_destination = mg.getGoalNodeIds();
         g.fill(kInf);
         rhs.fill(kInf);
     }
-    ~DStarLite() {}
     /// \~japanese
     /// ヒープ内の要素を更新します．
     ///
@@ -184,8 +183,7 @@ public:
                 }
                 in_open_list.reset(uid);
 
-                std::vector<std::pair<NodeId, Cost>> v;
-                Base::mg.neighborEdges(uid, v);
+                std::vector<std::pair<NodeId, Cost>> v = Base::mg.neighborEdges(uid);
                 for (auto p : v) {
                     NodeId sid = p.first;
                     Cost scost = p.second;
@@ -203,8 +201,7 @@ public:
                     if (rhs[sid] == satSum(scost, gold)) {
                         if (rhs[sid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId, Cost>> v;
-                            Base::mg.neighborEdges(sid, v);
+                            std::vector<std::pair<NodeId, Cost>> v = Base::mg.neighborEdges(sid);
                             for (auto p : v) {
                                 NodeId spid = p.first;
                                 Cost spcost = p.second;
@@ -215,8 +212,7 @@ public:
                     }
                     updateNode(sid);
                 };
-                std::vector<std::pair<NodeId, Cost>> v;
-                Base::mg.neighborEdges(uid, v);
+                std::vector<std::pair<NodeId, Cost>> v = Base::mg.neighborEdges(uid);
                 for_each(v.begin(), v.end(), f);
                 f({ uid, 0 });
             }
@@ -243,30 +239,16 @@ public:
         }
         return { satSum(satSum(std::min(g[id], rhs[id]), Base::mg.distance(id_current, id)), key_modifier), std::min(g[id], rhs[id]) };
     }
-    NodeId getNextNodeId() const
-    {
-        //TODO: Implement
-        return NodeId(0);
-    }
-    NodeId getCurrentNodeId() const
-    {
-        return id_current;
-    }
-    NodeId getLastNodeId() const
-    {
-        return id_last;
-    }
-    void getDestinationNodeIds(std::vector<NodeId>& ids) const
-    {
-        ids.insert(ids.end(), ids_destination.begin(), ids_destination.end());
-    }
+    NodeId getNextNodeId() const { return NodeId(0); }
+    NodeId getCurrentNodeId() const { return id_current; }
+    NodeId getLastNodeId() const { return id_last; }
+    std::vector<NodeId> getDestinationNodeIds() const { return ids_destination; }
 
     std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const
     {
         NodeId argmin = id;
         Cost mincost = kInf;
-        std::vector<std::pair<NodeId, Cost>> v;
-        Base::mg.neighborEdges(id, v);
+        std::vector<std::pair<NodeId, Cost>> v = Base::mg.neighborEdges(id);
         for (auto edge : v) {
             NodeId spid = edge.first;
             Cost spcost = edge.second;
@@ -279,37 +261,25 @@ public:
         return { argmin, mincost };
     }
 
-    bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<AgentState>& path) const
+    std::vector<AgentState> reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to) const
     {
+        std::vector<AgentState> path;
         path.push_back(Base::mg.agentStateByNodeId(id_from));
         NodeId id_current_on_path = id_from;
         NodeId id_last_on_path = id_from;
         while (std::find(ids_to.begin(), ids_to.end(), id_current_on_path) == ids_to.end()) {
             auto n = lowestNeighbor(id_current_on_path);
             if (n.second == kInf) {
-                return false;
+                return std::vector<AgentState>();
             }
             id_last_on_path = id_current_on_path;
             id_current_on_path = n.first;
             path.push_back(Base::mg.agentStateByEdge(id_last_on_path, id_current_on_path));
         }
-        return true;
-    }
-    bool reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to, std::vector<NodeId>& path) const
-    {
-        path.push_back(id_from);
-        while (std::find(ids_to.begin(), ids_to.end(), id_from) == ids_to.end()) {
-            auto n = lowestNeighbor(id_from);
-            if (n.second == kInf) {
-                return false;
-            }
-            id_from = n.first;
-            path.push_back(id_from);
-        }
-        return true;
+        return path;
     }
 
-    void preSense() {}
+    void preSense(const std::vector<Position>& sense_positions __attribute__((unused))) {}
     void postSense(const std::vector<Position>& changed_positions)
     {
         //TODO: Implement
@@ -328,19 +298,18 @@ public:
             if (!changed_positions.empty()) {
                 key_modifier = satSum(key_modifier, Base::mg.distance(id_last_modified, id_current));
                 id_last_modified = id_current;
-                std::vector<std::pair<NodeId, NodeId>> changed_edges;
-                Base::mg.affectedEdges(changed_positions, changed_edges);
+                std::vector<std::tuple<NodeId, NodeId, Cost>> changed_edges = Base::mg.affectedEdges(changed_positions);
                 for (auto e : changed_edges) {
                     Cost cold;
-                    if (Base::mg.edgeCost(e.first, e.second) == kInf) {
+                    if (std::get<2>(e) == kInf) {
                         // assume that the path is NOT blocked in the previous step
-                        cold = Base::mg.getEdgeWithHypothesis(e.first, e.second, false).second;
+                        cold = Base::mg.getEdgeWithHypothesis(std::get<0>(e), std::get<1>(e), false).second;
                     } else {
                         // assume that the path IS blocked in the previous step
-                        cold = Base::mg.getEdgeWithHypothesis(e.first, e.second, true).second;
+                        cold = Base::mg.getEdgeWithHypothesis(std::get<0>(e), std::get<1>(e), true).second;
                     }
-                    auto uid = e.first;
-                    auto vid = e.second;
+                    auto uid = std::get<0>(e);
+                    auto vid = std::get<1>(e);
                     if (cold > kInf) {
                         // TODO: probably unnecessary
                         if (rhs[uid] != 0) {
@@ -349,8 +318,7 @@ public:
                     } else if (rhs[uid] == satSum(cold, g[vid])) {
                         if (rhs[uid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId, Cost>> v;
-                            Base::mg.neighborEdges(uid, v);
+                            std::vector<std::pair<NodeId, Cost>> v = Base::mg.neighborEdges(uid);
                             for (auto edge : v) {
                                 NodeId spid = edge.first;
                                 Cost spcost = edge.second;
@@ -368,8 +336,7 @@ public:
                     } else if (rhs[vid] == satSum(cold, g[uid])) {
                         if (rhs[vid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId, Cost>> v;
-                            Base::mg.neighborEdges(vid, v);
+                            std::vector<std::pair<NodeId, Cost>> v = Base::mg.neighborEdges(vid);
                             for (auto edge : v) {
                                 NodeId spid = edge.first;
                                 Cost spcost = edge.second;
@@ -401,8 +368,7 @@ public:
     {
         resetCostsAndLists();
         id_current = Base::mg.getStartNodeId();
-        ids_destination.clear();
-        Base::mg.getGoalNodeIds(ids_destination);
+        ids_destination = Base::mg.getGoalNodeIds();
         id_last = id_current;
         id_last_modified = id_current;
     }
@@ -433,4 +399,4 @@ public:
     }
 };
 
-}
+} // namespace Amaze

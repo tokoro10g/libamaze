@@ -15,7 +15,7 @@ namespace Amaze {
 /// A maze class.
 ///
 /// \tparam W Maze width in the number of cells
-template <uint8_t W = 32>
+template <uint8_t W = kDefaultMazeWidth>
 class Maze {
 private:
     using MazeData = std::bitset<(2 * W - 1) * (2 * W - 1)>;
@@ -155,7 +155,7 @@ public:
     /// \~english
     /// Returns goal positions.
     /// \param[out] positions List of positions.
-    void getGoals(std::vector<Position>& positions) const { positions.insert(positions.end(), goals.begin(), goals.end()); }
+    std::vector<Position> getGoals() const { return goals; }
     /// \~japanese
     /// ゴール位置を追加します．
     /// \param[in] p 位置
@@ -206,10 +206,7 @@ public:
     /// \~english
     /// Toggles wall data.
     /// \param[in] p Position
-    void toggleWall(Position p)
-    {
-        setWall(p, !isSetWall(p));
-    }
+    void toggleWall(Position p) { setWall(p, !isSetWall(p)); }
     /// \~japanese
     /// 壁チェックデータの値をトグルします．
     /// \param[in] p 位置
@@ -217,10 +214,7 @@ public:
     /// \~english
     /// Toggles checked wall data.
     /// \param[in] p Position
-    void toggleCheckedWall(Position p)
-    {
-        setCheckedWall(p, !isCheckedWall(p));
-    }
+    void toggleCheckedWall(Position p) { setCheckedWall(p, !isCheckedWall(p)); }
 
     /// \~japanese
     /// 壁が存在するかどうかを返します．
@@ -245,4 +239,4 @@ public:
     bool isCheckedWall(Position p) const { return isSetInternal(p, true); }
 };
 
-}
+} // namespace Amaze

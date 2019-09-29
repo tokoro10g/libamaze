@@ -25,7 +25,7 @@ namespace Amaze {
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth>
 class MazeGraph {
 protected:
     /// \~japanese 迷路データ
@@ -46,11 +46,11 @@ public:
     /// \~english ID for invalid nodes
     static constexpr TNodeId kInvalidNode = std::numeric_limits<TNodeId>::max();
 
-    MazeGraph(const Maze<W>& maze)
+    explicit MazeGraph(const Maze<W>& maze)
         : maze(maze)
     {
     }
-    virtual ~MazeGraph() {}
+    virtual ~MazeGraph() = default;
 
     /// \~japanese
     /// ノード \p id_from と \p id_to の間の楽観的距離を計算します．
@@ -75,66 +75,67 @@ public:
     /// ノード \p id の隣接ノードのIDを \p v に格納します．
     ///
     /// \param[in] id 原点とするノードのID
-    /// \param[out] v 隣接ノードのIDを格納する\p std::vector
+    /// \returns 隣接ノードのIDを格納する\p std::vector
     ///
     /// \~english
     /// Fills \p v with neighbor IDs of the node \p id.
     ///
     /// \param[in] id Node ID of the source
-    /// \param[out] v \p std::vector filled with neighbors' IDs
-    virtual void neighbors(TNodeId id, std::vector<TNodeId>& v) const
+    /// \returns \p std::vector filled with neighbors' IDs
+    virtual std::vector<TNodeId> neighbors(TNodeId id) const
     {
-        std::vector<std::pair<TNodeId, TCost>> edges;
-        neighborEdges(id, edges);
+        std::vector<TNodeId> v;
+        std::vector<std::pair<TNodeId, TCost>> edges = neighborEdges(id);
         for (auto edge : edges) {
             v.push_back(edge.first);
         }
+        return v;
     }
 
     /// \~japanese
     /// ノード \p id からのエッジを \p v に格納します．
     ///
     /// \param[in] id 原点とするノードのID
-    /// \param[out] v エッジを格納する\p std::vector
+    /// \returns エッジを格納する\p std::vector
     ///
     /// \~english
     /// Fills \p v with edges from the node \p id.
     ///
     /// \param[in] id Node ID of the source
-    /// \param[out] v \p std::vector filled with edges
-    virtual void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const = 0;
+    /// \returns \p std::vector filled with edges
+    virtual std::vector<std::pair<TNodeId, TCost>> neighborEdges(TNodeId id) const = 0;
 
     /// \~japanese
     /// 与えた位置への迷路情報の変更の影響を受けるエッジを列挙します．
     ///
     /// \param[in] positions 位置のリスト
-    /// \param[out] edges エッジを格納する\p std::vector
+    /// \returns エッジを格納する\p std::vector
     ///
     /// \~english
     /// Enumerates edges affected by the change to the maze data for given positions.
     ///
     /// \param[in] positions List of positions
-    /// \param[out] edges \p std::vector filled with edges
-    virtual void affectedEdges(const std::vector<Position>& positions, std::vector<std::pair<TNodeId, TNodeId>>& edges) const
+    /// \returns \p std::vector filled with edges
+    virtual std::vector<std::tuple<TNodeId, TNodeId, TCost>> affectedEdges(const std::vector<Position>& positions) const
     {
+        std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
         std::vector<TNodeId> visited;
         for (Position p : positions) {
-            std::vector<TNodeId> ids;
-            nodeIdsByPosition(p, ids);
+            std::vector<TNodeId> ids = nodeIdsByPosition(p);
             for (auto id : ids) {
                 if (id == kInvalidNode) {
                     continue;
                 }
                 if (std::find(visited.begin(), visited.end(), id) == visited.end()) {
                     visited.push_back(id);
-                    std::vector<NodeId> v;
-                    neighbors(id, v);
+                    std::vector<std::pair<NodeId, Cost>> v = neighborEdges(id);
                     for (auto n : v) {
-                        edges.push_back({ id, n });
+                        edges.push_back({ id, n.first, n.second });
                     }
                 }
             }
         }
+        return edges;
     }
 
     /// \~japanese
@@ -164,10 +165,7 @@ public:
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const
-    {
-        return getEdgeWithHypothesis(agentStateByNodeId(id_from), agentStateByNodeId(id_to), blocked);
-    }
+    virtual std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const { return getEdgeWithHypothesis(agentStateByNodeId(id_from), agentStateByNodeId(id_to), blocked); }
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性とコストを計算します．
     ///
@@ -195,10 +193,7 @@ public:
     ///
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const
-    {
-        return getEdge(agentStateByNodeId(id_from), agentStateByNodeId(id_to));
-    }
+    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const { return getEdge(agentStateByNodeId(id_from), agentStateByNodeId(id_to)); }
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性を返します．
     ///
@@ -210,11 +205,7 @@ public:
     ///
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns the existence of the edge.
-    virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const
-    {
-        std::pair<bool, TCost> e = getEdge(id_from, id_to);
-        return e.first;
-    }
+    virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const { return getEdge(id_from, id_to).first; }
     /// \~japanese
     /// 迷路データに基づいてエッジのコストを返します．
     ///
@@ -226,11 +217,7 @@ public:
     ///
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns the cost of the edge.
-    virtual TCost edgeCost(TNodeId id_from, TNodeId id_to) const
-    {
-        std::pair<bool, TCost> e = getEdge(id_from, id_to);
-        return e.second;
-    }
+    virtual TCost edgeCost(TNodeId id_from, TNodeId id_to) const { return getEdge(id_from, id_to).second; }
 
     /// \~japanese
     /// エージェントの状態から対応するノードのIDを計算します．
@@ -255,7 +242,7 @@ public:
     ///
     /// \param[in] p Position
     /// \param[out] ids List of node ID.
-    virtual void nodeIdsByPosition(Position p, std::vector<NodeId>& ids) const = 0;
+    virtual std::vector<NodeId> nodeIdsByPosition(Position p) const = 0;
     /// \~japanese
     /// ノードIDから対応するエージェントの状態を計算します．
     ///
@@ -286,6 +273,19 @@ public:
     virtual AgentState agentStateByEdge(TNodeId id_from, TNodeId id_to) const = 0;
 
     /// \~japanese
+    /// 与えられたエージェントの状態から次に観測する壁の位置を返します．
+    ///
+    /// \param[in] as エージェントの状態
+    /// \returns 位置を格納した \p std::vector
+    ///
+    /// \~english
+    /// Returns positions of walls to sense next for a given agent state.
+    ///
+    /// \param[in] as Agent state
+    /// \returns \p std::vector contains positions
+    virtual std::vector<Position> nextWalls(AgentState as) const = 0;
+
+    /// \~japanese
     /// 与えられたノードIDの順列が引き返しを行う動作かどうかを判別します．
     ///
     /// \param[in] seq ノードIDの配列
@@ -307,11 +307,7 @@ public:
     /// Returns the start node ID.
     ///
     /// \returns the start node ID.
-    virtual TNodeId getStartNodeId() const
-    {
-        Position p = maze.getStart();
-        return nodeIdByAgentState({ p, kNoDirection, 0 });
-    }
+    virtual TNodeId getStartNodeId() const { return nodeIdByAgentState({ maze.getStart(), kNoDirection, 0 }); }
     /// \~japanese
     /// ゴールのノードIDのリストを返します．
     ///
@@ -321,16 +317,17 @@ public:
     /// Returns the list of goal node IDs.
     ///
     /// \param[out] ids List of goal node IDs
-    virtual void getGoalNodeIds(std::vector<TNodeId>& ids) const
+    virtual std::vector<TNodeId> getGoalNodeIds() const
     {
-        std::vector<Position> positions;
-        maze.getGoals(positions);
+        std::vector<TNodeId> ids;
+        std::vector<Position> positions = maze.getGoals();
         for (auto p : positions) {
             TNodeId id = nodeIdByAgentState({ p, kNoDirection, 0 });
             if (id != kInvalidNode) {
                 ids.push_back(id);
             }
         }
+        return ids;
     }
 
     /// \~japanese
@@ -342,10 +339,7 @@ public:
     /// Returns the const reference of \p maze.
     ///
     /// \returns the const reference of \p maze.
-    const Maze<W>& getCMaze() const
-    {
-        return maze;
-    }
+    const Maze<W>& getCMaze() const { return maze; }
 };
 
-}
+} // namespace Amaze

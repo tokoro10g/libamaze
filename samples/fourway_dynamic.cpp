@@ -27,8 +27,7 @@ int main(int argc, char* argv[])
     Utility::loadMazeFromFile(reference_maze, argv[1]);
     Utility::loadEmptyMaze(maze);
 
-    std::vector<Position> goals;
-    reference_maze.getGoals(goals);
+    std::vector<Position> goals = reference_maze.getGoals();
     maze.addGoals(goals);
     maze.setWall({ 1, 0 }, true);
     maze.setCheckedWall({ 0, 1 }, true);
@@ -39,8 +38,7 @@ int main(int argc, char* argv[])
 
     solver.initialize();
     Utility::printMaze(maze);
-    std::vector<uint16_t> goal_ids;
-    mg.getGoalNodeIds(goal_ids);
+    std::vector<uint16_t> goal_ids = mg.getGoalNodeIds();
     std::cout << "The start is " << mg.getStartNodeId() << std::endl;
     std::cout << "The goals are ";
     for (auto id_goal : goal_ids) {
@@ -51,7 +49,7 @@ int main(int argc, char* argv[])
     while (std::find(goal_ids.begin(), goal_ids.end(), solver.getCurrentNodeId()) == goal_ids.end()) {
         std::cout << solver.getCurrentAgentState() << std::endl;
         std::vector<Position> changed_positions;
-        solver.preSense();
+        solver.preSense(std::vector<Position>());
         senseFourWay(maze, reference_maze, solver.getCurrentAgentState(), changed_positions);
         solver.postSense(changed_positions);
     }
@@ -65,7 +63,7 @@ int main(int argc, char* argv[])
     while (solver.getCurrentNodeId() != mg.getStartNodeId()) {
         std::cout << solver.getCurrentAgentState() << std::endl;
         std::vector<Position> changed_positions;
-        solver.preSense();
+        solver.preSense(std::vector<Position>());
         senseFourWay(maze, reference_maze, solver.getCurrentAgentState(), changed_positions);
         solver.postSense(changed_positions);
     }
@@ -75,8 +73,7 @@ int main(int argc, char* argv[])
     auto solver_fast_run = DStarLite(mg_fast_run);
     solver_fast_run.initialize();
 
-    std::vector<AgentState> path;
-    solver_fast_run.reconstructPath(mg_fast_run.getStartNodeId(), goal_ids, path);
+    std::vector<AgentState> path = solver_fast_run.reconstructPath(mg_fast_run.getStartNodeId(), goal_ids);
     for (AgentState as : path) {
         std::cout << as << std::endl;
     }

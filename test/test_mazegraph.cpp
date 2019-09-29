@@ -23,18 +23,15 @@ TEST(fourwaygraph, unit)
     EXPECT_EQ(1, mg.distance(id_from, id_to));
     EXPECT_EQ(1, mg.distance(uint16_t(id_from + 1), id_to));
 
-    std::vector<uint16_t> v;
-    mg.neighbors(0, v);
-    sort(v.begin(), v.end());
-    ASSERT_THAT(v, ElementsAre(1, 16));
-    v.clear();
-    mg.neighbors(16, v);
-    sort(v.begin(), v.end());
-    ASSERT_THAT(v, ElementsAre(0, 17, 32));
-    v.clear();
-    mg.neighbors(17, v);
-    sort(v.begin(), v.end());
-    ASSERT_THAT(v, ElementsAre(1, 16, 18, 33));
+    std::vector<uint16_t> v1 = mg.neighbors(0);
+    sort(v1.begin(), v1.end());
+    ASSERT_THAT(v1, ElementsAre(1, 16));
+    std::vector<uint16_t> v2 = mg.neighbors(16);
+    sort(v2.begin(), v2.end());
+    ASSERT_THAT(v2, ElementsAre(0, 17, 32));
+    std::vector<uint16_t> v3 = mg.neighbors(17);
+    sort(v3.begin(), v3.end());
+    ASSERT_THAT(v3, ElementsAre(1, 16, 18, 33));
 }
 
 GTEST_API_ int main(int argc, char** argv)

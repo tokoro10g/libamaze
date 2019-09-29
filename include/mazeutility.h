@@ -78,10 +78,7 @@ namespace Utility {
     }
 
     template <uint8_t W>
-    bool loadMazeFromStdin(Maze<W>& maze)
-    {
-        return loadMazeFromStream(maze, std::cin);
-    }
+    bool loadMazeFromStdin(Maze<W>& maze) { return loadMazeFromStream(maze, std::cin); }
 
     template <uint8_t W>
     bool loadMazeFromFile(Maze<W>& maze, std::string filename)
@@ -114,8 +111,7 @@ namespace Utility {
     template <uint8_t W>
     void printMaze(const Maze<W>& maze, const int m = 1)
     {
-        std::vector<Position> goals;
-        maze.getGoals(goals);
+        std::vector<Position> goals = maze.getGoals();
         std::set<std::pair<int, int>> goal_cells;
 
         for (auto p : goals) {
@@ -170,4 +166,4 @@ namespace Utility {
     }
 }
 
-}
+} // namespace Amaze

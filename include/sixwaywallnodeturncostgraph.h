@@ -21,7 +21,7 @@ namespace Amaze {
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = 32>
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth>
 class SixWayWallNodeTurnCostGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
@@ -32,7 +32,7 @@ public:
     /// \~english Cardinality of the graph
     static constexpr TNodeId kSize = 2 * 2 * W * (W - 1);
 
-    SixWayWallNodeTurnCostGraph(const Maze<W>& maze)
+    explicit SixWayWallNodeTurnCostGraph(const Maze<W>& maze)
         : Base(maze)
     {
     }
@@ -40,7 +40,7 @@ public:
     {
         if (id_from >= kSize || id_to >= kSize) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id_from: " << int(id_from) << ", id_to: " << int(id_to) << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return Base::kInf;
         }
         if (id_from == id_to) {
@@ -49,15 +49,16 @@ public:
         AgentState as1 = agentStateByNodeId(id_from);
         AgentState as2 = agentStateByNodeId(id_to);
         // FIXME: may contain miscalculaions
-        return TCost(abs((int)as1.pos.x - as2.pos.x) + abs((int)as1.pos.y - as2.pos.y) + (as1.attribute != as2.attribute));
+        return TCost(abs(int(as1.pos.x) - as2.pos.x) + abs(int(as1.pos.y) - as2.pos.y) + (as1.attribute != as2.attribute));
     }
 
-    void neighborEdges(TNodeId id, std::vector<std::pair<TNodeId, TCost>>& v) const
+    std::vector<std::pair<TNodeId, TCost>> neighborEdges(TNodeId id) const
     {
+        std::vector<std::pair<TNodeId, TCost>> v;
         if (id >= kSize) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id: " << (int)id << __FILE__ << ":" << __LINE__ << std::endl;
-            return;
+            std::cerr << "Out of bounds!!! (id: " << int(id) << __FILE__ << ":" << __LINE__ << std::endl;
+            return v; // should be empty
         }
         constexpr int8_t dx[8] = { 0, 1, 2, 1, 0, -1, -2, -1 };
         constexpr int8_t dy[8] = { 2, 1, 0, -1, -2, -1, 0, 1 };
@@ -85,6 +86,7 @@ public:
         if (edge.first) {
             v.push_back({ nodeIdByAgentState(as_tmp), edge.second });
         }
+        return v;
     }
 
     std::pair<bool, TCost> getEdgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const
@@ -101,14 +103,14 @@ public:
 
         // FIXME: may contain bugs
         if (as1.attribute & 0x1) {
-            if (abs((int)as1.pos.x - as2.pos.x) == 1 && abs((int)as1.pos.y - as2.pos.y) == 1 && as1.pos.x % 2 != as1.pos.y % 2 && (as2.attribute & 0x1)) {
+            if (abs(int(as1.pos.x) - as2.pos.x) == 1 && abs(int(as1.pos.y) - as2.pos.y) == 1 && as1.pos.x % 2 != as1.pos.y % 2 && (as2.attribute & 0x1)) {
                 return { true, std::max(TCost(2), maxcost) };
             }
             if (as1.pos.x == as2.pos.x && as1.pos.y == as2.pos.y && !(as2.attribute & 0x1)) {
                 return { true, std::max(TCost(1), maxcost) };
             }
         } else {
-            if ((abs((int)as1.pos.x - as2.pos.x) == 2 && as1.pos.y == as2.pos.y && as1.pos.x % 2 == 1 && as1.pos.y % 2 == 0) || (abs((int)as1.pos.y - as2.pos.y) == 2 && as1.pos.x == as2.pos.x && as1.pos.x % 2 == 0 && as1.pos.y % 2 == 1)) {
+            if ((abs(int(as1.pos.x) - as2.pos.x) == 2 && as1.pos.y == as2.pos.y && as1.pos.x % 2 == 1 && as1.pos.y % 2 == 0) || (abs(int(as1.pos.y) - as2.pos.y) == 2 && as1.pos.x == as2.pos.x && as1.pos.x % 2 == 0 && as1.pos.y % 2 == 1)) {
                 if (!(as2.attribute & 0x1)) {
                     return { true, std::max(TCost(2), maxcost) };
                 }
@@ -145,17 +147,19 @@ public:
             return TNodeId(as.pos.y / 2 * (2 * W - 1) + as.pos.x / 2 + W - 1 + (as.attribute & 0x1) * kSize / 2);
         }
     }
-    void nodeIdsByPosition(Position p, std::vector<TNodeId>& ids) const
+    std::vector<TNodeId> nodeIdsByPosition(Position p) const
     {
+        std::vector<TNodeId> ids;
         ids.push_back(nodeIdByAgentState({ p, kNoDirection, 0 }));
         ids.push_back(nodeIdByAgentState({ p, kNoDirection, 1 }));
+        return ids;
     }
     AgentState agentStateByNodeId(TNodeId id) const
     {
         // FIXME: may contain bugs
         if (id >= kSize) {
             // TODO: implement exception handling
-            std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
+            std::cerr << "Out of bounds!!! (id: " << int(id) << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return kInvalidAgentState;
         }
         AgentState as;
@@ -223,6 +227,31 @@ public:
         return (seq[0] == seq[2] || Base::edgeExist(seq[0], seq[2]));
     }
 
+    std::vector<Position> nextWalls(AgentState as) const
+    {
+        std::vector<Position> positions;
+        if(as.dir == kNorth){
+            positions.push_back(as.pos + Difference{0, 2});
+            positions.push_back(as.pos + Difference{1, 1});
+            positions.push_back(as.pos + Difference{-1, 1});
+        } else if(as.dir == kEast){
+            positions.push_back(as.pos + Difference{2, 0});
+            positions.push_back(as.pos + Difference{1, 1});
+            positions.push_back(as.pos + Difference{1, -1});
+        } else if(as.dir == kSouth){
+            positions.push_back(as.pos + Difference{0, -2});
+            positions.push_back(as.pos + Difference{1, -1});
+            positions.push_back(as.pos + Difference{-1, -1});
+        } else if(as.dir == kWest){
+            positions.push_back(as.pos + Difference{-2, 0});
+            positions.push_back(as.pos + Difference{-1, 1});
+            positions.push_back(as.pos + Difference{-1, -1});
+        } else {
+            return std::vector<Position>();
+        }
+        return positions;
+    }
+
     TNodeId getStartNodeId() const
     {
         Position p = Base::maze.getStart();
@@ -231,10 +260,10 @@ public:
         }
         return nodeIdByAgentState({ p, kNoDirection, 0 });
     }
-    void getGoalNodeIds(std::vector<TNodeId>& ids) const
+    std::vector<TNodeId> getGoalNodeIds() const
     {
-        std::vector<Position> positions;
-        Base::maze.getGoals(positions);
+        std::vector<TNodeId> ids;
+        std::vector<Position> positions = Base::maze.getGoals();
         for (auto p : positions) {
             TNodeId id = nodeIdByAgentState({ p, kNoDirection, 0 });
             if (id != Base::kInvalidNode) {
@@ -245,6 +274,8 @@ public:
                 ids.push_back(id);
             }
         }
+        return ids;
     }
 };
-}
+
+} // namespace Amaze

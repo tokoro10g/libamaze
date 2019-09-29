@@ -37,8 +37,7 @@ int main(int argc, char* argv[])
     SixWayWallNodeGraph mg(reference_maze);
 #endif
     const uint16_t id_start = mg.getStartNodeId();
-    std::vector<uint16_t> goals;
-    mg.getGoalNodeIds(goals);
+    std::vector<uint16_t> goals = mg.getGoalNodeIds();
     std::cout << "The start is " << mg.agentStateByNodeId(id_start) << std::endl;
     std::cout << "The goals are ";
     for (uint16_t id_goal : goals) {
@@ -53,8 +52,7 @@ int main(int argc, char* argv[])
     auto solver = DStarLite(mg);
     solver.initialize();
 
-    std::vector<AgentState> path;
-    solver.reconstructPath(id_start, goals, path);
+    std::vector<AgentState> path = solver.reconstructPath(id_start, goals);
     for (AgentState as : path) {
         std::cout << as << std::endl;
     }

@@ -111,6 +111,8 @@ static constexpr Direction kWest = { 0x8 };
 
 static constexpr AgentState kInvalidAgentState = { { uint8_t(-1), uint8_t(-1) }, kNoDirection, 0 };
 
+static constexpr uint8_t kDefaultMazeWidth = 32;
+
 /// \~japanese
 /// 型\p Tの最大値で飽和する和を返します．
 /// \tparam T 数値型
@@ -163,4 +165,4 @@ std::ostream& operator<<(std::ostream& os, AgentState as)
     return os;
 }
 
-}
+} // namespace Amaze
