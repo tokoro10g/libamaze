@@ -26,12 +26,6 @@ private:
     /// \~japanese 壁チェックデータ
     /// \~english Checked wall data
     MazeData check_data;
-    /// \~japanese スタート位置
-    /// \~english Start position
-    Position start;
-    /// \~japanese ゴール位置
-    /// \~english Goal positions
-    std::vector<Position> goals;
 
     /// \~japanese
     /// 迷路データを操作する内部関数．
@@ -90,6 +84,13 @@ private:
     }
 
 public:
+    /// \~japanese スタート位置
+    /// \~english Start position
+    Position start;
+    /// \~japanese ゴール位置
+    /// \~english Goal positions
+    std::vector<Position> goals;
+
     Maze()
         : maze_data(0)
         , check_data(0)
@@ -120,7 +121,7 @@ public:
     {
         resetData();
         start = { 0, 0 };
-        clearGoals();
+        goals.clear();
     }
 
     /// \~japanese
@@ -131,53 +132,6 @@ public:
     /// Returns the width.
     /// \returns the number of cells.
     uint8_t getWidth() const { return W; }
-
-    /// \~japanese
-    /// スタート位置を返します．
-    /// \returns 位置
-    ///
-    /// \~english
-    /// Returns start position.
-    /// \returns position.
-    Position getStart() const { return start; }
-    /// \~japanese
-    /// スタート位置を設定します．
-    /// \param[in] p 位置
-    ///
-    /// \~english
-    /// Sets start position.
-    /// \param[in] p Position
-    void setStart(Position p) { start = p; }
-    /// \~japanese
-    /// ゴール位置のリストを返します．
-    /// \param[out] positions 位置のリスト
-    ///
-    /// \~english
-    /// Returns goal positions.
-    /// \param[out] positions List of positions.
-    std::vector<Position> getGoals() const { return goals; }
-    /// \~japanese
-    /// ゴール位置を追加します．
-    /// \param[in] p 位置
-    ///
-    /// \~english
-    /// Adds goal position.
-    /// \param[in] p Goal position
-    void addGoal(const Position p) { goals.push_back(p); }
-    /// \~japanese
-    /// ゴール位置を追加します．
-    /// \param[in] positions 位置のリスト
-    ///
-    /// \~english
-    /// Adds goal positions.
-    /// \param[in] positions List of positions
-    void addGoals(const std::vector<Position>& positions) { goals.insert(goals.end(), positions.begin(), positions.end()); }
-    /// \~japanese
-    /// ゴール位置をクリアします．
-    ///
-    /// \~english
-    /// Clears goal positions.
-    void clearGoals() { goals.clear(); }
 
     /// \~japanese
     /// 壁データの値を設定します．

@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
     /// \~english
     /// Define a maze graph and display agent states of the start and goals.
     FourWayStepMapGraph mg(reference_maze);
-    const uint16_t id_start = mg.getStartNodeId();
-    std::vector<uint16_t> goals = mg.getGoalNodeIds();
+    const uint16_t id_start = mg.startNodeId();
+    std::vector<uint16_t> goals = mg.goalNodeIds();
     std::cout << "The start is " << mg.agentStateByNodeId(id_start) << std::endl;
     std::cout << "The goals are ";
     for (uint16_t id_goal : goals) {

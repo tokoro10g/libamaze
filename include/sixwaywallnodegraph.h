@@ -25,11 +25,9 @@ template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = ui
 class SixWayWallNodeGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
 public:
     using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
-    using Base::getEdge;
-    using Base::getEdgeWithHypothesis;
+    using Base::edge;
+    using Base::edgeWithHypothesis;
 
-    /// \~japanese グラフのサイズ
-    /// \~english Cardinality of the graph
     static constexpr TNodeId kSize = 2 * W * (W - 1);
 
     explicit SixWayWallNodeGraph(const Maze<W>& maze)
@@ -71,14 +69,14 @@ public:
             AgentState as_tmp = as;
             as_tmp.pos.x = uint8_t(as_tmp.pos.x + dx[i]);
             as_tmp.pos.y = uint8_t(as_tmp.pos.y + dy[i]);
-            std::pair<bool, TNodeId> edge = getEdge(as, as_tmp);
-            if (edge.first) {
-                v.push_back({ nodeIdByAgentState(as_tmp), edge.second });
+            std::pair<bool, TNodeId> e = edge(as, as_tmp);
+            if (e.first) {
+                v.push_back({ nodeIdByAgentState(as_tmp), e.second });
             }
         }
         return v;
     }
-    std::pair<bool, TCost> getEdgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const
+    std::pair<bool, TCost> edgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const
     {
         if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
             std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") " << __FILE__ << ":" << __LINE__ << std::endl;
@@ -98,7 +96,7 @@ public:
         }
         return { false, Base::kInf };
     }
-    std::pair<bool, TCost> getEdge(AgentState as1, AgentState as2) const
+    std::pair<bool, TCost> edge(AgentState as1, AgentState as2) const
     {
         if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
             std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") " << __FILE__ << ":" << __LINE__ << std::endl;
@@ -107,7 +105,7 @@ public:
         if (!kExplore && (!Base::maze.isCheckedWall(as1.pos) || !Base::maze.isCheckedWall(as2.pos))) {
             return { false, Base::kInf };
         }
-        return getEdgeWithHypothesis(as1, as2, Base::maze.isSetWall(as1.pos) || Base::maze.isSetWall(as2.pos));
+        return edgeWithHypothesis(as1, as2, Base::maze.isSetWall(as1.pos) || Base::maze.isSetWall(as2.pos));
     }
     TNodeId nodeIdByAgentState(AgentState as) const
     {
@@ -191,25 +189,41 @@ public:
         return ret;
     }
 
-    std::vector<Position> nextWalls(AgentState as) const
+    std::vector<Position> observableWalls(AgentState as) const
     {
         std::vector<Position> positions;
-        if(as.dir == kNorth){
-            positions.push_back(as.pos + Difference{0, 2});
-            positions.push_back(as.pos + Difference{1, 1});
-            positions.push_back(as.pos + Difference{-1, 1});
-        } else if(as.dir == kEast){
-            positions.push_back(as.pos + Difference{2, 0});
-            positions.push_back(as.pos + Difference{1, 1});
-            positions.push_back(as.pos + Difference{1, -1});
-        } else if(as.dir == kSouth){
-            positions.push_back(as.pos + Difference{0, -2});
-            positions.push_back(as.pos + Difference{1, -1});
-            positions.push_back(as.pos + Difference{-1, -1});
-        } else if(as.dir == kWest){
-            positions.push_back(as.pos + Difference{-2, 0});
-            positions.push_back(as.pos + Difference{-1, 1});
-            positions.push_back(as.pos + Difference{-1, -1});
+        if (as.dir == kNorth) {
+            positions.push_back(as.pos + Difference { 0, 2 });
+            positions.push_back(as.pos + Difference { 1, 1 });
+            positions.push_back(as.pos + Difference { -1, 1 });
+        } else if (as.dir == kEast) {
+            positions.push_back(as.pos + Difference { 2, 0 });
+            positions.push_back(as.pos + Difference { 1, 1 });
+            positions.push_back(as.pos + Difference { 1, -1 });
+        } else if (as.dir == kSouth) {
+            positions.push_back(as.pos + Difference { 0, -2 });
+            positions.push_back(as.pos + Difference { 1, -1 });
+            positions.push_back(as.pos + Difference { -1, -1 });
+        } else if (as.dir == kWest) {
+            positions.push_back(as.pos + Difference { -2, 0 });
+            positions.push_back(as.pos + Difference { -1, 1 });
+            positions.push_back(as.pos + Difference { -1, -1 });
+        } else if (as.dir == kNoDirection) {
+            if (as.pos.x % 2 == 0 && as.pos.y % 2 == 1) {
+                positions.push_back(as.pos + Difference { 0, 2 });
+                positions.push_back(as.pos + Difference { 1, 1 });
+                positions.push_back(as.pos + Difference { -1, 1 });
+                positions.push_back(as.pos + Difference { 0, -2 });
+                positions.push_back(as.pos + Difference { 1, -1 });
+                positions.push_back(as.pos + Difference { -1, -1 });
+            } else if (as.pos.x % 2 == 1 && as.pos.y % 2 == 0) {
+                positions.push_back(as.pos + Difference { 2, 0 });
+                positions.push_back(as.pos + Difference { 1, 1 });
+                positions.push_back(as.pos + Difference { 1, -1 });
+                positions.push_back(as.pos + Difference { -2, 0 });
+                positions.push_back(as.pos + Difference { -1, 1 });
+                positions.push_back(as.pos + Difference { -1, -1 });
+            }
         } else {
             return std::vector<Position>();
         }
@@ -224,9 +238,9 @@ public:
         return (seq[0] == seq[2] || Base::edgeExist(seq[0], seq[2]));
     }
 
-    TNodeId getStartNodeId() const
+    TNodeId startNodeId() const
     {
-        Position p = Base::maze.getStart();
+        Position p = Base::maze.start;
         if (p.x % 2 == 0 && p.y % 2 == 0) {
             p.y++;
         }

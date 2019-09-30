@@ -26,13 +26,13 @@ namespace Utility {
             const int goal_width = 2;
             for (int i = 0; i < goal_width * 2 + 1; i++) {
                 for (int j = 0; j < goal_width * 2 + 1; j++) {
-                    maze.addGoal({ uint8_t(x * 2 - 1 + i), uint8_t(y * 2 - 1 + j) });
+                    maze.goals.push_back({ uint8_t(x * 2 - 1 + i), uint8_t(y * 2 - 1 + j) });
                 }
             }
         } else {
             for (int i = 0; i < 5; i++) {
                 for (int j = 0; j < 5; j++) {
-                    maze.addGoal({ uint8_t(13 + i), uint8_t(13 + j) });
+                    maze.goals.push_back({ uint8_t(13 + i), uint8_t(13 + j) });
                 }
             }
         }
@@ -96,25 +96,23 @@ namespace Utility {
     template <uint8_t W>
     void loadEmptyMaze(int x, int y, Maze<W>& maze)
     {
-        Position p = { uint8_t(x), uint8_t(y) };
         maze.resetData();
-        maze.clearGoals();
-        maze.addGoal(p);
+        maze.goals.clear();
+        maze.goals.push_back({ uint8_t(x), uint8_t(y) });
     }
     template <uint8_t W>
     void loadEmptyMaze(Maze<W>& maze)
     {
         maze.resetData();
-        maze.clearGoals();
+        maze.goals.clear();
     }
 
     template <uint8_t W>
     void printMaze(const Maze<W>& maze, const int m = 1)
     {
-        std::vector<Position> goals = maze.getGoals();
         std::set<std::pair<int, int>> goal_cells;
 
-        for (auto p : goals) {
+        for (auto p : maze.goals) {
             if (p.x % 2 == 0 && p.y % 2 == 0) {
                 goal_cells.insert({ p.x / 2, p.y / 2 });
             }
@@ -138,7 +136,7 @@ namespace Utility {
                         }
                         if (j == m / 2 && i == m / 2 && goal_cells.find({ cursorx, cursory }) != goal_cells.end()) {
                             std::cout << "G";
-                        } else if (j == m / 2 && i == m / 2 && maze.getStart().x / 2 == cursorx && maze.getStart().y / 2 == cursory) {
+                        } else if (j == m / 2 && i == m / 2 && maze.start.x / 2 == cursorx && maze.start.y / 2 == cursory) {
                             std::cout << "S";
                         } else {
                             std::cout << " ";

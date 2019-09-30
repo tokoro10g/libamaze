@@ -18,9 +18,8 @@ TEST(maze_load, load_from_string_stream1)
     ASSERT_TRUE(loadMazeFromStream(maze, iss));
     printMaze(maze);
     EXPECT_EQ(16, maze.getWidth());
-    EXPECT_EQ(Position({ 0, 0 }), maze.getStart());
-    std::vector<Position> positions = maze.getGoals();
-    EXPECT_EQ(Position({ 13, 13 }), positions[0]);
+    EXPECT_EQ(Position({ 0, 0 }), maze.start);
+    EXPECT_EQ(Position({ 13, 13 }), maze.goals[0]);
     EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
 }
 
@@ -31,9 +30,8 @@ TEST(maze_load, load_from_string_stream2)
     ASSERT_TRUE(loadMazeFromStream(maze, iss));
     printMaze(maze);
     EXPECT_EQ(32, maze.getWidth());
-    EXPECT_EQ(Position({ 0, 0 }), maze.getStart());
-    std::vector<Position> positions = maze.getGoals();
-    EXPECT_EQ(Position({ 37, 39 }), positions[0]);
+    EXPECT_EQ(Position({ 0, 0 }), maze.start);
+    EXPECT_EQ(Position({ 37, 39 }), maze.goals[0]);
     EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
 }
 
@@ -48,9 +46,8 @@ TEST(maze_load, load_empty)
 {
     Maze<16> maze;
     loadEmptyMaze(14, 14, maze);
-    EXPECT_EQ(Position({ 0, 0 }), maze.getStart());
-    std::vector<Position> positions = maze.getGoals();
-    EXPECT_EQ(Position({ 14, 14 }), positions[0]);
+    EXPECT_EQ(Position({ 0, 0 }), maze.start);
+    EXPECT_EQ(Position({ 14, 14 }), maze.goals[0]);
     for (int x = 0; x < 16 * 2; x += 2) {
         for (int y = 0; y < 16 * 2; y += 2) {
             EXPECT_EQ(false, maze.isSetWall({ uint8_t(x), uint8_t(y) }));

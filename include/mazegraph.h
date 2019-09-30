@@ -27,14 +27,13 @@ namespace Amaze {
 /// \tparam W Maze width
 template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth>
 class MazeGraph {
-protected:
-    /// \~japanese 迷路データ
-    /// \~english Maze data
-    const Maze<W>& maze;
-
 public:
     using Cost = TCost;
     using NodeId = TNodeId;
+
+    /// \~japanese 迷路データ
+    /// \~english Maze data
+    const Maze<W>& maze;
 
     /// \~japanese グラフのサイズ
     /// \~english Cardinality of the graph
@@ -151,7 +150,7 @@ public:
     /// \param[in] from, to Agent states at the ends of the edge
     /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdgeWithHypothesis(AgentState from, AgentState to, bool blocked) const = 0;
+    virtual std::pair<bool, TCost> edgeWithHypothesis(AgentState from, AgentState to, bool blocked) const = 0;
     /// \~japanese
     /// エッジがブロックされているかどうかを仮定してエッジの存在性とコストを計算します．
     ///
@@ -165,7 +164,7 @@ public:
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \param[in] blocked \p true if the edge between \p id_from and \p id_to is assumed to be blocked
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const { return getEdgeWithHypothesis(agentStateByNodeId(id_from), agentStateByNodeId(id_to), blocked); }
+    virtual std::pair<bool, TCost> edgeWithHypothesis(TNodeId id_from, TNodeId id_to, bool blocked) const { return edgeWithHypothesis(agentStateByNodeId(id_from), agentStateByNodeId(id_to), blocked); }
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性とコストを計算します．
     ///
@@ -177,11 +176,11 @@ public:
     ///
     /// \param[in] from, to Agent states at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdge(AgentState from, AgentState to) const = 0;
+    virtual std::pair<bool, TCost> edge(AgentState from, AgentState to) const = 0;
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性とコストを計算します．
     ///
-    /// このメソッドの戻り値は，\p id_from から \p id_to へ移動するときに訪れる壁の位置 \p p に対して<tt>getEdgeWithHypothesis(id_from, id_to, maze.isSetWall(p))</tt>と等価でなければなりません．
+    /// このメソッドの戻り値は，\p id_from から \p id_to へ移動するときに訪れる壁の位置 \p p に対して<tt>edgeWithHypothesis(id_from, id_to, maze.isSetWall(p))</tt>と等価でなければなりません．
     ///
     /// \param[in] id_from, id_to エッジの両端ノードのID
     /// \returns エッジの存在性とコストを格納した \p std::pair を返します．エッジやノードが無効のとき，コストは \link MazeGraph::kInf kInf \endlink になります．
@@ -189,11 +188,11 @@ public:
     /// \~english
     /// Calculates the existence and cost of the edge according to the maze data.
     ///
-    /// The return value must be consistent with that of <tt>getEdgeWithHypothesis(id_from, id_to, maze.isSetWall(p))</tt> where \p p is the position of the wall visited by travelling from \p id_from to \p id_to.
+    /// The return value must be consistent with that of <tt>edgeWithHypothesis(id_from, id_to, maze.isSetWall(p))</tt> where \p p is the position of the wall visited by travelling from \p id_from to \p id_to.
     ///
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns \p std::pair which consists of the existence and cost of the edge. The cost is \link MazeGraph::kInf kInf \endlink if the edge is blocked or either node is invalid.
-    virtual std::pair<bool, TCost> getEdge(TNodeId id_from, TNodeId id_to) const { return getEdge(agentStateByNodeId(id_from), agentStateByNodeId(id_to)); }
+    virtual std::pair<bool, TCost> edge(TNodeId id_from, TNodeId id_to) const { return edge(agentStateByNodeId(id_from), agentStateByNodeId(id_to)); }
     /// \~japanese
     /// 迷路データに基づいてエッジの存在性を返します．
     ///
@@ -205,7 +204,7 @@ public:
     ///
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns the existence of the edge.
-    virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const { return getEdge(id_from, id_to).first; }
+    virtual bool edgeExist(TNodeId id_from, TNodeId id_to) const { return edge(id_from, id_to).first; }
     /// \~japanese
     /// 迷路データに基づいてエッジのコストを返します．
     ///
@@ -217,7 +216,7 @@ public:
     ///
     /// \param[in] id_from, id_to Node IDs at the ends of the edge
     /// \returns the cost of the edge.
-    virtual TCost edgeCost(TNodeId id_from, TNodeId id_to) const { return getEdge(id_from, id_to).second; }
+    virtual TCost edgeCost(TNodeId id_from, TNodeId id_to) const { return edge(id_from, id_to).second; }
 
     /// \~japanese
     /// エージェントの状態から対応するノードのIDを計算します．
@@ -283,7 +282,7 @@ public:
     ///
     /// \param[in] as Agent state
     /// \returns \p std::vector contains positions
-    virtual std::vector<Position> nextWalls(AgentState as) const = 0;
+    virtual std::vector<Position> observableWalls(AgentState as) const = 0;
 
     /// \~japanese
     /// 与えられたノードIDの順列が引き返しを行う動作かどうかを判別します．
@@ -307,7 +306,7 @@ public:
     /// Returns the start node ID.
     ///
     /// \returns the start node ID.
-    virtual TNodeId getStartNodeId() const { return nodeIdByAgentState({ maze.getStart(), kNoDirection, 0 }); }
+    virtual TNodeId startNodeId() const { return nodeIdByAgentState({ maze.start, kNoDirection, 0 }); }
     /// \~japanese
     /// ゴールのノードIDのリストを返します．
     ///
@@ -317,11 +316,10 @@ public:
     /// Returns the list of goal node IDs.
     ///
     /// \param[out] ids List of goal node IDs
-    virtual std::vector<TNodeId> getGoalNodeIds() const
+    virtual std::vector<TNodeId> goalNodeIds() const
     {
         std::vector<TNodeId> ids;
-        std::vector<Position> positions = maze.getGoals();
-        for (auto p : positions) {
+        for (auto p : maze.goals) {
             TNodeId id = nodeIdByAgentState({ p, kNoDirection, 0 });
             if (id != kInvalidNode) {
                 ids.push_back(id);
@@ -329,17 +327,6 @@ public:
         }
         return ids;
     }
-
-    /// \~japanese
-    /// \p maze の const 参照を返します．
-    ///
-    /// \returns \p maze の const 参照を返します．
-    ///
-    /// \~english
-    /// Returns the const reference of \p maze.
-    ///
-    /// \returns the const reference of \p maze.
-    const Maze<W>& getCMaze() const { return maze; }
 };
 
 } // namespace Amaze

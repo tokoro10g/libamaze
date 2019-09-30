@@ -22,9 +22,9 @@ int main()
     Maze<max_maze_width> maze;
 
     Utility::loadEmptyMaze(maze);
-    maze.addGoal({ 61, 62 });
-    maze.addGoal({ 62, 61 });
-    maze.addGoal({ 62, 62 });
+    maze.goals.push_back({ 61, 62 });
+    maze.goals.push_back({ 62, 61 });
+    maze.goals.push_back({ 62, 62 });
     maze.setWall({ 1, 0 }, true);
     maze.setCheckedWall({ 0, 1 }, true);
     maze.setCheckedWall({ 1, 0 }, true);

@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
 #else
     SixWayWallNodeGraph mg(reference_maze);
 #endif
-    const uint16_t id_start = mg.getStartNodeId();
-    std::vector<uint16_t> goals = mg.getGoalNodeIds();
+    const uint16_t id_start = mg.startNodeId();
+    std::vector<uint16_t> goals = mg.goalNodeIds();
     std::cout << "The start is " << mg.agentStateByNodeId(id_start) << std::endl;
     std::cout << "The goals are ";
     for (uint16_t id_goal : goals) {

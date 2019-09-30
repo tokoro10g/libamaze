@@ -37,7 +37,7 @@ public:
     /// \~english
     /// Returns the agent state of the node the solver is going to visit next.
     /// \returns next agent state.
-    virtual AgentState getNextAgentState() const { return mg.agentStateByNodeId(getNextNodeId()); }
+    virtual AgentState nextAgentState() const { return mg.agentStateByNodeId(nextNodeId()); }
     /// \~japanese
     /// 現在のノードのエージェント状態を返します．
     /// \returns 現在のエージェント状態
@@ -45,12 +45,12 @@ public:
     /// \~english
     /// Returns the agent state of the current node.
     /// \returns current agent state.
-    virtual AgentState getCurrentAgentState() const
+    virtual AgentState currentAgentState() const
     {
-        if (getLastNodeId() == getCurrentNodeId()) {
-            return mg.agentStateByNodeId(getCurrentNodeId());
+        if (lastNodeId() == currentNodeId()) {
+            return mg.agentStateByNodeId(currentNodeId());
         } else {
-            return mg.agentStateByEdge(getLastNodeId(), getCurrentNodeId());
+            return mg.agentStateByEdge(lastNodeId(), currentNodeId());
         }
     }
     /// \~japanese
@@ -60,10 +60,10 @@ public:
     /// \~english
     /// Returns the agent states of the destination nodes.
     /// \param[out] states List of agent states at the destinations.
-    virtual std::vector<AgentState> getDestinationAgentStates() const
+    virtual std::vector<AgentState> destinationAgentStates() const
     {
         std::vector<AgentState> states;
-        std::vector<NodeId> ids = getDestinationNodeIds();
+        std::vector<NodeId> ids = destinationNodeIds();
         for (auto id : ids) {
             states.push_back(mg.agentStateByNodeId(id));
         }
@@ -76,7 +76,7 @@ public:
     /// \~english
     /// Returns the ID of the node the solver is going to visit next.
     /// \returns next ID.
-    virtual NodeId getNextNodeId() const = 0;
+    virtual NodeId nextNodeId() const = 0;
     /// \~japanese
     /// 現在のノードのIDを返します．
     /// \returns 現在のID
@@ -84,7 +84,7 @@ public:
     /// \~english
     /// Returns the ID of the current node.
     /// \returns current ID.
-    virtual NodeId getCurrentNodeId() const = 0;
+    virtual NodeId currentNodeId() const = 0;
     /// \~japanese
     /// 1ステップ前のノードのIDを返します．
     /// \returns 1ステップ前のID
@@ -92,7 +92,7 @@ public:
     /// \~english
     /// Returns the ID of the last node.
     /// \returns last ID.
-    virtual NodeId getLastNodeId() const = 0;
+    virtual NodeId lastNodeId() const = 0;
     /// \~japanese
     /// 終点ノードのIDを返します．
     /// \param[out] ids 終点のIDのリスト
@@ -100,7 +100,7 @@ public:
     /// \~english
     /// Returns the ID of the destination node.
     /// \param[out] ids List of destination IDs.
-    virtual std::vector<NodeId> getDestinationNodeIds() const = 0;
+    virtual std::vector<NodeId> destinationNodeIds() const = 0;
 
     /// \~japanese
     /// 現在のグラフの情報から最短経路を構成します．

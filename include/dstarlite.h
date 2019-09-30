@@ -85,7 +85,7 @@ public:
 
     explicit DStarLite(const TMazeGraph& mg)
         : Solver<TMazeGraph>(mg)
-        , id_current(mg.getStartNodeId())
+        , id_current(mg.startNodeId())
         , ids_destination()
         , id_last(id_current)
         , id_last_modified(id_current)
@@ -95,7 +95,7 @@ public:
         , open_list()
         , in_open_list(0)
     {
-        ids_destination = mg.getGoalNodeIds();
+        ids_destination = mg.goalNodeIds();
         g.fill(kInf);
         rhs.fill(kInf);
     }
@@ -239,10 +239,10 @@ public:
         }
         return { satSum(satSum(std::min(g[id], rhs[id]), Base::mg.distance(id_current, id)), key_modifier), std::min(g[id], rhs[id]) };
     }
-    NodeId getNextNodeId() const { return NodeId(0); }
-    NodeId getCurrentNodeId() const { return id_current; }
-    NodeId getLastNodeId() const { return id_last; }
-    std::vector<NodeId> getDestinationNodeIds() const { return ids_destination; }
+    NodeId nextNodeId() const { return NodeId(0); }
+    NodeId currentNodeId() const { return id_current; }
+    NodeId lastNodeId() const { return id_last; }
+    std::vector<NodeId> destinationNodeIds() const { return ids_destination; }
 
     std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const
     {
@@ -303,10 +303,10 @@ public:
                     Cost cold;
                     if (std::get<2>(e) == kInf) {
                         // assume that the path is NOT blocked in the previous step
-                        cold = Base::mg.getEdgeWithHypothesis(std::get<0>(e), std::get<1>(e), false).second;
+                        cold = Base::mg.edgeWithHypothesis(std::get<0>(e), std::get<1>(e), false).second;
                     } else {
                         // assume that the path IS blocked in the previous step
-                        cold = Base::mg.getEdgeWithHypothesis(std::get<0>(e), std::get<1>(e), true).second;
+                        cold = Base::mg.edgeWithHypothesis(std::get<0>(e), std::get<1>(e), true).second;
                     }
                     auto uid = std::get<0>(e);
                     auto vid = std::get<1>(e);
@@ -367,8 +367,8 @@ public:
     void reset()
     {
         resetCostsAndLists();
-        id_current = Base::mg.getStartNodeId();
-        ids_destination = Base::mg.getGoalNodeIds();
+        id_current = Base::mg.startNodeId();
+        ids_destination = Base::mg.goalNodeIds();
         id_last = id_current;
         id_last_modified = id_current;
     }
