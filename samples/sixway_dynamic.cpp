@@ -1,3 +1,4 @@
+#include "agentstrategy.h"
 #include "dstarlite.h"
 #include "maze.h"
 #include "mazeutility.h"
@@ -8,6 +9,8 @@
 #include <vector>
 
 using namespace Amaze;
+
+#define ENABLE_TURN_COST 0
 
 int main(int argc, char* argv[])
 {
@@ -37,12 +40,13 @@ int main(int argc, char* argv[])
     /// 迷路グラフを定義し，スタートとゴールの状態を表示します．
     /// \~english
     /// Define a maze graph and display agent states of the start and goals.
-#if 1
+#if ENABLE_TURN_COST
     SixWayWallNodeTurnCostGraph mg(maze);
 #else
     SixWayWallNodeGraph mg(maze);
 #endif
-    auto solver = DStarLite(mg);
+    auto solver = DStarLite(&mg);
+    using AS = AgentStrategy<decltype(mg), decltype(solver)>;
 
     Utility::printMaze(maze);
     std::vector<uint16_t> goal_ids = mg.goalNodeIds();
@@ -61,13 +65,11 @@ int main(int argc, char* argv[])
 
     while (std::find(goal_ids.begin(), goal_ids.end(), solver.currentNodeId()) == goal_ids.end()) {
         std::cout << solver.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
         solver.preSense(std::vector<Position>());
-        senseSixWay(maze, reference_maze, solver.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS::currentSensePositions(solver));
         solver.postSense(changed_positions);
     }
-    std::vector<Position> changed_positions;
-    senseSixWay(maze, reference_maze, solver.currentAgentState(), changed_positions);
+    std::vector<Position> changed_positions = sense(maze, reference_maze, AS::currentSensePositions(solver));
     std::cout << solver.currentAgentState() << std::endl;
 
     /// \~japanese
@@ -79,9 +81,8 @@ int main(int argc, char* argv[])
 
     while (solver.currentNodeId() != mg.startNodeId()) {
         std::cout << solver.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
         solver.preSense(std::vector<Position>());
-        senseSixWay(maze, reference_maze, solver.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS::currentSensePositions(solver));
         solver.postSense(changed_positions);
     }
     std::cout << solver.currentAgentState() << std::endl;
@@ -90,11 +91,14 @@ int main(int argc, char* argv[])
     /// 観測した情報からスタートからゴールまでの最短経路を導出します．
     /// \~english
     /// Calculate the shortest path from the start to goal according to the collected maze data.
+#if ENABLE_TURN_COST
+    SixWayWallNodeTurnCostGraph<false> mg_fast_run(maze);
+#else
     SixWayWallNodeGraph<false> mg_fast_run(maze);
-    auto solver_fast_run = DStarLite(mg_fast_run);
-    solver_fast_run.initialize();
+#endif
+    solver.changeMazeGraph(&mg_fast_run);
 
-    std::vector<AgentState> path = solver_fast_run.reconstructPath(mg_fast_run.startNodeId(), goal_ids);
+    std::vector<AgentState> path = solver.reconstructPath(mg_fast_run.startNodeId(), goal_ids);
     for (AgentState as : path) {
         std::cout << as << std::endl;
     }

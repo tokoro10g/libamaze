@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     /// ソルバを初期化して最短経路を導出します．
     /// \~english
     /// Initialize solver and calculate the shortest path.
-    auto solver = DStarLite(mg);
+    auto solver = DStarLite(&mg);
     solver.initialize();
 
     std::vector<AgentState> path = solver.reconstructPath(id_start, goals);

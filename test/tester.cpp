@@ -1,3 +1,4 @@
+#include "agentstrategy.h"
 #include "dstarlite.h"
 #include "fourwaystepmapgraph.h"
 #include "maze.h"
@@ -13,41 +14,10 @@ using namespace Amaze;
 using namespace std::chrono;
 
 template <uint8_t W>
-void senseFourWay(Maze<W>& maze, const Maze<W>& reference_maze, AgentState as, std::vector<Position>& changed_positions)
+std::vector<Amaze::Position> sense(Amaze::Maze<W>& maze, const Amaze::Maze<W>& reference_maze, const std::vector<Amaze::Position>& sense_positions)
 {
-    constexpr int8_t dx[4] = { 0, 1, 0, -1 };
-    constexpr int8_t dy[4] = { 1, 0, -1, 0 };
-    for (int i = 0; i < 4; i++) {
-        Position p = { uint8_t(as.pos.x + dx[i]), uint8_t(as.pos.y + dy[i]) };
-        if (p.x > 2 * W || p.y > 2 * W) {
-            continue;
-        }
-        if (maze.isCheckedWall(p)) {
-            continue;
-        }
-        maze.setCheckedWall(p, true);
-        if (reference_maze.isSetWall(p)) {
-            maze.setWall(p, true);
-            Position pto = { uint8_t(p.x + dx[i]), uint8_t(p.y + dy[i]) };
-            changed_positions.push_back(pto);
-        } else {
-            maze.setWall(p, false);
-        }
-    }
-}
-
-template <uint8_t W>
-void senseSixWay(Maze<W>& maze, const Maze<W>& reference_maze, AgentState as, std::vector<Position>& changed_positions)
-{
-    constexpr int8_t dx[8] = { 0, 1, 2, 1, 0, -1, -2, -1 };
-    constexpr int8_t dy[8] = { 2, 1, 0, -1, -2, -1, 0, 1 };
-    for (int i = 0; i < 8; i++) {
-        if (as.pos.x % 2 == 0 && as.pos.y % 2 == 1 && (i == 2 || i == 6)) {
-            continue;
-        } else if (as.pos.x % 2 == 1 && as.pos.y % 2 == 0 && (i == 0 || i == 4)) {
-            continue;
-        }
-        Position p = { uint8_t(as.pos.x + dx[i]), uint8_t(as.pos.y + dy[i]) };
+    std::vector<Amaze::Position> changed_positions;
+    for (auto p : sense_positions) {
         if (p.x > 2 * W || p.y > 2 * W) {
             continue;
         }
@@ -62,6 +32,7 @@ void senseSixWay(Maze<W>& maze, const Maze<W>& reference_maze, AgentState as, st
             maze.setWall(p, false);
         }
     }
+    return changed_positions;
 }
 
 int main()
@@ -122,8 +93,9 @@ int main()
     FourWayStepMapGraph<true, float> mg3(reference_maze);
     SixWayWallNodeTurnCostGraph mg4(reference_maze);
 
-    auto solver1 = DStarLite(mg1);
-    auto solver4 = DStarLite(mg4);
+    auto solver1 = DStarLite(&mg1);
+    using AS1 = AgentStrategy<decltype(mg1), decltype(solver1)>;
+    auto solver4 = DStarLite(&mg4);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -142,7 +114,7 @@ int main()
 
     while (std::find(goal_ids.begin(), goal_ids.end(), solver1.currentNodeId()) == goal_ids.end()) {
         std::cout << solver1.currentAgentState() << ": " << (int)solver1.currentNodeId() << std::endl;
-        std::vector<Position> positions = mg1.observableWalls(solver1.currentAgentState());
+        std::vector<Position> positions = AS1::currentSensePositions(solver1);
         std::cout << "Next sense: ";
         for (auto p : positions) {
             std::cout << p;
@@ -196,7 +168,8 @@ int main()
     maze.setCheckedWall({ 0, 1 }, true);
     maze.setCheckedWall({ 1, 0 }, true);
     FourWayStepMapGraph mg5(maze);
-    auto solver5 = DStarLite(mg5);
+    auto solver5 = DStarLite(&mg5);
+    using AS5 = AgentStrategy<decltype(mg5), decltype(solver5)>;
 
     solver5.initialize();
     Utility::printMaze(maze);
@@ -210,14 +183,12 @@ int main()
 
     while (std::find(goal_ids5.begin(), goal_ids5.end(), solver5.currentNodeId()) == goal_ids5.end()) {
         std::cout << solver5.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
 
         solver5.preSense(std::vector<Position>());
-        senseFourWay(maze, reference_maze, solver5.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS5::currentSensePositions(solver5));
         solver5.postSense(changed_positions);
     }
-    std::vector<Position> changed_positions;
-    senseFourWay(maze, reference_maze, solver5.currentAgentState(), changed_positions);
+    std::vector<Position> changed_positions = sense(maze, reference_maze, AS5::currentSensePositions(solver5));
     std::cout << solver5.currentNodeId() << std::endl;
 
     //Utility::printMaze(maze);
@@ -234,21 +205,19 @@ int main()
     while (std::find(goal_ids5.begin(), goal_ids5.end(), solver5.currentNodeId()) == goal_ids5.end()) {
         //Utility::printMaze(maze);
         std::cout << solver5.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
 
         solver5.preSense(std::vector<Position>());
-        senseFourWay(maze, reference_maze, solver5.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS5::currentSensePositions(solver5));
         solver5.postSense(changed_positions);
     }
     std::cout << solver5.currentAgentState() << std::endl;
 
     FourWayStepMapGraph<false> mg5_fast_run(maze);
-    auto solver5_fast_run = DStarLite(mg5_fast_run);
-    solver5_fast_run.initialize();
+    solver5.changeMazeGraph(&mg5_fast_run);
 
     Utility::printMaze(maze);
     goal_ids5 = mg5.goalNodeIds();
-    std::vector<AgentState> path5 = solver5_fast_run.reconstructPath(mg5_fast_run.startNodeId(), goal_ids5);
+    std::vector<AgentState> path5 = solver5.reconstructPath(mg5_fast_run.startNodeId(), goal_ids5);
     for (auto p : path5) {
         std::cout << p << ", ";
     }
@@ -266,7 +235,8 @@ int main()
     maze.setCheckedWall({ 0, 1 }, true);
     maze.setCheckedWall({ 1, 0 }, true);
     SixWayWallNodeTurnCostGraph mg6(maze);
-    auto solver6 = DStarLite(mg6);
+    auto solver6 = DStarLite(&mg6);
+    using AS6 = AgentStrategy<decltype(mg6), decltype(solver6)>;
 
     solver6.initialize();
     Utility::printMaze(maze);
@@ -281,10 +251,9 @@ int main()
     //for(int i=0;i<40;i++){
     while (std::find(goal_ids6.begin(), goal_ids6.end(), solver6.currentNodeId()) == goal_ids6.end()) {
         std::cout << solver6.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
 
         solver6.preSense(std::vector<Position>());
-        senseSixWay(maze, reference_maze, solver6.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS6::currentSensePositions(solver6));
         solver6.postSense(changed_positions);
     }
     std::cout << solver6.currentAgentState() << std::endl;
@@ -302,10 +271,9 @@ int main()
     while (std::find(goal_ids6.begin(), goal_ids6.end(), solver6.currentNodeId()) == goal_ids6.end()) {
         //Utility::printMaze(maze);
         std::cout << solver6.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
 
         solver6.preSense(std::vector<Position>());
-        senseSixWay(maze, reference_maze, solver6.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS6::currentSensePositions(solver6));
         solver6.postSense(changed_positions);
     }
     std::cout << solver6.currentAgentState() << std::endl;
@@ -323,10 +291,9 @@ int main()
     while (std::find(goal_ids6.begin(), goal_ids6.end(), solver6.currentNodeId()) == goal_ids6.end()) {
         //Utility::printMaze(maze);
         std::cout << solver6.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
 
         solver6.preSense(std::vector<Position>());
-        senseSixWay(maze, reference_maze, solver6.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS6::currentSensePositions(solver6));
         solver6.postSense(changed_positions);
     }
     std::cout << solver6.currentAgentState() << std::endl;

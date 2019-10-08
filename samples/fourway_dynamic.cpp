@@ -1,3 +1,4 @@
+#include "agentstrategy.h"
 #include "dstarlite.h"
 #include "fourwaystepmapgraph.h"
 #include "maze.h"
@@ -34,10 +35,11 @@ int main(int argc, char* argv[])
     maze.setCheckedWall({ 1, 0 }, true);
 
     FourWayStepMapGraph mg(maze);
-    auto solver = DStarLite(mg);
+    auto solver = DStarLite(&mg);
+    using AS = AgentStrategy<decltype(mg), decltype(solver)>;
 
     solver.initialize();
-    Utility::printMaze(maze);
+    Utility::printMaze(reference_maze);
     std::vector<uint16_t> goal_ids = mg.goalNodeIds();
     std::cout << "The start is " << mg.startNodeId() << std::endl;
     std::cout << "The goals are ";
@@ -48,32 +50,30 @@ int main(int argc, char* argv[])
 
     while (std::find(goal_ids.begin(), goal_ids.end(), solver.currentNodeId()) == goal_ids.end()) {
         std::cout << solver.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
         solver.preSense(std::vector<Position>());
-        senseFourWay(maze, reference_maze, solver.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS::currentSensePositions(solver));
         solver.postSense(changed_positions);
     }
-    std::vector<Position> changed_positions;
-    senseFourWay(maze, reference_maze, solver.currentAgentState(), changed_positions);
+    std::vector<Position> changed_positions = sense(maze, reference_maze, AS::currentSensePositions(solver));
     std::cout << solver.currentAgentState() << std::endl;
+
+    AS::senseHogei(solver.currentAgentState());
 
     solver.changeDestination(mg.startNodeId());
     std::cout << "Now the goal is " << (int)mg.startNodeId() << std::endl;
 
     while (solver.currentNodeId() != mg.startNodeId()) {
         std::cout << solver.currentAgentState() << std::endl;
-        std::vector<Position> changed_positions;
         solver.preSense(std::vector<Position>());
-        senseFourWay(maze, reference_maze, solver.currentAgentState(), changed_positions);
+        std::vector<Position> changed_positions = sense(maze, reference_maze, AS::currentSensePositions(solver));
         solver.postSense(changed_positions);
     }
     std::cout << solver.currentAgentState() << std::endl;
 
     FourWayStepMapGraph<false> mg_fast_run(maze);
-    auto solver_fast_run = DStarLite(mg_fast_run);
-    solver_fast_run.initialize();
+    solver.changeMazeGraph(&mg_fast_run);
 
-    std::vector<AgentState> path = solver_fast_run.reconstructPath(mg_fast_run.startNodeId(), goal_ids);
+    std::vector<AgentState> path = solver.reconstructPath(mg_fast_run.startNodeId(), goal_ids);
     for (AgentState as : path) {
         std::cout << as << std::endl;
     }

@@ -43,9 +43,9 @@ int main()
     /// ソルバを初期化して最短経路を導出します．
     /// \~english
     /// Initialize solver and calculate the shortest path.
-    auto solver_four = DStarLite(mg_four);
-    auto solver_six = DStarLite(mg_six);
-    auto solver_six_cost = DStarLite(mg_six_cost);
+    auto solver_four = DStarLite(&mg_four);
+    auto solver_six = DStarLite(&mg_six);
+    auto solver_six_cost = DStarLite(&mg_six_cost);
     high_resolution_clock::time_point tstart, tend;
 
 #if 1
