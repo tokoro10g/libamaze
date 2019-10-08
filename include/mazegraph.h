@@ -13,7 +13,6 @@ namespace Amaze {
 /// \~japanese
 /// 迷路のグラフ表現を扱う抽象クラス．
 ///
-/// \tparam kExplore 探索用のグラフのとき \p true
 /// \tparam TCost コストの型
 /// \tparam TNodeId ノードIDの型
 /// \tparam W 迷路の幅
@@ -21,11 +20,10 @@ namespace Amaze {
 /// \~english
 /// An abstract class for the graph representation of the maze.
 ///
-/// \tparam kExplore \p true if explore mode
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth>
+template <typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth, TNodeId NodeCount = TNodeId(0)>
 class MazeGraph {
 public:
     using Cost = TCost;
@@ -37,7 +35,7 @@ public:
 
     /// \~japanese グラフのサイズ
     /// \~english Cardinality of the graph
-    static constexpr TNodeId kSize = 0;
+    static constexpr TNodeId kSize = NodeCount;
     /// \~japanese 無限コストとみなす値
     /// \~english Cost value assumed to be infinity
     static constexpr TCost kInf = std::numeric_limits<TCost>::max();
@@ -270,19 +268,6 @@ public:
     /// \param[in] id_from, id_to Node ID
     /// \returns the agent state.
     virtual AgentState agentStateByEdge(TNodeId id_from, TNodeId id_to) const = 0;
-
-    /// \~japanese
-    /// 与えられたエージェントの状態から次に観測する壁の位置を返します．
-    ///
-    /// \param[in] as エージェントの状態
-    /// \returns 位置を格納した \p std::vector
-    ///
-    /// \~english
-    /// Returns positions of walls to sense next for a given agent state.
-    ///
-    /// \param[in] as Agent state
-    /// \returns \p std::vector contains positions
-    virtual std::vector<Position> observableWalls(AgentState as) const = 0;
 
     /// \~japanese
     /// 与えられたノードIDの順列が引き返しを行う動作かどうかを判別します．

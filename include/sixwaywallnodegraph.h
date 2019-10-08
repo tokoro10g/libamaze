@@ -21,14 +21,16 @@ namespace Amaze {
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth>
-class SixWayWallNodeGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth, TNodeId NodeCount = TNodeId(2 * W * (W - 1))>
+class SixWayWallNodeGraph : public MazeGraph<TCost, TNodeId, W, NodeCount> {
+    static_assert(NodeCount == TNodeId(2 * W * (W - 1)), "The template parameter NodeCount has invalid value.");
+
 public:
-    using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
+    using Base = MazeGraph<TCost, TNodeId, W, NodeCount>;
     using Base::edge;
     using Base::edgeWithHypothesis;
 
-    static constexpr TNodeId kSize = 2 * W * (W - 1);
+    static constexpr TNodeId kSize = NodeCount;
 
     explicit SixWayWallNodeGraph(const Maze<W>& maze)
         : Base(maze)
@@ -187,47 +189,6 @@ public:
             }
         }
         return ret;
-    }
-
-    std::vector<Position> observableWalls(AgentState as) const
-    {
-        std::vector<Position> positions;
-        if (as.dir == kNorth) {
-            positions.push_back(as.pos + Difference { 0, 2 });
-            positions.push_back(as.pos + Difference { 1, 1 });
-            positions.push_back(as.pos + Difference { -1, 1 });
-        } else if (as.dir == kEast) {
-            positions.push_back(as.pos + Difference { 2, 0 });
-            positions.push_back(as.pos + Difference { 1, 1 });
-            positions.push_back(as.pos + Difference { 1, -1 });
-        } else if (as.dir == kSouth) {
-            positions.push_back(as.pos + Difference { 0, -2 });
-            positions.push_back(as.pos + Difference { 1, -1 });
-            positions.push_back(as.pos + Difference { -1, -1 });
-        } else if (as.dir == kWest) {
-            positions.push_back(as.pos + Difference { -2, 0 });
-            positions.push_back(as.pos + Difference { -1, 1 });
-            positions.push_back(as.pos + Difference { -1, -1 });
-        } else if (as.dir == kNoDirection) {
-            if (as.pos.x % 2 == 0 && as.pos.y % 2 == 1) {
-                positions.push_back(as.pos + Difference { 0, 2 });
-                positions.push_back(as.pos + Difference { 1, 1 });
-                positions.push_back(as.pos + Difference { -1, 1 });
-                positions.push_back(as.pos + Difference { 0, -2 });
-                positions.push_back(as.pos + Difference { 1, -1 });
-                positions.push_back(as.pos + Difference { -1, -1 });
-            } else if (as.pos.x % 2 == 1 && as.pos.y % 2 == 0) {
-                positions.push_back(as.pos + Difference { 2, 0 });
-                positions.push_back(as.pos + Difference { 1, 1 });
-                positions.push_back(as.pos + Difference { 1, -1 });
-                positions.push_back(as.pos + Difference { -2, 0 });
-                positions.push_back(as.pos + Difference { -1, 1 });
-                positions.push_back(as.pos + Difference { -1, -1 });
-            }
-        } else {
-            return std::vector<Position>();
-        }
-        return positions;
     }
 
     bool isPullBackSequence(std::array<TNodeId, 3> seq) const

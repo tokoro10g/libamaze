@@ -21,14 +21,16 @@ namespace Amaze {
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
-template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth>
-class FourWayStepMapGraph : public MazeGraph<kExplore, TCost, TNodeId, W> {
+template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth, TNodeId NodeCount = TNodeId(W* W)>
+class FourWayStepMapGraph : public MazeGraph<TCost, TNodeId, W, NodeCount> {
+    static_assert(NodeCount == TNodeId(W * W), "The template parameter NodeCount has invalid value.");
+
 public:
-    using Base = MazeGraph<kExplore, TCost, TNodeId, W>;
+    using Base = MazeGraph<TCost, TNodeId, W, NodeCount>;
     using Base::edge;
     using Base::edgeWithHypothesis;
 
-    static constexpr TNodeId kSize = W * W;
+    static constexpr TNodeId kSize = NodeCount;
 
     explicit FourWayStepMapGraph(const Maze<W>& maze)
         : Base(maze)
@@ -65,6 +67,31 @@ public:
             }
         }
         return v;
+    }
+    virtual std::vector<std::tuple<TNodeId, TNodeId, TCost>> affectedEdges(const std::vector<Position>& positions) const
+    {
+        std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
+        for (auto p : positions) {
+            if (p.x % 2 == p.y % 2) {
+                // cell or pillar
+                continue;
+            }
+            if (p.x % 2 == 0 && p.y % 2 == 1) {
+                TNodeId id_from = nodeIdByAgentState({ p + Difference { 0, -1 }, kNoDirection, 0 });
+                auto e = edge(id_from, TNodeId(id_from + W));
+                if (e.first) {
+                    edges.push_back({ id_from, TNodeId(id_from + W), e.second });
+                }
+
+            } else /* p.x % 2 == 1 && p.y % 2 == 0 */ {
+                TNodeId id_from = nodeIdByAgentState({ p + Difference { -1, 0 }, kNoDirection, 0 });
+                auto e = edge(id_from, TNodeId(id_from + 1));
+                if (e.first) {
+                    edges.push_back({ id_from, TNodeId(id_from + 1), e.second });
+                }
+            }
+        }
+        return edges;
     }
 
     std::pair<bool, TCost> edgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const
@@ -149,35 +176,6 @@ public:
             break;
         }
         return ret;
-    }
-    std::vector<Position> observableWalls(AgentState as) const
-    {
-        std::vector<Position> positions;
-        if (as.dir == kNorth) {
-            positions.push_back(as.pos + Difference { 0, 3 });
-            positions.push_back(as.pos + Difference { 1, 2 });
-            positions.push_back(as.pos + Difference { -1, 2 });
-        } else if (as.dir == kEast) {
-            positions.push_back(as.pos + Difference { 3, 0 });
-            positions.push_back(as.pos + Difference { 2, 1 });
-            positions.push_back(as.pos + Difference { 2, -1 });
-        } else if (as.dir == kSouth) {
-            positions.push_back(as.pos + Difference { 0, -3 });
-            positions.push_back(as.pos + Difference { 1, -2 });
-            positions.push_back(as.pos + Difference { -1, -2 });
-        } else if (as.dir == kWest) {
-            positions.push_back(as.pos + Difference { -3, 0 });
-            positions.push_back(as.pos + Difference { -2, 1 });
-            positions.push_back(as.pos + Difference { -2, -1 });
-        } else if (as.dir == kNoDirection) {
-            positions.push_back(as.pos + Difference { 1, 0 });
-            positions.push_back(as.pos + Difference { -1, 0 });
-            positions.push_back(as.pos + Difference { 0, 1 });
-            positions.push_back(as.pos + Difference { 0, -1 });
-        } else {
-            return std::vector<Position>();
-        }
-        return positions;
     }
 
     bool isPullBackSequence(std::array<TNodeId, 3> seq) const { return (seq[0] == seq[2] && Base::edgeExist(seq[0], seq[1])); }

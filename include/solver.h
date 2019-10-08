@@ -13,22 +13,39 @@ namespace Amaze {
 /// An abstract class for shortest path solvers.
 ///
 /// \tparam TMazeGraph Class implements MazeGraph
-template <typename TMazeGraph>
+template <typename TCost, typename TNodeId, uint8_t W, TNodeId NodeCount>
 class Solver {
+public:
+    using MazeGraphBase = MazeGraph<TCost, TNodeId, W, NodeCount>;
+
 protected:
     /// \~japanese 迷路のグラフ表現
     /// \~english Graph representation of the maze
-    const TMazeGraph& mg;
+    const MazeGraphBase* mg;
 
 public:
-    using NodeId = typename TMazeGraph::NodeId;
-    using Cost = typename TMazeGraph::Cost;
+    using NodeId = TNodeId;
+    using Cost = TCost;
 
-    explicit Solver(const TMazeGraph& mg)
+    explicit Solver(const MazeGraphBase* mg)
         : mg(mg)
     {
     }
+    Solver(const Solver& s) = default;
+    Solver& operator=(const Solver& other)
+    {
+        if (this != &other) {
+            this->mg = other.mg;
+        }
+        return *this;
+    }
     virtual ~Solver() = default;
+
+    void changeMazeGraph(const MazeGraphBase* new_mg)
+    {
+        mg = new_mg;
+        initialize();
+    }
 
     /// \~japanese
     /// 次に訪れるノードのエージェント状態を返します．
@@ -37,7 +54,7 @@ public:
     /// \~english
     /// Returns the agent state of the node the solver is going to visit next.
     /// \returns next agent state.
-    virtual AgentState nextAgentState() const { return mg.agentStateByNodeId(nextNodeId()); }
+    virtual AgentState nextAgentState() const { return mg->agentStateByNodeId(nextNodeId()); }
     /// \~japanese
     /// 現在のノードのエージェント状態を返します．
     /// \returns 現在のエージェント状態
@@ -48,9 +65,9 @@ public:
     virtual AgentState currentAgentState() const
     {
         if (lastNodeId() == currentNodeId()) {
-            return mg.agentStateByNodeId(currentNodeId());
+            return mg->agentStateByNodeId(currentNodeId());
         } else {
-            return mg.agentStateByEdge(lastNodeId(), currentNodeId());
+            return mg->agentStateByEdge(lastNodeId(), currentNodeId());
         }
     }
     /// \~japanese
@@ -65,7 +82,7 @@ public:
         std::vector<AgentState> states;
         std::vector<NodeId> ids = destinationNodeIds();
         for (auto id : ids) {
-            states.push_back(mg.agentStateByNodeId(id));
+            states.push_back(mg->agentStateByNodeId(id));
         }
         return states;
     }
