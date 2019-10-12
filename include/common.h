@@ -4,6 +4,7 @@
 #include <limits>
 #include <ostream>
 #include <utility>
+#include <type_traits>
 
 namespace Amaze {
 
@@ -48,7 +49,7 @@ struct Difference {
 /// \~english
 /// Position coordinates in the maze.
 /// The coordinate system is defined as in the following figure.
-/// \warning The coordinate system is not based on the cell count.
+/// \warning Note that the coordinate system is not based on the cell count.
 ///
 /// \~
 /// <pre>
@@ -85,10 +86,10 @@ struct Position {
 } __attribute__((__packed__));
 
 /// \~japanese
-/// 迷路内の位置と方向，フラグを含むエージェントの状態を表す型．
+/// 迷路内の位置と方向，ユーザ定義のフラグを含むエージェントの状態を表す型．
 ///
 /// \~english
-/// State of the agent including position, direction, and flags in the maze.
+/// State of the agent including position, direction, and user-defined flags in the maze.
 struct AgentState {
     Position pos;
     Direction dir;
@@ -125,9 +126,8 @@ static constexpr uint8_t kDefaultMazeWidth = 32;
 /// \param a, b Numbers to be added
 /// \returns \p a + \p b or \p std::numeric_limits<T>::max()
 template <typename T>
-T satSum(T a, T b)
+typename std::enable_if<std::is_unsigned_v<T>, T>::type satSum(T a, T b)
 {
-    // FIXME: undefined behavior when a < 0 or b < 0
     if (std::numeric_limits<T>::max() - a <= b) {
         return std::numeric_limits<T>::max();
     } else {

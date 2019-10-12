@@ -7,16 +7,14 @@ using namespace Amaze;
 
 TEST(common_satsum, positive_case)
 {
-    EXPECT_EQ(2, satSum(1, 1));
-    EXPECT_EQ(2.f, satSum(1.f, 1.f));
+    EXPECT_EQ(2, satSum(uint8_t(1), uint8_t(1)));
+    EXPECT_EQ(2, satSum(uint16_t(1), uint16_t(1)));
 }
 
 TEST(common_satsum, saturated_case)
 {
-    EXPECT_EQ(255, satSum(static_cast<uint8_t>(200), static_cast<uint8_t>(57)));
-
-    float fmax = std::numeric_limits<float>::max();
-    EXPECT_EQ(fmax, satSum(fmax / 3.f * 2.f, fmax / 3.f * 2.f));
+    EXPECT_EQ(255, satSum(uint8_t(200), uint8_t(57)));
+    EXPECT_EQ(65535, satSum(uint16_t(20000), uint16_t(55423)));
 }
 
 TEST(common_position_difference, common_case)

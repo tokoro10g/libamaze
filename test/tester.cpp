@@ -90,7 +90,6 @@ int main()
 
     FourWayStepMapGraph mg1(reference_maze);
     FourWayStepMapGraph<true, uint16_t> mg2(reference_maze);
-    FourWayStepMapGraph<true, float> mg3(reference_maze);
     SixWayWallNodeTurnCostGraph mg4(reference_maze);
 
     auto solver1 = DStarLite(&mg1);
