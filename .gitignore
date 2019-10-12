@@ -1,6 +1,8 @@
 # Prerequisites
 *.d
 *.plist
+compile_commands.json
+.clangd
 
 # Compiled Object files
 *.slo
