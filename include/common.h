@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
-#include <utility>
 #include <type_traits>
+#include <utility>
 
 namespace Amaze {
 
@@ -100,6 +100,8 @@ struct AgentState {
     }
 } __attribute__((__packed__));
 
+/* */
+
 static constexpr Direction kNoDirection = { 0x0 };
 static constexpr Direction kFront = { 0x1 };
 static constexpr Direction kRight = { 0x2 };
@@ -113,6 +115,8 @@ static constexpr Direction kWest = { 0x8 };
 static constexpr AgentState kInvalidAgentState = { { uint8_t(-1), uint8_t(-1) }, kNoDirection, 0 };
 
 static constexpr uint8_t kDefaultMazeWidth = 32;
+
+/* */
 
 /// \~japanese
 /// 型\p Tの最大値で飽和する和を返します．
@@ -135,19 +139,21 @@ typename std::enable_if<std::is_unsigned_v<T>, T>::type satSum(T a, T b)
     }
 }
 
+/* */
+
 std::ostream& operator<<(std::ostream& os, Direction d)
 {
     if (d.bits.north) {
         os << 'N';
+    }
+    if (d.bits.south) {
+        os << 'S';
     }
     if (d.bits.east) {
         os << 'E';
     }
     if (d.bits.west) {
         os << 'W';
-    }
-    if (d.bits.south) {
-        os << 'S';
     }
     if (d.half == 0) {
         os << '0';
