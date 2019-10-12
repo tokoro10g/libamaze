@@ -49,10 +49,6 @@ public:
         }
         return positions;
     }
-    static std::vector<Position> senseHogei(AgentState as)
-    {
-        return std::vector<Position>(1, as.pos);
-    }
 
 private:
     MazeGraphFeatureBase();

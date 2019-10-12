@@ -57,8 +57,6 @@ int main(int argc, char* argv[])
     std::vector<Position> changed_positions = sense(maze, reference_maze, AS::currentSensePositions(solver));
     std::cout << solver.currentAgentState() << std::endl;
 
-    AS::senseHogei(solver.currentAgentState());
-
     solver.changeDestination(mg.startNodeId());
     std::cout << "Now the goal is " << (int)mg.startNodeId() << std::endl;
 
