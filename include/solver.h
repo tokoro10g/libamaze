@@ -128,7 +128,8 @@ public:
     /// Reconstructs the shortest path based on the current graph data.
     /// \param[in] id_from, id_to Start and end of the path
     /// \returns \p std::vector to return the path
-    virtual std::vector<AgentState> reconstructPath(NodeId id_from, NodeId id_to) const {
+    virtual std::vector<AgentState> reconstructPath(NodeId id_from, NodeId id_to) const
+    {
         std::set<NodeId> s;
         s.insert(id_to);
         return reconstructPath(id_from, s);
