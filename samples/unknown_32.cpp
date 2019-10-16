@@ -14,10 +14,6 @@ using namespace std::chrono;
 
 int main()
 {
-    /// \~japanese
-    /// \p Maze クラスのテンプレートパラメータには，迷路の幅・高さの最大値を指定します．
-    /// \~english
-    /// Specify the maximum width/height of the maze in the template parameter of \p Maze class.
     constexpr uint8_t max_maze_width = 32;
     Maze<max_maze_width> maze;
 
@@ -31,21 +27,22 @@ int main()
     Utility::printMaze(maze);
     std::cout << std::endl;
 
-    /// \~japanese
-    /// 迷路グラフを定義し，スタートとゴールの状態を表示します．
-    /// \~english
-    /// Define a maze graph and display agent states of the start and goals.
+    // 迷路グラフを定義し，スタートとゴールの状態を表示します．
+    //
+    // Defines a maze graph and display agent states of the start and goals.
+    //
     FourWayStepMapGraph mg_four(maze);
     SixWayWallNodeGraph mg_six(maze);
     SixWayWallNodeTurnCostGraph mg_six_cost(maze);
 
-    /// \~japanese
-    /// ソルバを初期化して最短経路を導出します．
-    /// \~english
-    /// Initialize solver and calculate the shortest path.
+    // ソルバを初期化して最短経路を導出します．
+    //
+    // Initializes the solver and calculate the shortest path.
+    //
     auto solver_four = DStarLite(&mg_four);
     auto solver_six = DStarLite(&mg_six);
     auto solver_six_cost = DStarLite(&mg_six_cost);
+
     high_resolution_clock::time_point tstart, tend;
 
 #if 1
