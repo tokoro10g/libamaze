@@ -43,9 +43,8 @@ public:
             std::cerr << "Out of bounds!!! (id_from: " << (int)id_from << ", id_to: " << (int)id_to << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return Base::kInf;
         }
-        AgentState as1 = agentStateByNodeId(id_from);
-        AgentState as2 = agentStateByNodeId(id_to);
-        // FIXME: may contain miscalculaions
+        auto as1 = agentStateByNodeId(id_from);
+        auto as2 = agentStateByNodeId(id_to);
         return TCost(abs((int)as1.pos.x - as2.pos.x) + abs((int)as1.pos.y - as2.pos.y));
     }
     std::vector<std::pair<TNodeId, TCost>> neighborEdges(TNodeId id) const
@@ -58,7 +57,7 @@ public:
         }
         constexpr int8_t dx[8] = { 0, 1, 2, 1, 0, -1, -2, -1 };
         constexpr int8_t dy[8] = { 2, 1, 0, -1, -2, -1, 0, 1 };
-        AgentState as = agentStateByNodeId(id);
+        auto as = agentStateByNodeId(id);
         for (int i = 0; i < 8; i++) {
             if (as.pos.x == 0 && dx[i] < 0)
                 continue;
@@ -68,10 +67,10 @@ public:
                 continue;
             if (as.pos.y + dy[i] > 2 * (W - 1))
                 continue;
-            AgentState as_tmp = as;
+            auto as_tmp = as;
             as_tmp.pos.x = uint8_t(as_tmp.pos.x + dx[i]);
             as_tmp.pos.y = uint8_t(as_tmp.pos.y + dy[i]);
-            std::pair<bool, TNodeId> e = edge(as, as_tmp);
+            auto e = edge(as, as_tmp);
             if (e.first) {
                 v.push_back({ nodeIdByAgentState(as_tmp), e.second });
             }
@@ -90,7 +89,6 @@ public:
             maxcost = Base::kInf;
         }
 
-        // FIXME: may contain bugs
         if (abs((int)as1.pos.x - as2.pos.x) == 1 && abs((int)as1.pos.y - as2.pos.y) == 1 && as1.pos.x % 2 != as1.pos.y % 2) {
             return { true, std::max(TCost(2), maxcost) };
         } else if ((abs((int)as1.pos.x - as2.pos.x) == 2 && as1.pos.y == as2.pos.y && as1.pos.x % 2 == 1 && as1.pos.y % 2 == 0) || (abs((int)as1.pos.y - as2.pos.y) == 2 && as1.pos.x == as2.pos.x && as1.pos.x % 2 == 0 && as1.pos.y % 2 == 1)) {
@@ -115,7 +113,6 @@ public:
             // cell or pillar
             return Base::kInvalidNode;
         }
-        // FIXME: may contain bugs
         if (as.pos.y % 2 == 0) {
             // East node
             return TNodeId(as.pos.y / 2 * (2 * W - 1) + as.pos.x / 2);
@@ -132,7 +129,6 @@ public:
     }
     AgentState agentStateByNodeId(TNodeId id) const
     {
-        // FIXME: may contain bugs
         if (id >= kSize) {
             // TODO: implement exception handling
             std::cerr << "Out of bounds!!! (id: " << (int)id << ") " << __FILE__ << ":" << __LINE__ << std::endl;
@@ -158,11 +154,10 @@ public:
         if (!Base::edgeExist(id_from, id_to)) {
             return kInvalidAgentState;
         }
-        AgentState as1, as2;
-        as1 = agentStateByNodeId(id_from);
-        as2 = agentStateByNodeId(id_to);
-        AgentState ret = as2;
-        Difference d = as2.pos - as1.pos;
+        auto as1 = agentStateByNodeId(id_from);
+        auto as2 = agentStateByNodeId(id_to);
+        auto ret = as2;
+        auto d = as2.pos - as1.pos;
         if (d.x == 0 && abs(d.y) == 2) {
             if (d.y < 0) {
                 ret.dir = kSouth;
@@ -201,7 +196,7 @@ public:
 
     TNodeId startNodeId() const
     {
-        Position p = Base::maze.start;
+        auto p = Base::maze.start;
         if (p.x % 2 == 0 && p.y % 2 == 0) {
             p.y++;
         }

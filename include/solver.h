@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mazegraph.h"
+#include <set>
 
 namespace Amaze {
 
@@ -72,16 +73,15 @@ public:
     }
     /// \~japanese
     /// 終点のノードのエージェント状態を返します．
-    /// \param[out] states 終点のエージェント状態のリスト
+    /// \returns 終点のエージェント状態のリスト
     ///
     /// \~english
     /// Returns the agent states of the destination nodes.
-    /// \param[out] states List of agent states at the destinations.
+    /// \returns List of agent states at the destinations.
     virtual std::vector<AgentState> destinationAgentStates() const
     {
         std::vector<AgentState> states;
-        std::vector<NodeId> ids = destinationNodeIds();
-        for (auto id : ids) {
+        for (auto id : destinationNodeIds()) {
             states.push_back(mg->agentStateByNodeId(id));
         }
         return states;
@@ -112,12 +112,12 @@ public:
     virtual NodeId lastNodeId() const = 0;
     /// \~japanese
     /// 終点ノードのIDを返します．
-    /// \param[out] ids 終点のIDのリスト
+    /// \returns 終点のIDのリスト
     ///
     /// \~english
     /// Returns the ID of the destination node.
-    /// \param[out] ids List of destination IDs.
-    virtual std::vector<NodeId> destinationNodeIds() const = 0;
+    /// \returns List of destination IDs.
+    virtual std::set<NodeId> destinationNodeIds() const = 0;
 
     /// \~japanese
     /// 現在のグラフの情報から最短経路を構成します．
@@ -128,17 +128,21 @@ public:
     /// Reconstructs the shortest path based on the current graph data.
     /// \param[in] id_from, id_to Start and end of the path
     /// \returns \p std::vector to return the path
-    virtual std::vector<AgentState> reconstructPath(NodeId id_from, NodeId id_to) const { return reconstructPath(id_from, std::vector(1, id_to)); }
+    virtual std::vector<AgentState> reconstructPath(NodeId id_from, NodeId id_to) const {
+        std::set<NodeId> s;
+        s.insert(id_to);
+        return reconstructPath(id_from, s);
+    }
     /// \~japanese
     /// 現在のグラフの情報から最短経路を構成します．
-    /// \param[in] id_from, id_to 経路の始点と終点
+    /// \param[in] id_from, ids_to 経路の始点と終点
     /// \returns 経路を格納する \p std::vector
     ///
     /// \~english
     /// Reconstructs the shortest path based on the current graph data.
     /// \param[in] id_from, ids_to Start and ends of the path
     /// \returns \p std::vector to return the path
-    virtual std::vector<AgentState> reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to) const = 0;
+    virtual std::vector<AgentState> reconstructPath(NodeId id_from, const std::set<NodeId>& ids_to) const = 0;
 
     /// \~japanese
     /// 壁センシング前の処理を行います．
@@ -177,7 +181,7 @@ public:
     /// \~english
     /// Changes destination and initializes internal variables to be ready for a new search originated from the current node.
     /// \param[in] ids List of node IDs at the destinations
-    virtual void changeDestinations(const std::vector<NodeId>& ids) = 0;
+    virtual void changeDestinations(const std::set<NodeId>& ids) = 0;
     /// \~japanese
     /// 終点を変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
     /// \param[in] id 終点のノードID
@@ -185,7 +189,12 @@ public:
     /// \~english
     /// Changes destination and initializes internal variables to be ready for a new search originated from the current node.
     /// \param[in] id Node ID at the destination
-    virtual void changeDestination(NodeId id) { changeDestinations(std::vector(1, id)); }
+    virtual void changeDestinations(NodeId id)
+    {
+        std::set<NodeId> s;
+        s.insert(id);
+        changeDestinations(s);
+    }
 };
 
 } // namespace Amaze

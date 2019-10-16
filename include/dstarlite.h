@@ -4,8 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
-#include <iostream>
-#include <limits>
+//#include <iostream>
 #include <set>
 #include <vector>
 
@@ -16,14 +15,10 @@ namespace Amaze {
 ///
 /// 実装は論文(http://idm-lab.org/bib/abstracts/papers/aaai02b.pdf)をもとにしています．
 ///
-/// \tparam TMazeGraph MazeGraphを実装した型
-///
 /// \~english
 /// D* Lite solver
 ///
 /// Implementation is based on the paper (http://idm-lab.org/bib/abstracts/papers/aaai02b.pdf).
-///
-/// \tparam TMazeGraph Class implements MazeGraph
 ///
 /// \~
 /// Sven Koenig and Maxim Likhachev, "D* Lite", 2002.
@@ -60,7 +55,7 @@ private:
     NodeId id_current;
     /// \~japanese 終点ノードのID
     /// \~english Destination node ID
-    std::vector<NodeId> ids_destination;
+    std::set<NodeId> ids_destination;
     /// \~japanese 一手前のノードのID
     /// \~english Last node ID
     NodeId id_last;
@@ -80,6 +75,7 @@ private:
     std::bitset<NodeCount> in_open_list;
 
 public:
+    using Base::changeDestinations;
     using Base::changeMazeGraph;
 
     /// \~japanese 無限コストとみなす値
@@ -169,8 +165,7 @@ public:
         NodeId examined_nodes = 0;
         NodeId max_heap_size = 0;
         while (!open_list.empty() && (open_list.begin()->first < calculateKey(id_current) || rhs[id_current] > g[id_current])) {
-            auto uid = open_list.begin()->second;
-            auto kold = open_list.begin()->first;
+            auto [kold, uid] = *open_list.begin();
             auto knew = calculateKey(uid);
             //std::cout<<(int)kold.first<<","<<(int)kold.second<<" "<<(int)knew.first<<","<<(int)knew.second<<std::endl;
             //std::cout<<uid<<": "<<(int)g[uid]<<","<<(int)rhs[uid]<<std::endl;
@@ -181,15 +176,12 @@ public:
                 g[uid] = rhs[uid];
                 open_list.erase(open_list.begin());
                 if (!in_open_list.test(uid)) {
-                    // this node is counted twice
+                    // this node is processed twice
                     continue;
                 }
                 in_open_list.reset(uid);
 
-                std::vector<std::pair<NodeId, Cost>> v = Base::mg->neighborEdges(uid);
-                for (auto p : v) {
-                    NodeId sid = p.first;
-                    Cost scost = p.second;
+                for (auto& [sid, scost] : Base::mg->neighborEdges(uid)) {
                     if (rhs[sid] != 0) {
                         rhs[sid] = std::min(rhs[sid], satSum(scost, g[uid]));
                     }
@@ -198,26 +190,20 @@ public:
             } else {
                 Cost gold = g[uid];
                 g[uid] = kInf;
-                auto f = [&](std::pair<NodeId, Cost> edge) {
-                    NodeId sid = edge.first;
-                    Cost scost = edge.second;
+                auto v = Base::mg->neighborEdges(uid);
+                v.push_back({ uid, 0 });
+                for (auto& [sid, scost] : v) {
                     if (rhs[sid] == satSum(scost, gold)) {
                         if (rhs[sid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId, Cost>> v = Base::mg->neighborEdges(sid);
-                            for (auto p : v) {
-                                NodeId spid = p.first;
-                                Cost spcost = p.second;
+                            for (auto& [spid, spcost] : Base::mg->neighborEdges(sid)) {
                                 mincost = std::min(mincost, satSum(spcost, g[spid]));
                             }
                             rhs[sid] = mincost;
                         }
                     }
                     updateNode(sid);
-                };
-                std::vector<std::pair<NodeId, Cost>> v = Base::mg->neighborEdges(uid);
-                for_each(v.begin(), v.end(), f);
-                f({ uid, 0 });
+                }
             }
             if (open_list.size() > max_heap_size) {
                 max_heap_size = NodeId(open_list.size());
@@ -245,16 +231,13 @@ public:
     NodeId nextNodeId() const { return NodeId(0); }
     NodeId currentNodeId() const { return id_current; }
     NodeId lastNodeId() const { return id_last; }
-    std::vector<NodeId> destinationNodeIds() const { return ids_destination; }
+    std::set<NodeId> destinationNodeIds() const { return ids_destination; }
 
     std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const
     {
         NodeId argmin = id;
         Cost mincost = kInf;
-        std::vector<std::pair<NodeId, Cost>> v = Base::mg->neighborEdges(id);
-        for (auto edge : v) {
-            NodeId spid = edge.first;
-            Cost spcost = edge.second;
+        for (auto& [spid, spcost] : Base::mg->neighborEdges(id)) {
             Cost cost = satSum(spcost, g[spid]);
             if (mincost >= cost) {
                 mincost = cost;
@@ -264,19 +247,19 @@ public:
         return { argmin, mincost };
     }
 
-    std::vector<AgentState> reconstructPath(NodeId id_from, const std::vector<NodeId>& ids_to) const
+    std::vector<AgentState> reconstructPath(NodeId id_from, const std::set<NodeId>& ids_to) const
     {
         std::vector<AgentState> path;
         path.push_back(Base::mg->agentStateByNodeId(id_from));
         NodeId id_current_on_path = id_from;
         NodeId id_last_on_path = id_from;
-        while (std::find(ids_to.begin(), ids_to.end(), id_current_on_path) == ids_to.end()) {
-            auto n = lowestNeighbor(id_current_on_path);
-            if (n.second == kInf) {
+        while (ids_to.find(id_current_on_path) == ids_to.end()) {
+            auto [nid, ncost] = lowestNeighbor(id_current_on_path);
+            if (ncost == kInf) {
                 return std::vector<AgentState>();
             }
             id_last_on_path = id_current_on_path;
-            id_current_on_path = n.first;
+            id_current_on_path = nid;
             path.push_back(Base::mg->agentStateByEdge(id_last_on_path, id_current_on_path));
         }
         return path;
@@ -301,18 +284,15 @@ public:
             if (!changed_positions.empty()) {
                 key_modifier = satSum(key_modifier, Base::mg->distance(id_last_modified, id_current));
                 id_last_modified = id_current;
-                std::vector<std::tuple<NodeId, NodeId, Cost>> changed_edges = Base::mg->affectedEdges(changed_positions);
-                for (auto e : changed_edges) {
+                for (auto& [uid, vid, cost] : Base::mg->affectedEdges(changed_positions)) {
                     Cost cold;
-                    if (std::get<2>(e) == kInf) {
+                    if (cost == kInf) {
                         // assume that the path is NOT blocked in the previous step
-                        cold = Base::mg->edgeWithHypothesis(std::get<0>(e), std::get<1>(e), false).second;
+                        cold = Base::mg->edgeWithHypothesis(uid, vid, false).second;
                     } else {
                         // assume that the path IS blocked in the previous step
-                        cold = Base::mg->edgeWithHypothesis(std::get<0>(e), std::get<1>(e), true).second;
+                        cold = Base::mg->edgeWithHypothesis(uid, vid, true).second;
                     }
-                    auto uid = std::get<0>(e);
-                    auto vid = std::get<1>(e);
                     if (cold > kInf) {
                         // TODO: probably unnecessary
                         if (rhs[uid] != 0) {
@@ -321,10 +301,7 @@ public:
                     } else if (rhs[uid] == satSum(cold, g[vid])) {
                         if (rhs[uid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId, Cost>> v = Base::mg->neighborEdges(uid);
-                            for (auto edge : v) {
-                                NodeId spid = edge.first;
-                                Cost spcost = edge.second;
+                            for (auto& [spid, spcost] : Base::mg->neighborEdges(uid)) {
                                 mincost = std::min(mincost, satSum(spcost, g[spid]));
                             }
                             rhs[uid] = mincost;
@@ -339,10 +316,7 @@ public:
                     } else if (rhs[vid] == satSum(cold, g[uid])) {
                         if (rhs[vid] != 0) {
                             Cost mincost = kInf;
-                            std::vector<std::pair<NodeId, Cost>> v = Base::mg->neighborEdges(vid);
-                            for (auto edge : v) {
-                                NodeId spid = edge.first;
-                                Cost spcost = edge.second;
+                            for (auto& [spid, spcost] : Base::mg->neighborEdges(vid)) {
                                 mincost = std::min(mincost, satSum(spcost, g[spid]));
                             }
                             rhs[vid] = mincost;
@@ -385,12 +359,11 @@ public:
         }
         computeShortestPath();
     }
-    void changeDestinations(const std::vector<NodeId>& ids)
+    void changeDestinations(const std::set<NodeId>& ids)
     {
         resetCostsAndLists();
         // id_current = id_current
-        ids_destination.clear();
-        ids_destination.insert(ids_destination.end(), ids.begin(), ids.end());
+        ids_destination = ids;
         id_last = id_current;
         id_last_modified = id_current;
         for (auto id : ids_destination) {

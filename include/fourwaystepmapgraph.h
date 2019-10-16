@@ -9,18 +9,22 @@ namespace Amaze {
 ///
 /// このグラフ表現では区画の中心にノードを置き，区画どうしを結ぶ4方向のエッジを考えます．
 ///
+/// \tparam kExplore 探索モードのとき \p true
 /// \tparam TCost コストの型
 /// \tparam TNodeId ノードIDの型
 /// \tparam W 迷路の幅
+/// \tparam NodeCount ノードの個数 = W * W (変更不可)
 ///
 /// \~english
 /// A 4-way step map graph representation of the maze.
 ///
 /// This representation considers nodes at the center of cells and 4 edges from each node towards the adjacent cells.
 ///
+/// \tparam kExplore \p true if exploration mode
 /// \tparam TCost Type of the cost
 /// \tparam TNodeId Type of the node ID
 /// \tparam W Maze width
+/// \tparam NodeCount The number of nodes = W * W (unmodifiable)
 template <bool kExplore = true, typename TCost = uint16_t, typename TNodeId = uint16_t, uint8_t W = kDefaultMazeWidth, TNodeId NodeCount = TNodeId(W* W)>
 class FourWayStepMapGraph : public MazeGraph<TCost, TNodeId, W, NodeCount> {
     static_assert(NodeCount == TNodeId(W * W), "The template parameter NodeCount has invalid value.");

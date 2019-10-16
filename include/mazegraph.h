@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <set>
 #include <utility>
 
 namespace Amaze {
@@ -82,8 +83,7 @@ public:
     virtual std::vector<TNodeId> neighbors(TNodeId id) const
     {
         std::vector<TNodeId> v;
-        std::vector<std::pair<TNodeId, TCost>> edges = neighborEdges(id);
-        for (auto edge : edges) {
+        for (auto edge : neighborEdges(id)) {
             v.push_back(edge.first);
         }
         return v;
@@ -118,15 +118,13 @@ public:
         std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
         std::vector<TNodeId> visited;
         for (Position p : positions) {
-            std::vector<TNodeId> ids = nodeIdsByPosition(p);
-            for (auto id : ids) {
+            for (auto id : nodeIdsByPosition(p)) {
                 if (id == kInvalidNode) {
                     continue;
                 }
                 if (std::find(visited.begin(), visited.end(), id) == visited.end()) {
                     visited.push_back(id);
-                    std::vector<std::pair<NodeId, Cost>> v = neighborEdges(id);
-                    for (auto n : v) {
+                    for (auto n : neighborEdges(id)) {
                         edges.push_back({ id, n.first, n.second });
                     }
                 }
@@ -232,13 +230,13 @@ public:
     /// 位置に対応するノードのIDのリストを計算します．
     ///
     /// \param[in] p 位置
-    /// \param[out] ids ノードのIDのリストが格納されます
+    /// \returns ノードのIDを格納した \p std::vector
     ///
     /// \~english
     /// Calculates the node ID corresponding to the position.
     ///
     /// \param[in] p Position
-    /// \param[out] ids List of node ID.
+    /// \returns List of node ID.
     virtual std::vector<NodeId> nodeIdsByPosition(Position p) const = 0;
     /// \~japanese
     /// ノードIDから対応するエージェントの状態を計算します．
@@ -295,19 +293,19 @@ public:
     /// \~japanese
     /// ゴールのノードIDのリストを返します．
     ///
-    /// \param[out] ids ゴールのノードIDのリスト
+    /// \returns ゴールのノードIDのリスト
     ///
     /// \~english
     /// Returns the list of goal node IDs.
     ///
-    /// \param[out] ids List of goal node IDs
-    virtual std::vector<TNodeId> goalNodeIds() const
+    /// \returns List of goal node IDs
+    virtual std::set<TNodeId> goalNodeIds() const
     {
-        std::vector<TNodeId> ids;
+        std::set<TNodeId> ids;
         for (auto p : maze.goals) {
             TNodeId id = nodeIdByAgentState({ p, kNoDirection, 0 });
             if (id != kInvalidNode) {
-                ids.push_back(id);
+                ids.insert(id);
             }
         }
         return ids;
