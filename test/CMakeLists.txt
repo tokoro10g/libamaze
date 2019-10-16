@@ -17,6 +17,5 @@ gtest_discover_tests(test_common)
 gtest_discover_tests(test_maze)
 gtest_discover_tests(test_mazegraph)
 
-add_executable(tester tester.cpp)
 #target_link_libraries(tester ubsan)
 #add_test(IntegrationTest tester)
