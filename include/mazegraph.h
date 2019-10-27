@@ -43,6 +43,9 @@ public:
     /// \~japanese 無効なノードID
     /// \~english ID for invalid nodes
     static constexpr TNodeId kInvalidNode = std::numeric_limits<TNodeId>::max();
+    /// \~japanese 迷路の最大幅
+    /// \~english Maximum width of the maze
+    static constexpr uint8_t kWidth = W;
 
     explicit MazeGraph(const Maze<W>& maze)
         : maze(maze)

@@ -90,6 +90,9 @@ public:
     /// \~japanese ゴール位置
     /// \~english Goal positions
     std::vector<Position> goals;
+    /// \~japanese 迷路の最大幅
+    /// \~english Maximum width of the maze
+    static constexpr uint8_t kWidth = W;
 
     Maze()
         : maze_data(0)

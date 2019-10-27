@@ -130,7 +130,7 @@ static constexpr uint8_t kDefaultMazeWidth = 32;
 /// \param a, b Numbers to be added
 /// \returns \p a + \p b or \p std::numeric_limits<T>::max()
 template <typename T>
-typename std::enable_if<std::is_unsigned_v<T>, T>::type satSum(T a, T b)
+std::enable_if_t<std::is_unsigned_v<T>, T> satSum(T a, T b)
 {
     if (std::numeric_limits<T>::max() - a <= b) {
         return std::numeric_limits<T>::max();
