@@ -15,7 +15,6 @@
 #include "dstarlite.h"
 #include "maze.h"
 #include "mazeutility.h"
-#include "sample_agent.h"
 #include "sixwaywallnodegraph.h"
 #include "sixwaywallnodeturncostgraph.h"
 #include <iostream>

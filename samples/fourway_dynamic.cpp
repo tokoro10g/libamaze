@@ -12,12 +12,11 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "agentstrategy.h"
+#include "agenthelper.h"
 #include "dstarlite.h"
 #include "fourwaystepmapgraph.h"
 #include "maze.h"
 #include "mazeutility.h"
-#include "sample_agent.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -88,8 +87,7 @@ int main(int argc, char* argv[])
     //
     auto solver = DStarLite(&mg);
     solver.initialize();
-    // TODO: interface TBD
-    using AS = AgentStrategy<decltype(mg), decltype(solver)>;
+    using AH = AgentHelper<decltype(mg), decltype(solver)>;
 
     // 参照迷路の形状とスタート・ゴールの情報を表示します．
     //
@@ -118,7 +116,7 @@ int main(int argc, char* argv[])
         //
         // Obtains a list of wall positions to sense next according to the current solver state.
         //
-        auto sense_positions = AS::currentSensePositions(solver);
+        auto sense_positions = AH::currentSensePositions(solver);
         // センシング前のソルバの処理を行います．通常のD* Liteソルバでは何もしません．
         //
         // Performs a solver action before sensing. A normal D* Lite solver does not do anything.
@@ -128,7 +126,7 @@ int main(int argc, char* argv[])
         //
         // 壁のデータに変更が加わった座標のリストを取得しています．(実装はsample_agent.hを参照)
         //
-        auto changed_positions = sense(virtual_maze, reference_maze, sense_positions);
+        auto changed_positions = AH::sense(virtual_maze, reference_maze, sense_positions);
         // センシング後のソルバの処理を行います．変更された壁の座標を渡して，つぎに取るべき行動を決定します．
         // ソルバの状態はこの処理で更新されます．
         //
@@ -141,7 +139,7 @@ int main(int argc, char* argv[])
         // The return value of solver.currentAgentState() here corresponds to the next agent state.
         //
     }
-    auto changed_positions = sense(virtual_maze, reference_maze, AS::currentSensePositions(solver));
+    auto changed_positions = AH::sense(virtual_maze, reference_maze, AH::currentSensePositions(solver));
     std::cout << solver.currentAgentState() << std::endl;
 
     /*
@@ -165,9 +163,9 @@ int main(int argc, char* argv[])
     //
     while (solver.currentNodeId() != mg.startNodeId()) {
         std::cout << solver.currentAgentState() << std::endl;
-        auto sense_positions = AS::currentSensePositions(solver);
+        auto sense_positions = AH::currentSensePositions(solver);
         solver.preSense(sense_positions);
-        auto changed_positions = sense(virtual_maze, reference_maze, sense_positions);
+        auto changed_positions = AH::sense(virtual_maze, reference_maze, sense_positions);
         solver.postSense(changed_positions);
     }
     std::cout << solver.currentAgentState() << std::endl;

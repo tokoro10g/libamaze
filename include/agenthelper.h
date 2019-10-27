@@ -49,6 +49,26 @@ public:
         }
         return positions;
     }
+    static std::vector<Position> sense(Maze<TMazeGraph::kWidth>& virtual_maze, const Maze<TMazeGraph::kWidth>& reference_maze, const std::vector<Position>& sense_positions)
+    {
+        std::vector<Position> changed_positions;
+        for (auto p : sense_positions) {
+            if (p.x > 2 * TMazeGraph::kWidth || p.y > 2 * TMazeGraph::kWidth) {
+                continue;
+            }
+            if (virtual_maze.isCheckedWall(p)) {
+                continue;
+            }
+            virtual_maze.setCheckedWall(p, true);
+            if (reference_maze.isSetWall(p)) {
+                virtual_maze.setWall(p, true);
+                changed_positions.push_back(p);
+            } else {
+                virtual_maze.setWall(p, false);
+            }
+        }
+        return changed_positions;
+    }
 
 private:
     MazeGraphFeatureBase();
@@ -107,7 +127,7 @@ private:
 };
 
 template <typename TMazeGraph, typename TSolver>
-class AgentStrategy : public MazeGraphFeature<TMazeGraph>, public SolverFeature<TSolver> {
+class AgentHelper : public MazeGraphFeature<TMazeGraph>, public SolverFeature<TSolver> {
 public:
     using MazeGraph = TMazeGraph;
     using Solver = TSolver;
@@ -118,6 +138,6 @@ public:
     }
 
 private:
-    AgentStrategy() {};
+    AgentHelper() {};
 };
 } // namespace Amaze
