@@ -1,5 +1,7 @@
 add_executable(fourway_static fourway_static.cpp)
 add_executable(fourway_dynamic fourway_dynamic.cpp)
 add_executable(sixway_static sixway_static.cpp)
+add_executable(sixway_static_comparison sixway_static_comparison.cpp)
 add_executable(sixway_dynamic sixway_dynamic.cpp)
+add_executable(sixway_dynamic_comparison sixway_dynamic_comparison.cpp)
 add_executable(unknown_32 unknown_32.cpp)
