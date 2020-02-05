@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "agenthelper.h"
+#include "astar.h"
 #include "dstarlite.h"
 #include "maze.h"
 #include "mazeutility.h"

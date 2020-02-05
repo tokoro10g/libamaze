@@ -1,3 +1,4 @@
+#include "astar.h"
 #include "dstarlite.h"
 #include "fourwaystepmapgraph.h"
 #include "maze.h"
@@ -41,6 +42,9 @@ int main()
     auto solver_four = DStarLite(&mg_four);
     auto solver_six = DStarLite(&mg_six);
     auto solver_six_cost = DStarLite(&mg_six_cost);
+    auto solver_four_astar = AStar(&mg_four);
+    auto solver_six_astar = AStar(&mg_six);
+    auto solver_six_cost_astar = AStar(&mg_six_cost);
 
     high_resolution_clock::time_point tstart, tend;
 
@@ -51,7 +55,13 @@ int main()
         solver_four.initialize();
     }
     tend = high_resolution_clock::now();
-    std::cout << "Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+    std::cout << "[D* Lite] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+    tstart = high_resolution_clock::now();
+    for (int k = 0; k < 100; k++) {
+        solver_four_astar.initialize();
+    }
+    tend = high_resolution_clock::now();
+    std::cout << "[A*] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
 #endif
 
 #if 1
@@ -61,7 +71,13 @@ int main()
         solver_six.initialize();
     }
     tend = high_resolution_clock::now();
-    std::cout << "Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+    std::cout << "[D* Lite] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+    tstart = high_resolution_clock::now();
+    for (int k = 0; k < 100; k++) {
+        solver_six_astar.initialize();
+    }
+    tend = high_resolution_clock::now();
+    std::cout << "[A*] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
 #endif
 
 #if 1
@@ -71,7 +87,13 @@ int main()
         solver_six_cost.initialize();
     }
     tend = high_resolution_clock::now();
-    std::cout << "Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+    std::cout << "[D* Lite] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+    tstart = high_resolution_clock::now();
+    for (int k = 0; k < 100; k++) {
+        solver_six_cost_astar.initialize();
+    }
+    tend = high_resolution_clock::now();
+    std::cout << "[A*] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
 #endif
 
     return 0;
