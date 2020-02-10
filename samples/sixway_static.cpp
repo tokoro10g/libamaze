@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "astar.h"
+#include "bfs.h"
 #include "dstarlite.h"
 #include "maze.h"
 #include "mazeutility.h"

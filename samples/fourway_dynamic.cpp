@@ -14,6 +14,7 @@
 
 #include "agenthelper.h"
 #include "astar.h"
+#include "bfs.h"
 #include "dstarlite.h"
 #include "fourwaystepmapgraph.h"
 #include "maze.h"

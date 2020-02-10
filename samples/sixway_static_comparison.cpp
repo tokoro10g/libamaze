@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "astar.h"
+#include "bfs.h"
 #include "dstarlite.h"
 #include "maze.h"
 #include "mazeutility.h"
@@ -74,6 +75,7 @@ int main(int argc, char* argv[])
     //
     auto solver_DSL = DStarLite(&mg);
     auto solver_AS = AStar(&mg);
+    auto solver_BFS = BFS(&mg);
     high_resolution_clock::time_point tstart, tend;
 
     tstart = high_resolution_clock::now();
@@ -82,12 +84,20 @@ int main(int argc, char* argv[])
     }
     tend = high_resolution_clock::now();
     std::cout << "[D* Lite] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+
     tstart = high_resolution_clock::now();
     for (int k = 0; k < 100; k++) {
         solver_AS.initialize();
     }
     tend = high_resolution_clock::now();
     std::cout << "[A*] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
+
+    tstart = high_resolution_clock::now();
+    for (int k = 0; k < 100; k++) {
+        solver_BFS.initialize();
+    }
+    tend = high_resolution_clock::now();
+    std::cout << "[BFS] Average time: " << (double)duration_cast<microseconds>(tend - tstart).count() / 1000.0 / 100.0 << " ms" << std::endl;
 
     return 0;
 }
