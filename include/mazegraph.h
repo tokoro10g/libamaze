@@ -112,12 +112,18 @@ public:
     /// \returns エッジを格納する\p std::vector
     ///
     /// \~english
-    /// Enumerates edges affected by the change to the maze data for given positions.
+    /// Enumerates edges affected by the change in the maze data for given positions.
     ///
     /// \param[in] positions List of positions
     /// \returns \p std::vector filled with edges
     virtual std::vector<std::tuple<TNodeId, TNodeId, TCost>> affectedEdges(const std::vector<Position>& positions) const
     {
+        /// \~japanese
+        /// デフォルトの実装はナイーブで遅いです．
+        /// \link MazeGraph \endlink の各サブクラスに対してこのメソッドを再実装したほうが良いでしょう．
+        /// \~english
+        /// This default implementation is naive and therefore slow.
+        /// It is better to reimplement this method for each \link MazeGraph \endlink subclass.
         std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
         std::vector<TNodeId> visited;
         for (Position p : positions) {
