@@ -11,10 +11,10 @@
 namespace Amaze {
 
 /// \~japanese
-/// A* ソルバ
+/// 幅優先探索ソルバ
 ///
 /// \~english
-/// A* solver
+/// Breadth-first search solver
 template <typename TCost, typename TNodeId, uint8_t W, TNodeId NodeCount>
 class BFS : public Solver<TCost, TNodeId, W, NodeCount> {
 public:
@@ -22,7 +22,6 @@ public:
     using Base = Solver<TCost, TNodeId, W, NodeCount>;
     using NodeId = TNodeId;
     using Cost = TCost;
-    using HeapKey = Cost;
 
 private:
     /// \~japanese 現在のノードのID
@@ -38,7 +37,8 @@ private:
     /// \~english Next candidate node ID
     NodeId id_candidate;
 
-    /// g value
+    /// \~japanese 終点から各ノードまでのコスト値
+    /// \~english Cost of each node from the destination
     std::array<Cost, NodeCount> g;
 
 public:
