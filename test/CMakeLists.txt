@@ -1,18 +1,53 @@
-find_package(PkgConfig)
-pkg_check_modules(GTEST REQUIRED gtest>=1.7.0)
+Find_package(PkgConfig)
+find_package(Threads REQUIRED)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(ExternalProject)
+SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/external)
+
+externalproject_add(
+    googletest
+    URL https://github.com/google/googletest/archive/release-1.10.0.zip
+    UPDATE_COMMAND ""
+    INSTALL_COMMAND ""
+    )
+
+externalproject_get_property(googletest source_dir)
+set(GTEST_INCLUDE_PATH ${source_dir}/googletest/include)
+set(GMOCK_INCLUDE_PATH ${source_dir}/googlemock/include)
+
+externalproject_get_property(googletest binary_dir)
+set(GTEST_LIBRARY_PATH ${binary_dir}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}gtest.a) # in Unix, libgtest.a
+set(GTEST_LIBRARY GTest::GTest)
+add_library(${GTEST_LIBRARY} UNKNOWN IMPORTED)
+set_target_properties(${GTEST_LIBRARY} PROPERTIES
+    IMPORTED_LOCATION ${GTEST_LIBRARY_PATH}
+    INTERFACE_LINK_LIBRARIES Threads::Threads)
+add_dependencies(${GTEST_LIBRARY} googletest)
+
+set(GMOCK_LIBRARY_PATH ${binary_dir}/lib/${CMAKE_FIND_LIBRARY_PREFIXES}gmock.a) # in Unix, libgmock.a
+set(GMOCK_LIBRARY GTest::GMock)
+add_library(${GMOCK_LIBRARY} UNKNOWN IMPORTED)
+set_target_properties(${GMOCK_LIBRARY} PROPERTIES
+    IMPORTED_LOCATION ${GMOCK_LIBRARY_PATH}
+    INTERFACE_LINK_LIBRARIES Threads::Threads)
+add_dependencies(${GMOCK_LIBRARY} googletest)
 
 include(GoogleTest)
-include_directories(
-    ${GTEST_INCLUDE_DIRS}
-    )
- 
+
+add_compile_options(-Wno-error=effc++ -Wno-error=long-long -Wno-error=conversion)
 add_executable(test_common test_common.cpp)
 add_executable(test_maze test_maze.cpp)
 add_executable(test_mazegraph test_mazegraph.cpp)
-target_link_libraries(test_common gtest)
-target_link_libraries(test_maze gtest)
-target_link_libraries(test_mazegraph gtest)
- 
+target_include_directories(test_common PUBLIC ${GTEST_INCLUDE_PATH} ${GMOCK_INCLUDE_PATH})
+target_include_directories(test_maze PUBLIC ${GTEST_INCLUDE_PATH} ${GMOCK_INCLUDE_PATH})
+target_include_directories(test_mazegraph PUBLIC ${GTEST_INCLUDE_PATH} ${GMOCK_INCLUDE_PATH})
+target_link_libraries(test_common GTest::GTest GTest::GMock)
+target_link_libraries(test_maze GTest::GTest GTest::GMock)
+target_link_libraries(test_mazegraph GTest::GTest GTest::GMock)
+
 gtest_discover_tests(test_common)
 gtest_discover_tests(test_maze)
 gtest_discover_tests(test_mazegraph)
