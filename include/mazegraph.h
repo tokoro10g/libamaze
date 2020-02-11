@@ -73,13 +73,17 @@ public:
     virtual TCost distance(TNodeId id_from, TNodeId id_to) const = 0;
 
     /// \~japanese
-    /// ノード \p id の隣接ノードのIDを \p v に格納します．
+    /// ノード \p id の隣接ノードのIDを列挙します．
+    ///
+    /// 入力が無効な場合は空の \p std::vector を返します．
     ///
     /// \param[in] id 原点とするノードのID
     /// \returns 隣接ノードのIDを格納する\p std::vector
     ///
     /// \~english
-    /// Fills \p v with neighbor IDs of the node \p id.
+    /// Enumerates neighbor IDs of the node \p id.
+    ///
+    /// The returned vector will be empty if the input is invalid.
     ///
     /// \param[in] id Node ID of the source
     /// \returns \p std::vector filled with neighbors' IDs
@@ -93,13 +97,17 @@ public:
     }
 
     /// \~japanese
-    /// ノード \p id からのエッジを \p v に格納します．
+    /// ノード \p id からのエッジを列挙します．
+    ///
+    /// 入力が無効な場合は空の \p std::vector を返します．
     ///
     /// \param[in] id 原点とするノードのID
     /// \returns エッジを格納する\p std::vector
     ///
     /// \~english
-    /// Fills \p v with edges from the node \p id.
+    /// Enumerates edges from the node \p id.
+    ///
+    /// The returned vector will be empty if the input is invalid.
     ///
     /// \param[in] id Node ID of the source
     /// \returns \p std::vector filled with edges
@@ -108,11 +116,15 @@ public:
     /// \~japanese
     /// 与えた位置への迷路情報の変更の影響を受けるエッジを列挙します．
     ///
+    /// 入力が無効な場合は空の \p std::vector を返します．
+    ///
     /// \param[in] positions 位置のリスト
     /// \returns エッジを格納する\p std::vector
     ///
     /// \~english
     /// Enumerates edges affected by the change in the maze data for given positions.
+    ///
+    /// The returned vector will be empty if the input is invalid.
     ///
     /// \param[in] positions List of positions
     /// \returns \p std::vector filled with edges
@@ -226,11 +238,15 @@ public:
     /// \~japanese
     /// エージェントの状態から対応するノードのIDを計算します．
     ///
+    /// 状態が無効な場合は返り値は \p MazeGraph::kInvalidNode になります．
+    ///
     /// \param[in] as エージェントの状態
     /// \returns ノードのIDを返します．
     ///
     /// \~english
     /// Calculates the node ID corresponding to the agent state.
+    ///
+    /// The returned value will be \p MazeGraph::kInvalidNode if the state is invalid.
     ///
     /// \param[in] as Agent state
     /// \returns the node ID.
@@ -238,11 +254,15 @@ public:
     /// \~japanese
     /// 位置に対応するノードのIDのリストを計算します．
     ///
+    /// 位置が無効な場合は返り値は空になります．
+    ///
     /// \param[in] p 位置
     /// \returns ノードのIDを格納した \p std::vector
     ///
     /// \~english
     /// Calculates the node ID corresponding to the position.
+    ///
+    /// The returned vector will be empty if the position is invalid.
     ///
     /// \param[in] p Position
     /// \returns List of node ID.
@@ -251,6 +271,7 @@ public:
     /// ノードIDから対応するエージェントの状態を計算します．
     ///
     /// ノードIDのみから方向や\p attribute が一意に定まらない場合は，方向を \p Amaze::kNoDirection に，\p attribute を0に設定します．
+    /// ノードIDが無効な場合は，返り値は \p Amaze::kInvalidAgentState になります．
     ///
     /// \param[in] id ノードID
     /// \returns エージェントの状態を返します．
@@ -259,6 +280,7 @@ public:
     /// Calculates the agent state corresponding to the node ID.
     ///
     /// The direction is set to \p Amaze::kNoDirection if it is not uniquely determined by the node ID. \p attribute is also default to 0.
+    /// If the node ID is invalid, the returned value will be \p Amaze::kInvalidAgentState.
     ///
     /// \param[in] id Node ID
     /// \returns the agent state.
@@ -266,11 +288,17 @@ public:
     /// \~japanese
     /// \p id_from から \p id_to へのエッジから，終点に対応するエージェントの状態を計算します．
     ///
+    /// \p dir や \p attribute は一意に定まります．
+    /// ノードIDが無効な場合は，返り値は \p Amaze::kInvalidAgentState になります．
+    ///
     /// \param[in] id_from, id_to ノードID
     /// \returns エージェントの状態を返します．
     ///
     /// \~english
     /// Calculates the agent state corresponding to the terminal node of the edge from \p id_from to \p id_to.
+    ///
+    /// Note that the properties \p dir and \p attribute are uniquely determined for the inputs.
+    /// The returned value will be \p Amaze::kInvalidAgentState if the node ID(s) is(are) invalid.
     ///
     /// \param[in] id_from, id_to Node ID
     /// \returns the agent state.

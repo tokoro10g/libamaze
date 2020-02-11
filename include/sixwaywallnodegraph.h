@@ -109,8 +109,8 @@ public:
     }
     TNodeId nodeIdByAgentState(AgentState as) const
     {
-        if (as.pos.x % 2 == as.pos.y % 2) {
-            // cell or pillar
+        if (as.pos.x % 2 == as.pos.y % 2 || as.pos.x > 2 * W || as.pos.y > 2 * W) {
+            // cell, pillar, or out of range
             return Base::kInvalidNode;
         }
         if (as.pos.y % 2 == 0) {
@@ -124,7 +124,10 @@ public:
     std::vector<TNodeId> nodeIdsByPosition(Position p) const
     {
         std::vector<TNodeId> ids;
-        ids.push_back(nodeIdByAgentState({ p, kNoDirection, 0 }));
+        TNodeId id = nodeIdByAgentState({ p, kNoDirection, 0 });
+        if (id != Base::kInvalidNode) {
+            ids.push_back(id);
+        }
         return ids;
     }
     AgentState agentStateByNodeId(TNodeId id) const
