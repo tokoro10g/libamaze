@@ -1,8 +1,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include <gmock/gmock-matchers.h>
+#include "gmock/gmock-matchers.h"
 #include <iostream>
 #include <limits>
+#include <tuple>
 
 #include "cases_maze.h"
 #include "common.h"
@@ -13,7 +14,18 @@ using namespace Amaze;
 using namespace Amaze::Utility;
 using namespace testing;
 
-TEST(fourwaygraph, conversion_node_id_agent_state_16)
+class FourWayGraphUnitTest : public testing::TestWithParam<std::tuple<Position, unsigned int>> {
+protected:
+    FourWayGraphUnitTest()
+        : maze()
+        , mg(maze)
+    {
+    }
+    Maze<16> maze;
+    FourWayStepMapGraph<true, uint16_t, uint16_t, 16> mg;
+};
+
+TEST(FourWayGraphUnitTest, ConvertsAgentStateAndNodeId16)
 {
     Maze<16> maze;
     FourWayStepMapGraph mg(maze);
@@ -22,6 +34,7 @@ TEST(fourwaygraph, conversion_node_id_agent_state_16)
     EXPECT_EQ(0, mg.nodeIdByAgentState({ { 0, 0 }, kNoDirection, 0 }));
     EXPECT_EQ(1, mg.nodeIdByAgentState({ { 2, 0 }, kNoDirection, 0 }));
     EXPECT_EQ(16, mg.nodeIdByAgentState({ { 0, 2 }, kNoDirection, 0 }));
+    EXPECT_EQ(decltype(mg)::kInvalidNode, mg.nodeIdByAgentState({ { 180, 180 }, kNoDirection, 0 }));
 
     auto as0 = AgentState { { 0, 0 }, kNoDirection, 0 };
     EXPECT_EQ(as0, mg.agentStateByNodeId(0));
@@ -45,7 +58,7 @@ TEST(fourwaygraph, conversion_node_id_agent_state_16)
     EXPECT_EQ(kInvalidAgentState, mg.agentStateByEdge(0, 2));
 }
 
-TEST(fourwaygraph, conversion_node_id_agent_state_32)
+TEST(FourWayGraphUnitTest, ConvertsAgentStateAndNodeId32)
 {
     Maze<32> maze;
     FourWayStepMapGraph mg(maze);
@@ -65,6 +78,7 @@ TEST(fourwaygraph, conversion_node_id_agent_state_32)
     ASSERT_THAT(mg.nodeIdsByPosition(Position { 0, 0 }), ElementsAre(0));
     ASSERT_THAT(mg.nodeIdsByPosition(Position { 2, 0 }), ElementsAre(1));
     ASSERT_THAT(mg.nodeIdsByPosition(Position { 0, 2 }), ElementsAre(32));
+    EXPECT_EQ(0U, mg.nodeIdsByPosition(Position { 200, 200 }).size());
 
     auto as0to1 = AgentState { { 2, 0 }, kEast, 0 };
     EXPECT_EQ(as0to1, mg.agentStateByEdge(0, 1));
@@ -78,12 +92,20 @@ TEST(fourwaygraph, conversion_node_id_agent_state_32)
     EXPECT_EQ(kInvalidAgentState, mg.agentStateByEdge(0, 16));
 }
 
-TEST(fourwaygraph, enumerate_edges)
+TEST(FourWayGraphUnitTest, EnumeratesEdges)
 {
-    // TODO: implement
+    Maze<32> maze;
+    FourWayStepMapGraph mg(maze);
+
+    auto as1 = AgentState { { 0, 2 }, kNoDirection, 0 };
+    auto as2 = AgentState { { 0, 0 }, kNoDirection, 0 };
+
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edge(as1, as2));
+    EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edge(as1, kInvalidAgentState));
+    EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edge(kInvalidAgentState, as1));
 }
 
-TEST(fourwaygraph, distance_and_neighbors)
+TEST(FourWayGraphUnitTest, GetsNeighborsAndCosts)
 {
     std::istringstream iss(maze_str1);
     Maze<16> maze;
@@ -123,14 +145,32 @@ TEST(fourwaygraph, distance_and_neighbors)
     EXPECT_EQ(v3e[1], std::make_pair(NodeId(16), mg.kInf));
     EXPECT_EQ(v3e[2], std::make_pair(NodeId(18), mg.kInf));
     EXPECT_EQ(v3e[3], std::make_pair(NodeId(33), Cost(1)));
+
+    auto v4e = mg.neighborEdges(32768);
+    EXPECT_EQ(0U, v4e.size());
 }
 
-TEST(fourwaygraph, affected_edges)
+TEST_P(FourWayGraphUnitTest, CalculatesAffectedEdges)
 {
-    // TODO: implement
+    Maze<16> maze;
+    FourWayStepMapGraph mg(maze);
+    std::vector<Position> positions;
+
+    positions.push_back(std::get<0>(GetParam()));
+    auto edges = mg.affectedEdges(positions);
+    EXPECT_EQ(std::get<1>(GetParam()), edges.size());
 }
 
-TEST(fourwaygraph, pull_back)
+INSTANTIATE_TEST_SUITE_P(Inst1, FourWayGraphUnitTest,
+    testing::Values(
+        std::make_tuple(Position { 0, 0 }, 0U),
+        std::make_tuple(Position { 1, 1 }, 0U),
+        std::make_tuple(Position { 0, 1 }, 1U),
+        std::make_tuple(Position { 1, 0 }, 1U),
+        std::make_tuple(Position { 100, 101 }, 0U),
+        std::make_tuple(Position { 200, 201 }, 0U)));
+
+TEST(FourWayGraphUnitTest, pull_back)
 {
     Maze<16> maze;
     FourWayStepMapGraph mg(maze);
