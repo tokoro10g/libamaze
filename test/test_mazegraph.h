@@ -180,10 +180,3 @@ TEST(FourWayGraphUnitTest, pull_back)
     EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 1, 16 } }));
     EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 18, 0 } }));
 }
-
-GTEST_API_ int main(int argc, char** argv)
-{
-    printf("Running main() from %s\n", __FILE__);
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

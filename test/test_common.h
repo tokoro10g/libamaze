@@ -22,10 +22,3 @@ TEST(common_position_difference, common_case)
     EXPECT_EQ(Position({ 1, 1 }), Position({ 2, 1 }) + Difference({ -1, 0 }));
     EXPECT_EQ(Difference({ 0, 1 }), Position({ 2, 1 }) - Position({ 2, 0 }));
 }
-
-GTEST_API_ int main(int argc, char** argv)
-{
-    printf("Running main() from %s\n", __FILE__);
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

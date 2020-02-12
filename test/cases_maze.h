@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 
 const std::string maze_str1 = "0\n"

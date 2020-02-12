@@ -78,10 +78,3 @@ TEST(maze_ops, set_toggle)
     maze.setCheckedWall({ 1, 0 }, true);
     EXPECT_EQ(true, maze.isCheckedWall({ 1, 0 }));
 }
-
-GTEST_API_ int main(int argc, char** argv)
-{
-    printf("Running main() from %s\n", __FILE__);
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
