@@ -40,7 +40,7 @@ include(GoogleTest)
 add_executable(unit_test unit_test.cpp)
 target_include_directories(unit_test PUBLIC ${GTEST_INCLUDE_PATH} ${GMOCK_INCLUDE_PATH})
 target_link_libraries(unit_test GTest::GTest GTest::GMock --coverage)
-target_compile_options(unit_test PUBLIC -Wno-error --coverage)
+target_compile_options(unit_test PRIVATE -w --coverage)
 
 gtest_discover_tests(unit_test)
 

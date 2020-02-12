@@ -11,7 +11,7 @@
 using namespace Amaze;
 using namespace Amaze::Utility;
 
-TEST(maze_load, load_from_string_stream1)
+TEST(MazeLoadTest, LoadsFromStringStream1)
 {
     std::istringstream iss(maze_str1);
     Maze<16> maze;
@@ -23,7 +23,7 @@ TEST(maze_load, load_from_string_stream1)
     EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
 }
 
-TEST(maze_load, load_from_string_stream2)
+TEST(MazeLoadTest, LoadsFromStringStream2)
 {
     std::istringstream iss(maze_str2);
     Maze<32> maze;
@@ -35,14 +35,14 @@ TEST(maze_load, load_from_string_stream2)
     EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
 }
 
-TEST(maze_load, load_too_large_data)
+TEST(MazeLoadTest, ReturnsFalseIfDataIsTooLarge)
 {
     std::istringstream iss(maze_str1);
     Maze<15> maze;
     ASSERT_FALSE(loadMazeFromStream(maze, iss));
 }
 
-TEST(maze_load, load_empty)
+TEST(MazeLoadTest, LoadsEmptyMaze)
 {
     Maze<16> maze;
     loadEmptyMaze(14, 14, maze);
@@ -56,7 +56,7 @@ TEST(maze_load, load_empty)
     }
 }
 
-TEST(maze_ops, set_toggle)
+TEST(MazeOperationTest, CanSetAndToggle)
 {
     std::istringstream iss(maze_str1);
     Maze<16> maze;

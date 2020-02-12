@@ -1,6 +1,7 @@
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "gmock/gmock-matchers.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest-typed-test.h"
+#include "gtest/gtest.h"
 #include <iostream>
 #include <limits>
 #include <tuple>
@@ -12,9 +13,8 @@
 
 using namespace Amaze;
 using namespace Amaze::Utility;
-using namespace testing;
 
-class FourWayGraphUnitTest : public testing::TestWithParam<std::tuple<Position, unsigned int>> {
+class FourWayGraphUnitTest : public ::testing::TestWithParam<std::tuple<Position, unsigned int>> {
 protected:
     FourWayGraphUnitTest()
         : maze()
@@ -25,95 +25,84 @@ protected:
     FourWayStepMapGraph<true, uint16_t, uint16_t, 16> mg;
 };
 
-TEST(FourWayGraphUnitTest, ConvertsAgentStateAndNodeId16)
+template <typename ConcreteMaze>
+class FourWayGraphUnitTypedTest : public ::testing::Test {
+protected:
+    FourWayGraphUnitTypedTest()
+        : maze()
+        , mg(maze)
+    {
+    }
+    ConcreteMaze maze;
+    FourWayStepMapGraph<true, uint16_t, uint16_t, ConcreteMaze::kWidth> mg;
+};
+
+TYPED_TEST_SUITE_P(FourWayGraphUnitTypedTest);
+TYPED_TEST_P(FourWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId)
 {
-    Maze<16> maze;
-    FourWayStepMapGraph mg(maze);
+    using ::testing::ElementsAre;
+    using TMazeGraph = typename decltype(this->mg)::Base;
 
-    EXPECT_EQ(decltype(mg)::kInvalidNode, mg.nodeIdByAgentState({ { 1, 0 }, kNoDirection, 0 }));
-    EXPECT_EQ(0, mg.nodeIdByAgentState({ { 0, 0 }, kNoDirection, 0 }));
-    EXPECT_EQ(1, mg.nodeIdByAgentState({ { 2, 0 }, kNoDirection, 0 }));
-    EXPECT_EQ(16, mg.nodeIdByAgentState({ { 0, 2 }, kNoDirection, 0 }));
-    EXPECT_EQ(decltype(mg)::kInvalidNode, mg.nodeIdByAgentState({ { 180, 180 }, kNoDirection, 0 }));
+    EXPECT_EQ(TMazeGraph::kInvalidNode, this->mg.nodeIdByAgentState({ { 1, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(0, this->mg.nodeIdByAgentState({ { 0, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(1, this->mg.nodeIdByAgentState({ { 2, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(TMazeGraph::kWidth, this->mg.nodeIdByAgentState({ { 0, 2 }, kNoDirection, 0 }));
 
-    auto as0 = AgentState { { 0, 0 }, kNoDirection, 0 };
-    EXPECT_EQ(as0, mg.agentStateByNodeId(0));
-    auto as1 = AgentState { { 2, 0 }, kNoDirection, 0 };
-    EXPECT_EQ(as1, mg.agentStateByNodeId(1));
-    auto as16 = AgentState { { 0, 2 }, kNoDirection, 0 };
-    EXPECT_EQ(as16, mg.agentStateByNodeId(16));
+    EXPECT_EQ(AgentState({ { 0, 0 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(0));
+    EXPECT_EQ(AgentState({ { 2, 0 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(1));
+    EXPECT_EQ(AgentState({ { 0, 2 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(TMazeGraph::kWidth));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByNodeId(TMazeGraph::kWidth * TMazeGraph::kWidth));
 
-    ASSERT_THAT(mg.nodeIdsByPosition(Position { 0, 0 }), ElementsAre(0));
-    ASSERT_THAT(mg.nodeIdsByPosition(Position { 2, 0 }), ElementsAre(1));
-    ASSERT_THAT(mg.nodeIdsByPosition(Position { 0, 2 }), ElementsAre(16));
+    ASSERT_THAT(this->mg.nodeIdsByPosition(Position { 0, 0 }), ElementsAre(0));
+    ASSERT_THAT(this->mg.nodeIdsByPosition(Position { 2, 0 }), ElementsAre(1));
+    ASSERT_THAT(this->mg.nodeIdsByPosition(Position { 0, 2 }), ElementsAre(TMazeGraph::kWidth));
+    EXPECT_EQ(0U, this->mg.nodeIdsByPosition(Position { 200, 200 }).size());
 
-    auto as0to1 = AgentState { { 2, 0 }, kEast, 0 };
-    EXPECT_EQ(as0to1, mg.agentStateByEdge(0, 1));
-    auto as1to0 = AgentState { { 0, 0 }, kWest, 0 };
-    EXPECT_EQ(as1to0, mg.agentStateByEdge(1, 0));
-    auto as0to16 = AgentState { { 0, 2 }, kNorth, 0 };
-    EXPECT_EQ(as0to16, mg.agentStateByEdge(0, 16));
-    auto as16to0 = AgentState { { 0, 0 }, kSouth, 0 };
-    EXPECT_EQ(as16to0, mg.agentStateByEdge(16, 0));
-    EXPECT_EQ(kInvalidAgentState, mg.agentStateByEdge(0, 2));
+    EXPECT_EQ(AgentState({ { 2, 0 }, kEast, 0 }), this->mg.agentStateByEdge(0, 1));
+    EXPECT_EQ(AgentState({ { 0, 0 }, kWest, 0 }), this->mg.agentStateByEdge(1, 0));
+    EXPECT_EQ(AgentState({ { 0, 2 }, kNorth, 0 }), this->mg.agentStateByEdge(0, TMazeGraph::kWidth));
+    EXPECT_EQ(AgentState({ { 0, 0 }, kSouth, 0 }), this->mg.agentStateByEdge(TMazeGraph::kWidth, 0));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, 2));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, TMazeGraph::kWidth / 2));
 }
+REGISTER_TYPED_TEST_SUITE_P(FourWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId);
+typedef ::testing::Types<Maze<16>, Maze<32>, Maze<64>> MazeTypes;
+INSTANTIATE_TYPED_TEST_SUITE_P(My, FourWayGraphUnitTypedTest, MazeTypes);
 
-TEST(FourWayGraphUnitTest, ConvertsAgentStateAndNodeId32)
+TEST_F(FourWayGraphUnitTest, EnumeratesEdges)
 {
-    Maze<32> maze;
-    FourWayStepMapGraph mg(maze);
-
-    EXPECT_EQ(decltype(mg)::kInvalidNode, mg.nodeIdByAgentState({ { 1, 0 }, kNoDirection, 0 }));
-    EXPECT_EQ(0, mg.nodeIdByAgentState({ { 0, 0 }, kNoDirection, 0 }));
-    EXPECT_EQ(1, mg.nodeIdByAgentState({ { 2, 0 }, kNoDirection, 0 }));
-    EXPECT_EQ(32, mg.nodeIdByAgentState({ { 0, 2 }, kNoDirection, 0 }));
-
-    auto as0 = AgentState { { 0, 0 }, kNoDirection, 0 };
-    EXPECT_EQ(as0, mg.agentStateByNodeId(0));
-    auto as1 = AgentState { { 2, 0 }, kNoDirection, 0 };
-    EXPECT_EQ(as1, mg.agentStateByNodeId(1));
-    auto as32 = AgentState { { 0, 2 }, kNoDirection, 0 };
-    EXPECT_EQ(as32, mg.agentStateByNodeId(32));
-
-    ASSERT_THAT(mg.nodeIdsByPosition(Position { 0, 0 }), ElementsAre(0));
-    ASSERT_THAT(mg.nodeIdsByPosition(Position { 2, 0 }), ElementsAre(1));
-    ASSERT_THAT(mg.nodeIdsByPosition(Position { 0, 2 }), ElementsAre(32));
-    EXPECT_EQ(0U, mg.nodeIdsByPosition(Position { 200, 200 }).size());
-
-    auto as0to1 = AgentState { { 2, 0 }, kEast, 0 };
-    EXPECT_EQ(as0to1, mg.agentStateByEdge(0, 1));
-    auto as1to0 = AgentState { { 0, 0 }, kWest, 0 };
-    EXPECT_EQ(as1to0, mg.agentStateByEdge(1, 0));
-    auto as0to32 = AgentState { { 0, 2 }, kNorth, 0 };
-    EXPECT_EQ(as0to32, mg.agentStateByEdge(0, 32));
-    auto as32to0 = AgentState { { 0, 0 }, kSouth, 0 };
-    EXPECT_EQ(as32to0, mg.agentStateByEdge(32, 0));
-    EXPECT_EQ(kInvalidAgentState, mg.agentStateByEdge(0, 2));
-    EXPECT_EQ(kInvalidAgentState, mg.agentStateByEdge(0, 16));
-}
-
-TEST(FourWayGraphUnitTest, EnumeratesEdges)
-{
-    Maze<32> maze;
-    FourWayStepMapGraph mg(maze);
-
     auto as1 = AgentState { { 0, 2 }, kNoDirection, 0 };
     auto as2 = AgentState { { 0, 0 }, kNoDirection, 0 };
 
     EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edge(as1, as2));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edge(as2, as1));
     EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edge(as1, kInvalidAgentState));
     EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edge(kInvalidAgentState, as1));
 }
 
-TEST(FourWayGraphUnitTest, GetsNeighborsAndCosts)
+TEST_F(FourWayGraphUnitTest, EnumeratesEdgesWithHypothesis)
 {
-    std::istringstream iss(maze_str1);
-    Maze<16> maze;
-    ASSERT_TRUE(loadMazeFromStream(maze, iss));
-    FourWayStepMapGraph mg(maze);
+    auto as1 = AgentState { { 0, 2 }, kNoDirection, 0 };
+    auto as2 = AgentState { { 0, 0 }, kNoDirection, 0 };
 
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edgeWithHypothesis(as1, as2, false));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edgeWithHypothesis(as2, as1, false));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf), mg.edgeWithHypothesis(as1, as2, true));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf), mg.edgeWithHypothesis(as2, as1, true));
+    EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edgeWithHypothesis(as1, kInvalidAgentState, false));
+    EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edgeWithHypothesis(kInvalidAgentState, as1, false));
+    EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edgeWithHypothesis(as1, kInvalidAgentState, true));
+    EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edgeWithHypothesis(kInvalidAgentState, as1, true));
+}
+
+TEST_F(FourWayGraphUnitTest, GetsNeighborsAndCosts)
+{
+    using ::testing::ElementsAre;
     using Cost = decltype(mg)::Cost;
     using NodeId = decltype(mg)::NodeId;
+
+    std::istringstream iss(maze_str1);
+    ASSERT_TRUE(loadMazeFromStream(maze, iss));
 
     EXPECT_EQ(1, mg.distance(0, 1));
     EXPECT_EQ(2, mg.distance(1, 16));
@@ -150,6 +139,14 @@ TEST(FourWayGraphUnitTest, GetsNeighborsAndCosts)
     EXPECT_EQ(0U, v4e.size());
 }
 
+TEST_F(FourWayGraphUnitTest, TestPullBackSequence)
+{
+    EXPECT_EQ(true, mg.isPullBackSequence({ { 0, 1, 0 } }));
+    EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 1, 2 } }));
+    EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 1, 16 } }));
+    EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 18, 0 } }));
+}
+
 TEST_P(FourWayGraphUnitTest, CalculatesAffectedEdges)
 {
     Maze<16> maze;
@@ -161,22 +158,14 @@ TEST_P(FourWayGraphUnitTest, CalculatesAffectedEdges)
     EXPECT_EQ(std::get<1>(GetParam()), edges.size());
 }
 
-INSTANTIATE_TEST_SUITE_P(Inst1, FourWayGraphUnitTest,
-    testing::Values(
+INSTANTIATE_TEST_SUITE_P(General, FourWayGraphUnitTest,
+    ::testing::Values(
         std::make_tuple(Position { 0, 0 }, 0U),
         std::make_tuple(Position { 1, 1 }, 0U),
         std::make_tuple(Position { 0, 1 }, 1U),
-        std::make_tuple(Position { 1, 0 }, 1U),
+        std::make_tuple(Position { 1, 0 }, 1U)));
+INSTANTIATE_TEST_SUITE_P(Invalid, FourWayGraphUnitTest,
+    ::testing::Values(
         std::make_tuple(Position { 100, 101 }, 0U),
-        std::make_tuple(Position { 200, 201 }, 0U)));
-
-TEST(FourWayGraphUnitTest, pull_back)
-{
-    Maze<16> maze;
-    FourWayStepMapGraph mg(maze);
-
-    EXPECT_EQ(true, mg.isPullBackSequence({ { 0, 1, 0 } }));
-    EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 1, 2 } }));
-    EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 1, 16 } }));
-    EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 18, 0 } }));
-}
+        std::make_tuple(Position { 200, 201 }, 0U),
+        std::make_tuple(Position { 201, 8 }, 0U)));
