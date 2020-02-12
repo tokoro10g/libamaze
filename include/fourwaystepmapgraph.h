@@ -82,6 +82,9 @@ public:
             }
             if (p.x % 2 == 0 && p.y % 2 == 1) {
                 TNodeId id_from = nodeIdByAgentState({ p + Difference { 0, -1 }, kNoDirection, 0 });
+                if (id_from == Base::kInvalidNode) {
+                    continue;
+                }
                 auto e = edge(id_from, TNodeId(id_from + W));
                 if (e.first) {
                     edges.push_back({ id_from, TNodeId(id_from + W), e.second });
@@ -89,6 +92,9 @@ public:
 
             } else /* p.x % 2 == 1 && p.y % 2 == 0 */ {
                 TNodeId id_from = nodeIdByAgentState({ p + Difference { -1, 0 }, kNoDirection, 0 });
+                if (id_from == Base::kInvalidNode) {
+                    continue;
+                }
                 auto e = edge(id_from, TNodeId(id_from + 1));
                 if (e.first) {
                     edges.push_back({ id_from, TNodeId(id_from + 1), e.second });
@@ -131,8 +137,8 @@ public:
     }
     TNodeId nodeIdByAgentState(AgentState as) const
     {
-        if (as.pos.x % 2 != 0 || as.pos.y % 2 != 0) {
-            // wall or pillar
+        if (as.pos.x % 2 != 0 || as.pos.y % 2 != 0 || as.pos.x > 2 * W || as.pos.y > 2 * W) {
+            // wall, pillar, or out of range
             //std::cerr << "Invalid state!!! (pos: " << (int)as.pos.x << ", " << (int)as.pos.y << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return Base::kInvalidNode;
         }
@@ -141,7 +147,10 @@ public:
     std::vector<TNodeId> nodeIdsByPosition(Position p) const
     {
         std::vector<TNodeId> ids;
-        ids.push_back(nodeIdByAgentState({ p, kNoDirection, 0 }));
+        TNodeId id = nodeIdByAgentState({ p, kNoDirection, 0 });
+        if (id != Base::kInvalidNode) {
+            ids.push_back(id);
+        }
         return ids;
     }
     AgentState agentStateByNodeId(TNodeId id) const
