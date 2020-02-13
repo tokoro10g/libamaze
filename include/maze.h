@@ -42,7 +42,6 @@ private:
     /// \param[in] val New value
     void setInternal(Position p, bool is_checked, bool val)
     {
-        // TODO: assert
         if (!((p.x % 2) ^ (p.y % 2)) || p.x >= 2 * W - 1 || p.y >= 2 * W - 1) {
             // not a wall
             return;
@@ -69,7 +68,6 @@ private:
     /// \param[in] is_checked \p true if querying wall check data
     bool isSetInternal(Position p, bool is_checked) const
     {
-        // TODO: assert
         if (!((p.x % 2) ^ (p.y % 2)) || p.x >= 2 * W - 1 || p.y >= 2 * W - 1) {
             // not a wall
             return false;

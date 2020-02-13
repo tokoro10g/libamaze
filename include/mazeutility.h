@@ -1,7 +1,6 @@
 #pragma once
 
 #include "maze.h"
-#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <set>
@@ -17,7 +16,7 @@ namespace Utility {
         is >> type;
         is >> w >> h;
         if (W < w || W < h) {
-            std::cerr << "Too large" << std::endl;
+            // Too large
             return false;
         }
         if (type == 1) {
@@ -49,7 +48,7 @@ namespace Utility {
                     cursorx--;
                     continue;
                 } else {
-                    std::cerr << "Invalid maze data" << std::endl;
+                    // Invalid maze data
                     return false;
                 }
 
@@ -141,16 +140,16 @@ namespace Utility {
                         } else {
                             std::cout << " ";
                         }
-                        std::cout << "\x1b[0m";
+                        std::cout << "\x1b[0m"; // end of underline
                     }
 
                     for (int i = 0; i < m; i++) {
                         if (i == m - 1 && (cursorx == W - 1 || maze.isSetWall({ uint8_t(2 * cursorx + 1), uint8_t(2 * cursory) }))) {
                             std::cout << "|";
                         } else if (j == m - 1 && (cursory == 0 || maze.isSetWall({ uint8_t(2 * cursorx), uint8_t(2 * cursory - 1) }))) {
-                            std::cout << "\x1b[4m";
+                            std::cout << "\x1b[4m"; // underline
                             std::cout << " ";
-                            std::cout << "\x1b[0m";
+                            std::cout << "\x1b[0m"; // end of underline
                         } else {
                             std::cout << " ";
                         }
