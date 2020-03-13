@@ -53,9 +53,9 @@ TYPED_TEST_P(FourWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId)
     EXPECT_EQ(AgentState({ { 0, 2 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(TMazeGraph::kWidth));
     EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByNodeId(TMazeGraph::kWidth * TMazeGraph::kWidth));
 
-    ASSERT_THAT(this->mg.nodeIdsByPosition(Position { 0, 0 }), ElementsAre(0));
-    ASSERT_THAT(this->mg.nodeIdsByPosition(Position { 2, 0 }), ElementsAre(1));
-    ASSERT_THAT(this->mg.nodeIdsByPosition(Position { 0, 2 }), ElementsAre(TMazeGraph::kWidth));
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 0, 0 }), ElementsAre(0));
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 2, 0 }), ElementsAre(1));
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 0, 2 }), ElementsAre(TMazeGraph::kWidth));
     EXPECT_EQ(0U, this->mg.nodeIdsByPosition(Position { 200, 200 }).size());
 
     EXPECT_EQ(AgentState({ { 2, 0 }, kEast, 0 }), this->mg.agentStateByEdge(0, 1));
@@ -84,11 +84,17 @@ TEST_F(FourWayGraphUnitTest, EnumeratesEdgesWithHypothesis)
 {
     auto as1 = AgentState { { 0, 2 }, kNoDirection, 0 };
     auto as2 = AgentState { { 0, 0 }, kNoDirection, 0 };
+    auto id1 = mg.nodeIdByAgentState(as1);
+    auto id2 = mg.nodeIdByAgentState(as2);
 
     EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edgeWithHypothesis(as1, as2, false));
     EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edgeWithHypothesis(as2, as1, false));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edgeWithHypothesis(id1, id2, false));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edgeWithHypothesis(id2, id1, false));
     EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf), mg.edgeWithHypothesis(as1, as2, true));
     EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf), mg.edgeWithHypothesis(as2, as1, true));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf), mg.edgeWithHypothesis(id1, id2, true));
+    EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf), mg.edgeWithHypothesis(id2, id1, true));
     EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edgeWithHypothesis(as1, kInvalidAgentState, false));
     EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edgeWithHypothesis(kInvalidAgentState, as1, false));
     EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf), mg.edgeWithHypothesis(as1, kInvalidAgentState, true));
@@ -110,30 +116,42 @@ TEST_F(FourWayGraphUnitTest, GetsNeighborsAndCosts)
 
     auto v1 = mg.neighbors(0);
     std::sort(v1.begin(), v1.end());
-    ASSERT_THAT(v1, ElementsAre(1, 16));
+    EXPECT_THAT(v1, ElementsAre(1, 16));
     auto v1e = mg.neighborEdges(0);
     std::sort(v1e.begin(), v1e.end());
     EXPECT_EQ(v1e[0], std::make_pair(NodeId(1), mg.kInf));
     EXPECT_EQ(v1e[1], std::make_pair(NodeId(16), Cost(1)));
 
+    EXPECT_EQ(mg.edgeCost(0, 1), mg.kInf);
+    EXPECT_EQ(mg.edgeCost(0, 16), Cost(1));
+
     auto v2 = mg.neighbors(16);
     std::sort(v2.begin(), v2.end());
-    ASSERT_THAT(v2, ElementsAre(0, 17, 32));
+    EXPECT_THAT(v2, ElementsAre(0, 17, 32));
     auto v2e = mg.neighborEdges(16);
     std::sort(v2e.begin(), v2e.end());
     EXPECT_EQ(v2e[0], std::make_pair(NodeId(0), Cost(1)));
     EXPECT_EQ(v2e[1], std::make_pair(NodeId(17), mg.kInf));
     EXPECT_EQ(v2e[2], std::make_pair(NodeId(32), Cost(1)));
 
+    EXPECT_EQ(mg.edgeCost(16, 0), Cost(1));
+    EXPECT_EQ(mg.edgeCost(16, 17), mg.kInf);
+    EXPECT_EQ(mg.edgeCost(16, 32), Cost(1));
+
     auto v3 = mg.neighbors(17);
     std::sort(v3.begin(), v3.end());
-    ASSERT_THAT(v3, ElementsAre(1, 16, 18, 33));
+    EXPECT_THAT(v3, ElementsAre(1, 16, 18, 33));
     auto v3e = mg.neighborEdges(17);
     std::sort(v3e.begin(), v3e.end());
     EXPECT_EQ(v3e[0], std::make_pair(NodeId(1), Cost(1)));
     EXPECT_EQ(v3e[1], std::make_pair(NodeId(16), mg.kInf));
     EXPECT_EQ(v3e[2], std::make_pair(NodeId(18), mg.kInf));
     EXPECT_EQ(v3e[3], std::make_pair(NodeId(33), Cost(1)));
+
+    EXPECT_EQ(mg.edgeCost(17, 1), Cost(1));
+    EXPECT_EQ(mg.edgeCost(17, 16), mg.kInf);
+    EXPECT_EQ(mg.edgeCost(17, 18), mg.kInf);
+    EXPECT_EQ(mg.edgeCost(17, 33), Cost(1));
 
     auto v4e = mg.neighborEdges(32768);
     EXPECT_EQ(0U, v4e.size());
@@ -145,6 +163,18 @@ TEST_F(FourWayGraphUnitTest, TestPullBackSequence)
     EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 1, 2 } }));
     EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 1, 16 } }));
     EXPECT_EQ(false, mg.isPullBackSequence({ { 0, 18, 0 } }));
+}
+
+TEST_F(FourWayGraphUnitTest, GetsStartGoalNodeIds)
+{
+    using ::testing::ElementsAre;
+    using Cost = decltype(mg)::Cost;
+    using NodeId = decltype(mg)::NodeId;
+
+    std::istringstream iss(maze_str1);
+    ASSERT_TRUE(loadMazeFromStream(maze, iss));
+    EXPECT_EQ(mg.startNodeId(), 0);
+    EXPECT_THAT(mg.goalNodeIds(), ElementsAre(119, 120, 135, 136));
 }
 
 TEST_P(FourWayGraphUnitTest, CalculatesAffectedEdges)
