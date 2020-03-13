@@ -1,5 +1,5 @@
 cd build
-make -j13
+make -s -j13
 make test
 cd test/CMakeFiles/unit_test.dir/
 lcov -d . -c -o coverage.info
