@@ -165,6 +165,11 @@ std::ostream& operator<<(std::ostream& os, Position p)
     os << "(" << int(p.x) << ", " << int(p.y) << ")";
     return os;
 }
+std::ostream& operator<<(std::ostream& os, Difference d)
+{
+    os << "(" << int(d.x) << ", " << int(d.y) << ")";
+    return os;
+}
 std::ostream& operator<<(std::ostream& os, AgentState as)
 {
     os << "(" << as.pos << ", " << as.dir << ", " << int(as.attribute) << ")";

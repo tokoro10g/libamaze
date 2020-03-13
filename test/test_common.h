@@ -22,3 +22,36 @@ TEST(DifferenceTest, AddAndSubtract)
     EXPECT_EQ(Position({ 1, 1 }), Position({ 2, 1 }) + Difference({ -1, 0 }));
     EXPECT_EQ(Difference({ 0, 1 }), Position({ 2, 1 }) - Position({ 2, 0 }));
 }
+
+TEST(ShiftOperatorsTest, PrintsDirection)
+{
+    std::stringstream buffer;
+    buffer << kNorth << kSouth << kEast << kWest << kNoDirection;
+    buffer << kFront << kBack << kRight << kLeft;
+    std::string s = buffer.str();
+    EXPECT_TRUE(s == "NSEW0NSEW");
+}
+
+TEST(ShiftOperatorsTest, PrintsPosition)
+{
+    std::stringstream buffer;
+    buffer << Position({ 0, 1 }) << Position({ 2, 1 });
+    std::string s = buffer.str();
+    EXPECT_TRUE(s == "(0, 1)(2, 1)");
+}
+
+TEST(ShiftOperatorsTest, PrintsDifference)
+{
+    std::stringstream buffer;
+    buffer << Difference({ 0, 1 }) << Difference({ 2, 1 });
+    std::string s = buffer.str();
+    EXPECT_TRUE(s == "(0, 1)(2, 1)");
+}
+
+TEST(ShiftOperatorsTest, PrintsAgentState)
+{
+    std::stringstream buffer;
+    buffer << AgentState({ 0, 1, kNorth, 0 }) << AgentState({ 2, 1, kSouth, 1 });
+    std::string s = buffer.str();
+    EXPECT_TRUE(s == "((0, 1), N, 0)((2, 1), S, 1)");
+}
