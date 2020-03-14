@@ -42,6 +42,13 @@ TEST(MazeLoadTest, ReturnsFalseIfDataIsTooLarge)
     ASSERT_FALSE(loadMazeFromStream(maze, iss));
 }
 
+TEST(MazeLoadTest, ReturnsFalseIfDataIsFaulty)
+{
+    std::istringstream iss(faulty_maze_str);
+    Maze<15> maze;
+    ASSERT_FALSE(loadMazeFromStream(maze, iss));
+}
+
 TEST(MazeLoadTest, LoadsEmptyMaze)
 {
     Maze<16> maze;

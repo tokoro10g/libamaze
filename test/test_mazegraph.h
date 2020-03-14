@@ -10,34 +10,39 @@
 #include "common.h"
 #include "fourwaystepmapgraph.h"
 #include "mazeutility.h"
+#include "sixwaywallnodegraph.h"
+#include "sixwaywallnodeturncostgraph.h"
 
 using namespace Amaze;
 using namespace Amaze::Utility;
 
-class FourWayGraphUnitTest : public ::testing::TestWithParam<std::tuple<Position, unsigned int>> {
-protected:
-    FourWayGraphUnitTest()
-        : maze()
-        , mg(maze)
-    {
-    }
-    Maze<16> maze;
-    FourWayStepMapGraph<true, uint16_t, uint16_t, 16> mg;
-};
+typedef ::testing::Types<Maze<16>, Maze<17>, Maze<24>, Maze<32>, Maze<64>> MazeTypes;
 
-template <typename ConcreteMaze>
-class FourWayGraphUnitTypedTest : public ::testing::Test {
+template <typename ConcreteMazeGraph, typename ConcreteMaze>
+class AbstractMazeGraphUnitTypedTest : public ::testing::Test {
 protected:
-    FourWayGraphUnitTypedTest()
+    AbstractMazeGraphUnitTypedTest()
         : maze()
         , mg(maze)
     {
     }
     ConcreteMaze maze;
-    FourWayStepMapGraph<true, uint16_t, uint16_t, ConcreteMaze::kWidth> mg;
+    ConcreteMazeGraph mg;
 };
 
+template <typename ConcreteMaze>
+using FourWayGraphUnitTypedTest = AbstractMazeGraphUnitTypedTest<FourWayStepMapGraph<true, uint16_t, uint16_t, ConcreteMaze::kWidth>, ConcreteMaze>;
+
+template <typename ConcreteMaze>
+using SixWayGraphUnitTypedTest = AbstractMazeGraphUnitTypedTest<SixWayWallNodeGraph<true, uint16_t, uint16_t, ConcreteMaze::kWidth>, ConcreteMaze>;
+
+template <typename ConcreteMaze>
+using SixWayTCGraphUnitTypedTest = AbstractMazeGraphUnitTypedTest<SixWayWallNodeTurnCostGraph<true, uint16_t, uint16_t, ConcreteMaze::kWidth>, ConcreteMaze>;
+
 TYPED_TEST_SUITE_P(FourWayGraphUnitTypedTest);
+TYPED_TEST_SUITE_P(SixWayGraphUnitTypedTest);
+TYPED_TEST_SUITE_P(SixWayTCGraphUnitTypedTest);
+
 TYPED_TEST_P(FourWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId)
 {
     using ::testing::ElementsAre;
@@ -65,9 +70,95 @@ TYPED_TEST_P(FourWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId)
     EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, 2));
     EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, TMazeGraph::kWidth / 2));
 }
+
+TYPED_TEST_P(SixWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId)
+{
+    using ::testing::ElementsAre;
+    using TMazeGraph = typename decltype(this->mg)::Base;
+
+    EXPECT_EQ(TMazeGraph::kInvalidNode, this->mg.nodeIdByAgentState({ { 0, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(0, this->mg.nodeIdByAgentState({ { 1, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(1, this->mg.nodeIdByAgentState({ { 3, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(TMazeGraph::kWidth - 1, this->mg.nodeIdByAgentState({ { 0, 1 }, kNoDirection, 0 }));
+
+    EXPECT_EQ(AgentState({ { 1, 0 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(0));
+    EXPECT_EQ(AgentState({ { 3, 0 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(1));
+    EXPECT_EQ(AgentState({ { 0, 1 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(TMazeGraph::kWidth - 1));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByNodeId(2 * TMazeGraph::kWidth * (TMazeGraph::kWidth - 1)));
+
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 1, 0 }), ElementsAre(0));
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 3, 0 }), ElementsAre(1));
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 0, 1 }), ElementsAre(TMazeGraph::kWidth - 1));
+    EXPECT_EQ(0U, this->mg.nodeIdsByPosition(Position { 200, 200 }).size());
+
+    EXPECT_EQ(AgentState({ { 3, 0 }, kEast, 0 }), this->mg.agentStateByEdge(0, 1));
+    EXPECT_EQ(AgentState({ { 1, 0 }, kWest, 0 }), this->mg.agentStateByEdge(1, 0));
+    EXPECT_EQ(AgentState({ { 0, 1 }, kNorth, 0 }), this->mg.agentStateByEdge(0, TMazeGraph::kWidth - 1));
+    EXPECT_EQ(AgentState({ { 1, 0 }, kEast, 0 }), this->mg.agentStateByEdge(TMazeGraph::kWidth - 1, 0));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, 2));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, TMazeGraph::kWidth / 2));
+}
+
+TYPED_TEST_P(SixWayTCGraphUnitTypedTest, ConvertsAgentStateAndNodeId)
+{
+    using ::testing::ElementsAre;
+    using TMazeGraph = typename decltype(this->mg)::Base;
+
+    auto n = 2 * TMazeGraph::kWidth * (TMazeGraph::kWidth - 1);
+
+    EXPECT_EQ(TMazeGraph::kInvalidNode, this->mg.nodeIdByAgentState({ { 0, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(0, this->mg.nodeIdByAgentState({ { 1, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(1, this->mg.nodeIdByAgentState({ { 3, 0 }, kNoDirection, 0 }));
+    EXPECT_EQ(TMazeGraph::kWidth - 1, this->mg.nodeIdByAgentState({ { 0, 1 }, kNoDirection, 0 }));
+
+    EXPECT_EQ(AgentState({ { 1, 0 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(0));
+    EXPECT_EQ(AgentState({ { 3, 0 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(1));
+    EXPECT_EQ(AgentState({ { 0, 1 }, kNoDirection, 0 }), this->mg.agentStateByNodeId(TMazeGraph::kWidth - 1));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByNodeId(2 * n));
+
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 1, 0 }), ElementsAre(0, n));
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 3, 0 }), ElementsAre(1, n + 1));
+    EXPECT_THAT(this->mg.nodeIdsByPosition(Position { 0, 1 }), ElementsAre(TMazeGraph::kWidth - 1, n + TMazeGraph::kWidth - 1));
+    EXPECT_EQ(0U, this->mg.nodeIdsByPosition(Position { 200, 200 }).size());
+
+    EXPECT_EQ(AgentState({ { 3, 0 }, kEast, 0 }), this->mg.agentStateByEdge(0, 1));
+    EXPECT_EQ(AgentState({ { 1, 0 }, kWest, 0 }), this->mg.agentStateByEdge(1, 0));
+    EXPECT_EQ(AgentState({ { 1, 0 }, kNoDirection, 1 }), this->mg.agentStateByEdge(0, n));
+    EXPECT_EQ(AgentState({ { 1, 0 }, kNoDirection, 0 }), this->mg.agentStateByEdge(n, 0));
+    EXPECT_EQ(AgentState({ { 2, 1 }, kNorth, 1 }), this->mg.agentStateByEdge(n, n + TMazeGraph::kWidth));
+    EXPECT_EQ(AgentState({ { 1, 0 }, kWest, 1 }), this->mg.agentStateByEdge(n + TMazeGraph::kWidth, n));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, TMazeGraph::kWidth));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(TMazeGraph::kWidth, 0));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(n, n + 1));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(n + 1, n));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, TMazeGraph::kWidth - 1));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(TMazeGraph::kWidth - 1, 0));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, 2));
+    EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, TMazeGraph::kWidth / 2));
+}
+
 REGISTER_TYPED_TEST_SUITE_P(FourWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId);
-typedef ::testing::Types<Maze<16>, Maze<32>, Maze<64>> MazeTypes;
-INSTANTIATE_TYPED_TEST_SUITE_P(My, FourWayGraphUnitTypedTest, MazeTypes);
+REGISTER_TYPED_TEST_SUITE_P(SixWayGraphUnitTypedTest, ConvertsAgentStateAndNodeId);
+REGISTER_TYPED_TEST_SUITE_P(SixWayTCGraphUnitTypedTest, ConvertsAgentStateAndNodeId);
+INSTANTIATE_TYPED_TEST_SUITE_P(VariousSize, FourWayGraphUnitTypedTest, MazeTypes);
+INSTANTIATE_TYPED_TEST_SUITE_P(VariousSize, SixWayGraphUnitTypedTest, MazeTypes);
+INSTANTIATE_TYPED_TEST_SUITE_P(VariousSize, SixWayTCGraphUnitTypedTest, MazeTypes);
+
+template <typename ConcreteMazeGraph>
+class AbstractMazeGraphUnitTest : public ::testing::TestWithParam<std::tuple<Position, unsigned int>> {
+protected:
+    AbstractMazeGraphUnitTest()
+        : maze()
+        , mg(maze)
+    {
+    }
+    Maze<16> maze;
+    ConcreteMazeGraph mg;
+};
+
+using FourWayGraphUnitTest = AbstractMazeGraphUnitTest<FourWayStepMapGraph<true, uint16_t, uint16_t, 16>>;
+using SixWayGraphUnitTest = AbstractMazeGraphUnitTest<SixWayWallNodeGraph<true, uint16_t, uint16_t, 16>>;
+using SixWayTCGraphUnitTest = AbstractMazeGraphUnitTest<SixWayWallNodeTurnCostGraph<true, uint16_t, uint16_t, 16>>;
 
 TEST_F(FourWayGraphUnitTest, EnumeratesEdges)
 {
@@ -199,3 +290,5 @@ INSTANTIATE_TEST_SUITE_P(Invalid, FourWayGraphUnitTest,
         std::make_tuple(Position { 100, 101 }, 0U),
         std::make_tuple(Position { 200, 201 }, 0U),
         std::make_tuple(Position { 201, 8 }, 0U)));
+
+// TODO: write tests for SixWayWallNodeGraph and SixWayWallNodeTurnCostGraph
