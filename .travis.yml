@@ -8,9 +8,33 @@ addons:
             - ubuntu-toolchain-r-test
         packages:
             - g++-9
-            - lcov
+            - libperlio-gzip-perl
+            - libjson-perl
+
+before_install:
+    - pip install --user cpp-coveralls
+    - git clone https://github.com/linux-test-project/lcov.git
+    - cd lcov && sudo make install
+    - cd ..
+
+install:
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 20
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 20
+    - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-9 20  
+    - sudo update-alternatives --config gcc
+    - sudo update-alternatives --config g++
+    - sudo update-alternatives --config gcov
+
+before_script:
+    - mkdir build
 
 script: ./build.sh
 
 after_success:
+    - cd build
+    - make test
+    - cd test/CMakeFiles/unit_test.dir/
+    - lcov -d . -c -o coverage.info
+    - lcov -r coverage.info '*/googletest/*' '*/test/*' '*/c++/*' '/usr/*' -o coverageFiltered.info
+    - cd ..
     - coveralls -e "test" -e "samples" -e "build/external" -e "build/CMakeFiles"
