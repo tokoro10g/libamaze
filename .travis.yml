@@ -10,7 +10,11 @@ addons:
             - g++-9
             - lcov
 
-script: mkdir build && ./build.sh
+before_script:
+    - mkdir build
+    - CC=gcc-9 CXX=g++-9
+
+script: ./build.sh
 
 after_success:
     - coveralls -e "test" -e "samples" -e "build/external" -e "build/CMakeFiles"
