@@ -1,0 +1,16 @@
+language: cpp
+os: linux
+compiler: gcc
+dist: bionic
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - g++-9
+            - lcov
+
+script: ./build.sh
+
+after_success:
+    - coveralls -e "test" -e "samples" -e "build/external" -e "build/CMakeFiles"
