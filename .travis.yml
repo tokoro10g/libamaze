@@ -36,5 +36,5 @@ after_success:
     - cd test/CMakeFiles/unit_test.dir/
     - lcov -d . -c -o coverage.info
     - lcov -r coverage.info '*/googletest/*' '*/test/*' '*/c++/*' '/usr/*' -o coverageFiltered.info
-    - cd ..
+    - cd $TRAVIS_BUILD_DIR
     - coveralls -e "test" -e "samples" -e "build/external" -e "build/CMakeFiles"
