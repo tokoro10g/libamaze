@@ -1,4 +1,5 @@
 cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 make -s -j13
 make test
 cd test/CMakeFiles/unit_test.dir/
