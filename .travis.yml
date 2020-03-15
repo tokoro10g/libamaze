@@ -10,7 +10,7 @@ addons:
             - g++-9
             - lcov
 
-script: ./build.sh
+script: mkdir build && ./build.sh
 
 after_success:
     - coveralls -e "test" -e "samples" -e "build/external" -e "build/CMakeFiles"
