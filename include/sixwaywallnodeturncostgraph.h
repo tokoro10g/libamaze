@@ -232,6 +232,13 @@ public:
     {
         auto p = Base::maze.start;
         if (p.x % 2 == 0 && p.y % 2 == 0) {
+            // \~japanese
+            // エージェントは常に北側の壁からスタートするという仮定を設けています．
+            // 別の言い方をすると，スタート時点の進行方向を北と定義し，座標系もそれにしたがって決めています．
+            //
+            // \~english
+            // This assumes that the agent always starts from the north wall.
+            // In other words, the initial direction is defined as north, and the coordinates are determined accordingly.
             p.y++;
         }
         return nodeIdByAgentState({ p, kNoDirection, 0 });
