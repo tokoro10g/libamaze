@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace Amaze {
 
@@ -12,64 +13,57 @@ namespace Utility {
     template <uint8_t W>
     bool loadMazeFromStream(Maze<W>& maze, std::istream& is)
     {
-        int type, w, h;
-        is >> type;
-        is >> w >> h;
-        if (W < w || W < h) {
-            // Too large
+        std::vector<std::string> char_data;
+        std::string line;
+        std::getline(is, line);
+        char_data.push_back(line);
+
+        if ((line.length() - 1) % 4 != 0) {
+            // invalid format
             return false;
         }
-        if (type == 1) {
-            int x, y;
-            is >> x >> y;
-            const int goal_width = 2;
-            for (int i = 0; i < goal_width * 2 + 1; i++) {
-                for (int j = 0; j < goal_width * 2 + 1; j++) {
-                    maze.goals.push_back({ uint8_t(x * 2 - 1 + i), uint8_t(y * 2 - 1 + j) });
-                }
-            }
-        } else {
-            for (int i = 0; i < 5; i++) {
-                for (int j = 0; j < 5; j++) {
-                    maze.goals.push_back({ uint8_t(13 + i), uint8_t(13 + j) });
-                }
-            }
+        if (line.length() > 4 * W + 1) {
+            // too large
+            return false;
         }
-        for (int cursory = h - 1; cursory >= 0; cursory--) {
-            for (int cursorx = 0; cursorx < w; cursorx++) {
-                char ch;
-                uint8_t byte;
-                is >> ch;
-                if (ch >= '0' && ch <= '9') {
-                    byte = uint8_t(ch - '0');
-                } else if (ch >= 'a' && ch <= 'f') {
-                    byte = uint8_t(ch + 0xa - 'a');
-                } else if (ch == ' ' || ch == '\n' || ch == '\r') {
-                    cursorx--;
-                    continue;
-                } else {
-                    // Invalid maze data
-                    return false;
+        uint8_t w = static_cast<uint8_t>((line.length() - 1) / 4);
+
+        for (uint8_t i = 0; i < w * 2; i++) {
+            std::string line;
+            std::getline(is, line);
+            char_data.push_back(line);
+        }
+
+        for (int8_t cursory = int8_t(w - 1); cursory >= 0; cursory--) {
+            for (uint8_t cursorx = 0; cursorx < w; cursorx++) {
+                uint8_t x = cursorx;
+                uint8_t y = uint8_t(w - 1 - cursory);
+
+                char cell_char = char_data[uint8_t(cursory * 2 + 1)][cursorx * 4 + 2];
+                Position p = { uint8_t(x * 2), uint8_t(y * 2) };
+                if (cell_char == 'G') {
+                    if (std::find(maze.goals.begin(), maze.goals.end(), p) == maze.goals.end()) {
+                        maze.goals.push_back(p);
+                    }
+                } else if (cell_char == 'S') {
+                    maze.start = p;
                 }
 
-                Position p;
-                p.x = uint8_t(2 * cursorx);
-                if (cursory != 0) {
-                    p.y = uint8_t(2 * cursory - 1);
-                    maze.setWall(p, byte & 0x4);
+                if (y != w - 1) {
+                    // north wall
+                    maze.setWall(p + Difference({ 0, 1 }), char_data[cursory * 2][cursorx * 4 + 2] == '-');
                 }
-                if (cursory != W - 1) {
-                    p.y = uint8_t(2 * cursory + 1);
-                    maze.setWall(p, byte & 0x1);
+                if (y != 0) {
+                    // south wall
+                    maze.setWall(p + Difference({ 0, -1 }), char_data[cursory * 2 + 2][cursorx * 4 + 2] == '-');
                 }
-                p.y = uint8_t(2 * cursory);
-                if (cursorx != 0) {
-                    p.x = uint8_t(2 * cursorx - 1);
-                    maze.setWall(p, byte & 0x8);
+                if (x != w - 1) {
+                    // east wall
+                    maze.setWall(p + Difference({ 1, 0 }), char_data[cursory * 2 + 1][cursorx * 4 + 4] == '|');
                 }
-                if (cursorx != W - 1) {
-                    p.x = uint8_t(2 * cursorx + 1);
-                    maze.setWall(p, byte & 0x2);
+                if (x != 0) {
+                    // west wall
+                    maze.setWall(p + Difference({ -1, 0 }), char_data[cursory * 2 + 1][cursorx * 4] == '|');
                 }
             }
         }

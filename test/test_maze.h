@@ -19,7 +19,7 @@ TEST(MazeLoadTest, LoadsFromStringStream1)
     printMaze(maze);
     EXPECT_EQ(16, maze.getWidth());
     EXPECT_EQ(Position({ 0, 0 }), maze.start);
-    EXPECT_EQ(Position({ 13, 13 }), maze.goals[0]);
+    EXPECT_EQ(Position({ 14, 14 }), maze.goals[0]);
     EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
 }
 
@@ -31,7 +31,7 @@ TEST(MazeLoadTest, LoadsFromStringStream2)
     printMaze(maze);
     EXPECT_EQ(32, maze.getWidth());
     EXPECT_EQ(Position({ 0, 0 }), maze.start);
-    EXPECT_EQ(Position({ 37, 39 }), maze.goals[0]);
+    EXPECT_EQ(Position({ 38, 40 }), maze.goals[0]);
     EXPECT_EQ(true, maze.isSetWall({ 1, 0 }));
 }
 
@@ -44,7 +44,7 @@ TEST(MazeLoadTest, ReturnsFalseIfDataIsTooLarge)
 
 TEST(MazeLoadTest, ReturnsFalseIfDataIsFaulty)
 {
-    std::istringstream iss(faulty_maze_str);
+    std::istringstream iss("+--\n+--\n+--\n");
     Maze<15> maze;
     ASSERT_FALSE(loadMazeFromStream(maze, iss));
 }
