@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "maze.h"
 #include <fstream>
 #include <iostream>
@@ -39,11 +40,26 @@ namespace Utility {
                 uint8_t x = cursorx;
                 uint8_t y = uint8_t(w - 1 - cursory);
 
-                char cell_char = char_data[uint8_t(cursory * 2 + 1)][cursorx * 4 + 2];
+                uint8_t ch_x = uint8_t(cursorx * 4 + 2);
+                uint8_t ch_y = uint8_t(cursory * 2 + 1);
+
+                char cell_char = char_data[ch_y][ch_x];
                 Position p = { uint8_t(x * 2), uint8_t(y * 2) };
                 if (cell_char == 'G') {
                     if (std::find(maze.goals.begin(), maze.goals.end(), p) == maze.goals.end()) {
                         maze.goals.push_back(p);
+                        if (y != w - 1 && char_data[ch_y - 2][ch_x] == 'G') {
+                            maze.goals.push_back(p + Difference({ 0, 1 }));
+                        }
+                        if (y != 0 && char_data[ch_y + 2][ch_x] == 'G') {
+                            maze.goals.push_back(p + Difference({ 0, -1 }));
+                        }
+                        if (x != w - 1 && char_data[ch_y][ch_x + 4] == 'G') {
+                            maze.goals.push_back(p + Difference({ 1, 0 }));
+                        }
+                        if (x != 0 && char_data[ch_y][ch_x - 4] == 'G') {
+                            maze.goals.push_back(p + Difference({ -1, 0 }));
+                        }
                     }
                 } else if (cell_char == 'S') {
                     maze.start = p;
