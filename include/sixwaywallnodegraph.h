@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "mazegraph.h"
 
 namespace Amaze {
@@ -88,10 +89,11 @@ public:
         if (blocked) {
             maxcost = Base::kInf;
         }
-
-        if (abs((int)as1.pos.x - as2.pos.x) == 1 && abs((int)as1.pos.y - as2.pos.y) == 1 && as1.pos.x % 2 != as1.pos.y % 2) {
+        if (as1.pos.type() == PositionTypes::kWall && abs((int)as1.pos.x - as2.pos.x) == 1 && abs((int)as1.pos.y - as2.pos.y) == 1) {
+            // diagonal path
             return { true, std::max(TCost(2), maxcost) };
         } else if ((abs((int)as1.pos.x - as2.pos.x) == 2 && as1.pos.y == as2.pos.y && as1.pos.x % 2 == 1 && as1.pos.y % 2 == 0) || (abs((int)as1.pos.y - as2.pos.y) == 2 && as1.pos.x == as2.pos.x && as1.pos.x % 2 == 0 && as1.pos.y % 2 == 1)) {
+            // straight path
             return { true, std::max(TCost(3), maxcost) };
         }
         return { false, Base::kInf };
@@ -109,7 +111,7 @@ public:
     }
     TNodeId nodeIdByAgentState(AgentState as) const
     {
-        if (as.pos.x % 2 == as.pos.y % 2 || as.pos.x > 2 * W || as.pos.y > 2 * W) {
+        if (as.pos.type() != PositionTypes::kWall || as.pos.x > 2 * W || as.pos.y > 2 * W) {
             // cell, pillar, or out of range
             return Base::kInvalidNode;
         }
@@ -200,7 +202,7 @@ public:
     TNodeId startNodeId() const
     {
         auto p = Base::maze.start;
-        if (p.x % 2 == 0 && p.y % 2 == 0) {
+        if (p.type() == PositionTypes::kCell) {
             // \~japanese
             // エージェントは常に北側の壁からスタートするという仮定を設けています．
             // 別の言い方をすると，スタート時点の進行方向を北と定義し，座標系もそれにしたがって決めています．

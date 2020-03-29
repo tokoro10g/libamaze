@@ -28,6 +28,17 @@ union Direction {
 } __attribute__((__packed__));
 
 /// \~japanese
+/// 位置の種類を表す列挙型．
+///
+/// \~english
+/// Enumerator that represents types of positions.
+enum PositionTypes {
+    kCell = 0,
+    kWall,
+    kPillar
+};
+
+/// \~japanese
 /// 迷路内の位置の差分を表す型．
 ///
 /// \~english
@@ -75,6 +86,10 @@ struct Position {
     {
         return this->x == other.x && this->y == other.y;
     }
+    bool operator!=(const Position& other) const
+    {
+        return !(*this == other);
+    }
     Difference operator-(const Position& other) const
     {
         return { int8_t(this->x - other.x), int8_t(this->y - other.y) };
@@ -82,6 +97,16 @@ struct Position {
     Position operator+(const Difference& diff) const
     {
         return { uint8_t(this->x + diff.x), uint8_t(this->y + diff.y) };
+    }
+    PositionTypes type() const
+    {
+        if (this->x % 2 == 0 && this->y % 2 == 0) {
+            return PositionTypes::kCell;
+        } else if (this->x % 2 == 1 && this->y % 2 == 1) {
+            return PositionTypes::kPillar;
+        } else {
+            return PositionTypes::kWall;
+        }
     }
 } __attribute__((__packed__));
 

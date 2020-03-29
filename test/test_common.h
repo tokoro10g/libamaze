@@ -23,6 +23,14 @@ TEST(DifferenceTest, AddAndSubtract)
     EXPECT_EQ(Difference({ 0, 1 }), Position({ 2, 1 }) - Position({ 2, 0 }));
 }
 
+TEST(PositionTest, DeterminesType)
+{
+    EXPECT_EQ(Position({ 0, 0 }).type(), PositionTypes::kCell);
+    EXPECT_EQ(Position({ 0, 1 }).type(), PositionTypes::kWall);
+    EXPECT_EQ(Position({ 1, 0 }).type(), PositionTypes::kWall);
+    EXPECT_EQ(Position({ 1, 1 }).type(), PositionTypes::kPillar);
+}
+
 TEST(ShiftOperatorsTest, PrintsDirection)
 {
     std::stringstream buffer;

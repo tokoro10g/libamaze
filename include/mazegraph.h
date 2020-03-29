@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "maze.h"
 #include <algorithm>
 #include <array>

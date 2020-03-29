@@ -122,7 +122,7 @@ namespace Utility {
         std::set<std::pair<int, int>> goal_cells;
 
         for (auto p : maze.goals) {
-            if (p.x % 2 == 0 && p.y % 2 == 0) {
+            if (p.type() == PositionTypes::kCell) {
                 goal_cells.insert({ p.x / 2, p.y / 2 });
             }
         }

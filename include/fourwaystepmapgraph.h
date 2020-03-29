@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "mazegraph.h"
 
 namespace Amaze {
@@ -76,8 +77,7 @@ public:
     {
         std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
         for (auto p : positions) {
-            if (p.x % 2 == p.y % 2) {
-                // cell or pillar
+            if (p.type() != PositionTypes::kWall) {
                 continue;
             }
             if (p.x % 2 == 0 && p.y % 2 == 1) {
@@ -137,7 +137,7 @@ public:
     }
     TNodeId nodeIdByAgentState(AgentState as) const
     {
-        if (as.pos.x % 2 != 0 || as.pos.y % 2 != 0 || as.pos.x > 2 * W || as.pos.y > 2 * W) {
+        if (as.pos.type() != PositionTypes::kCell || as.pos.x > 2 * W || as.pos.y > 2 * W) {
             // wall, pillar, or out of range
             //std::cerr << "Invalid state!!! (pos: " << (int)as.pos.x << ", " << (int)as.pos.y << ") " << __FILE__ << ":" << __LINE__ << std::endl;
             return Base::kInvalidNode;
