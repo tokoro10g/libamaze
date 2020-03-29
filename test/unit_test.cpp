@@ -4,7 +4,8 @@
 
 #include "test_common.h"
 #include "test_maze.h"
-#include "test_mazegraph.h"
+#include "test_fourwaymazegraph.h"
+#include "test_sixwaymazegraph.h"
 
 GTEST_API_ int main(int argc, char** argv)
 {
