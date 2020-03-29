@@ -156,6 +156,20 @@ public:
     }
 
     /// \~japanese
+    /// 与えたエッジ上にある壁の位置を求めます．
+    ///
+    /// \param[in] from, to エッジの両端の状態
+    /// \returns 壁の位置
+    ///
+    /// \~english
+    /// Determines the position of a wall on a specified edge.
+    ///
+    /// \param[in] from, to Agent states at the ends of the edge
+    /// \returns Position of the wall
+    virtual Position wallPositionOnEdge(AgentState from, AgentState to) const = 0;
+    virtual Position wallPositionOnEdge(TNodeId id_from, TNodeId id_to) const { return wallPositionOnEdge(agentStateByNodeId(id_from), agentStateByNodeId(id_to)); }
+
+    /// \~japanese
     /// エッジがブロックされているかどうかを仮定してエッジの存在性とコストを計算します．
     ///
     /// \param[in] from, to エッジの両端の状態

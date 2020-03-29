@@ -30,6 +30,7 @@ public:
     using Base = MazeGraph<TCost, TNodeId, W, NodeCount>;
     using Base::edge;
     using Base::edgeWithHypothesis;
+    using Base::wallPositionOnEdge;
 
     static constexpr TNodeId kSize = NodeCount;
 
@@ -77,6 +78,14 @@ public:
             }
         }
         return v;
+    }
+    Position wallPositionOnEdge(AgentState from, AgentState to) const
+    {
+        if (!Base::edgeExist(nodeIdByAgentState(from), nodeIdByAgentState(to))) {
+            return kInvalidAgentState.pos;
+        }
+
+        return to.pos;
     }
     std::pair<bool, TCost> edgeWithHypothesis(AgentState as1, AgentState as2, bool blocked) const
     {
