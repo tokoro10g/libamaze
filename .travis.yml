@@ -33,8 +33,7 @@ script: ./build.sh
 after_success:
     - cd build
     - make test
-    - cd test/CMakeFiles/unit_test.dir/
     - lcov -d . -c -o coverage.info
     - lcov -r coverage.info '*/googletest/*' '*/test/*' '*/c++/*' '/usr/*' -o coverageFiltered.info
     - cd $TRAVIS_BUILD_DIR
-    - coveralls-lcov build/test/CMakeFiles/unit_test.dir/coverageFiltered.info
+    - coveralls-lcov build/coverageFiltered.info
