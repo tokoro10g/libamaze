@@ -99,11 +99,11 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     }
     std::array<int8_t, 4> diff{{-1, 1, W, -W}};
     for (auto d : diff) {
-      if (id < -d || id + d >= kSize) {
+      if (id + d < 0 || id + d >= kSize) {
         continue;
       }
       std::pair<bool, TNodeId> e = edge(id, TNodeId(id + d));
-      if (id + d >= 0 && id + d < kSize && e.first) {
+      if (e.first) {
         v.push_back({TNodeId(id + d), e.second});
       }
     }
@@ -176,6 +176,9 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       return {false, Base::kInf};
     }
     Difference d = as2.pos - as1.pos;
+    if (d.x != 0 && d.y != 0) {
+      return {false, Base::kInf};
+    }
     d.x /= 2;
     d.y /= 2;
     Position p = as1.pos + d;

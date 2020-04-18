@@ -100,3 +100,36 @@ TEST(MazeOperationTest, CanSetAndToggle) {
   maze.setCheckedWall({1, 0}, true);
   EXPECT_EQ(true, maze.isCheckedWall({1, 0}));
 }
+
+TEST(MazeOperationTest, ReturnsFalseIfNotWall) {
+  Maze<16> maze;
+  loadEmptyMaze(14, 14, maze);
+
+  EXPECT_EQ(false, maze.isSetWall({0, 0}));
+  EXPECT_EQ(false, maze.isSetWall({1, 1}));
+
+  EXPECT_EQ(false, maze.isCheckedWall({0, 0}));
+  EXPECT_EQ(false, maze.isCheckedWall({1, 1}));
+}
+
+TEST(MazeOperationTest, NoOpIfNotWall) {
+  Maze<16> maze;
+  loadEmptyMaze(14, 14, maze);
+
+  maze.setWall({0, 0}, true);
+  EXPECT_EQ(false, maze.isSetWall({0, 0}));
+
+  maze.setCheckedWall({0, 0}, true);
+  EXPECT_EQ(false, maze.isCheckedWall({0, 0}));
+}
+
+TEST(MazeOperationTest, NoOpIfOutOfRange) {
+  Maze<16> maze;
+  loadEmptyMaze(14, 14, maze);
+
+  maze.setWall({200, 201}, true);
+  EXPECT_EQ(false, maze.isSetWall({200, 201}));
+
+  maze.setCheckedWall({200, 201}, true);
+  EXPECT_EQ(false, maze.isCheckedWall({200, 201}));
+}

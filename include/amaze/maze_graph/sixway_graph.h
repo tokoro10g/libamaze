@@ -94,8 +94,8 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     constexpr int8_t dy[8] = {2, 1, 0, -1, -2, -1, 0, 1};
     auto as = agentStateByNodeId(id);
     for (int i = 0; i < 8; i++) {
-      if (as.pos.x == 0 && dx[i] < 0) continue;
-      if (as.pos.y == 0 && dy[i] < 0) continue;
+      if (as.pos.x + dx[i] < 0) continue;
+      if (as.pos.y + dy[i] < 0) continue;
       if (as.pos.x + dx[i] > 2 * (W - 1)) continue;
       if (as.pos.y + dy[i] > 2 * (W - 1)) continue;
       auto as_tmp = as;
