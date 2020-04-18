@@ -37,12 +37,12 @@ add_dependencies(${GMOCK_LIBRARY} googletest)
 
 include(GoogleTest)
 
-add_executable(unit_test unit_test.cpp)
-target_include_directories(unit_test PUBLIC ${GTEST_INCLUDE_PATH} ${GMOCK_INCLUDE_PATH})
-target_link_libraries(unit_test GTest::GTest GTest::GMock --coverage)
-target_compile_options(unit_test PRIVATE -w --coverage)
+add_executable(test_amaze test_common.cc test_fourway_graph.cc test_sixway_graph.cc test_maze.cc test_main.cc)
+target_include_directories(test_amaze PUBLIC ${GTEST_INCLUDE_PATH} ${GMOCK_INCLUDE_PATH})
+target_link_libraries(test_amaze GTest::GTest GTest::GMock --coverage)
+target_compile_options(test_amaze PRIVATE -w --coverage)
 
-gtest_discover_tests(unit_test)
+gtest_discover_tests(test_amaze)
 
 #target_link_libraries(tester ubsan)
 #add_test(IntegrationTest tester)
