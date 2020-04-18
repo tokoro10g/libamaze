@@ -32,6 +32,18 @@
 using namespace amaze;         // NOLINT(build/namespaces)
 using namespace amaze::utils;  // NOLINT(build/namespaces)
 
+TEST(MazeLoadTest, ReturnsFalseIfDataIsTooLarge) {
+  std::istringstream iss(maze_str1);
+  Maze<15> maze;
+  ASSERT_FALSE(loadMazeFromStream(maze, iss));
+}
+
+TEST(MazeLoadTest, ReturnsFalseIfDataIsFaulty) {
+  std::istringstream iss("+--\n+--\n+--\n");
+  Maze<15> maze;
+  ASSERT_FALSE(loadMazeFromStream(maze, iss));
+}
+
 TEST(MazeLoadTest, LoadsFromStringStream1) {
   std::istringstream iss(maze_str1);
   Maze<16> maze;
@@ -54,25 +66,13 @@ TEST(MazeLoadTest, LoadsFromStringStream2) {
   EXPECT_EQ(true, maze.isSetWall({1, 0}));
 }
 
-TEST(MazeLoadTest, ReturnsFalseIfDataIsTooLarge) {
-  std::istringstream iss(maze_str1);
-  Maze<15> maze;
-  ASSERT_FALSE(loadMazeFromStream(maze, iss));
-}
-
-TEST(MazeLoadTest, ReturnsFalseIfDataIsFaulty) {
-  std::istringstream iss("+--\n+--\n+--\n");
-  Maze<15> maze;
-  ASSERT_FALSE(loadMazeFromStream(maze, iss));
-}
-
 TEST(MazeLoadTest, LoadsEmptyMaze) {
   Maze<16> maze;
   loadEmptyMaze(14, 14, maze);
   EXPECT_EQ(Position({0, 0}), maze.start);
   EXPECT_EQ(Position({14, 14}), maze.goals[0]);
-  for (int x = 0; x < 16 * 2; x += 2) {
-    for (int y = 0; y < 16 * 2; y += 2) {
+  for (int y = 0; y < 16 * 2 - 1; y++) {
+    for (int x = !(y % 2); x < 16 * 2 - 1; x += 2) {
       EXPECT_EQ(false, maze.isSetWall({uint8_t(x), uint8_t(y)}));
       EXPECT_EQ(false, maze.isCheckedWall({uint8_t(x), uint8_t(y)}));
     }

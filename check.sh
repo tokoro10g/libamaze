@@ -5,3 +5,4 @@ make test
 lcov -d . -c -o coverage.info
 lcov -r coverage.info '*/googletest/*' '*/test/*' '*/c++/*' '/usr/*' -o coverageFiltered.info
 genhtml -o lcovHtml --num-spaces 4 -s --legend coverageFiltered.info
+echo "Coverage report is at file://$(pwd)/lcovHtml/index.html"
