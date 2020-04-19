@@ -55,7 +55,7 @@ union Direction {
 ///
 /// \~english
 /// Enumerator that represents types of positions.
-enum PositionTypes { kCell = 0, kWall, kPillar };
+enum class PositionType { kCell = 0, kWall, kPillar };
 
 /// \~japanese
 /// 迷路内の位置の差分を表す型．
@@ -110,13 +110,13 @@ struct Position {
   Position operator+(const Difference &diff) const {
     return {uint8_t(this->x + diff.x), uint8_t(this->y + diff.y)};
   }
-  PositionTypes type() const {
+  PositionType type() const {
     if (this->x % 2 == 0 && this->y % 2 == 0) {
-      return PositionTypes::kCell;
+      return PositionType::kCell;
     } else if (this->x % 2 == 1 && this->y % 2 == 1) {
-      return PositionTypes::kPillar;
+      return PositionType::kPillar;
     } else {
-      return PositionTypes::kWall;
+      return PositionType::kWall;
     }
   }
 } __attribute__((__packed__));
@@ -189,7 +189,7 @@ class Maze {
   /// \param[in] is_checked \p true if modifying wall check data
   /// \param[in] val New value
   void setInternal(Position p, bool is_checked, bool val) {
-    if (p.type() != PositionTypes::kWall || p.x >= 2 * W - 1 ||
+    if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
         p.y >= 2 * W - 1) {
       // not a wall
       return;
@@ -215,7 +215,7 @@ class Maze {
   /// \param[in] p Position
   /// \param[in] is_checked \p true if querying wall check data
   bool isSetInternal(Position p, bool is_checked) const {
-    if (p.type() != PositionTypes::kWall || p.x >= 2 * W - 1 ||
+    if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
         p.y >= 2 * W - 1) {
       // not a wall
       return false;

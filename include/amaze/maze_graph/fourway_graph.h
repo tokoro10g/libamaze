@@ -113,7 +113,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       const std::vector<Position> &positions) const override {
     std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
     for (auto p : positions) {
-      if (p.type() != PositionTypes::kWall) {
+      if (p.type() != PositionType::kWall) {
         continue;
       }
       if (p.x % 2 == 0 && p.y % 2 == 1) {
@@ -188,7 +188,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     return edgeWithHypothesis(as1, as2, Base::maze.isSetWall(p));
   }
   TNodeId nodeIdByAgentState(AgentState as) const override {
-    if (as.pos.type() != PositionTypes::kCell || as.pos.x > 2 * W ||
+    if (as.pos.type() != PositionType::kCell || as.pos.x > 2 * W ||
         as.pos.y > 2 * W) {
       // wall, pillar, or out of range
 #if 0

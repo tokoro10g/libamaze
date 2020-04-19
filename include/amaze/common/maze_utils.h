@@ -150,7 +150,7 @@ void printMaze(const Maze<W> &maze, const int m = 1) {
   std::set<std::pair<int, int>> goal_cells;
 
   for (auto p : maze.goals) {
-    if (p.type() == PositionTypes::kCell) {
+    if (p.type() == PositionType::kCell) {
       goal_cells.insert({p.x / 2, p.y / 2});
     }
   }

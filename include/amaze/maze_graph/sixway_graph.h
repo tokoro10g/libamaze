@@ -127,7 +127,7 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     if (blocked) {
       maxcost = Base::kInf;
     }
-    if (as1.pos.type() == PositionTypes::kWall &&
+    if (as1.pos.type() == PositionType::kWall &&
         abs(static_cast<int>(as1.pos.x) - as2.pos.x) == 1 &&
         abs(static_cast<int>(as1.pos.y) - as2.pos.y) == 1) {
       // diagonal path
@@ -158,7 +158,7 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
         Base::maze.isSetWall(as1.pos) || Base::maze.isSetWall(as2.pos));
   }
   TNodeId nodeIdByAgentState(AgentState as) const override {
-    if (as.pos.type() != PositionTypes::kWall || as.pos.x > 2 * W ||
+    if (as.pos.type() != PositionType::kWall || as.pos.x > 2 * W ||
         as.pos.y > 2 * W) {
       // cell, pillar, or out of range
       return Base::kInvalidNode;
@@ -248,7 +248,7 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
 
   TNodeId startNodeId() const override {
     auto p = Base::maze.start;
-    if (p.type() == PositionTypes::kCell) {
+    if (p.type() == PositionType::kCell) {
       // \~japanese
       // エージェントは常に北側の壁からスタートするという仮定を設けています．
       // 別の言い方をすると，スタート時点の進行方向を北と定義し，座標系もそれにしたがって決めています．

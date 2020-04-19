@@ -45,10 +45,10 @@ TEST(DifferenceTest, AddAndSubtract) {
 }
 
 TEST(PositionTest, DeterminesType) {
-  EXPECT_EQ(Position({0, 0}).type(), PositionTypes::kCell);
-  EXPECT_EQ(Position({0, 1}).type(), PositionTypes::kWall);
-  EXPECT_EQ(Position({1, 0}).type(), PositionTypes::kWall);
-  EXPECT_EQ(Position({1, 1}).type(), PositionTypes::kPillar);
+  EXPECT_EQ(Position({0, 0}).type(), PositionType::kCell);
+  EXPECT_EQ(Position({0, 1}).type(), PositionType::kWall);
+  EXPECT_EQ(Position({1, 0}).type(), PositionType::kWall);
+  EXPECT_EQ(Position({1, 1}).type(), PositionType::kPillar);
 }
 
 TEST(ShiftOperatorsTest, PrintsDirection) {
