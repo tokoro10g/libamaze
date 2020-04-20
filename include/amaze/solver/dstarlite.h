@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
+#include <cassert>
 #include <set>
 #include <vector>
 
@@ -134,7 +135,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
   /// \param[in] id Node ID
   /// \param[in] k New key value
   void updateHeap(NodeId id, HeapKey k) {
-    if (id > NodeCount) {
+    if (id > NodeCount) /* [[unlikely]] */ {
       return;
     }
     auto it = find_if(open_list.begin(), open_list.end(),
@@ -161,7 +162,8 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
   ///
   /// \param[in] id Node ID
   void updateNode(NodeId id) {
-    if (id > NodeCount) {
+    if (id > NodeCount) /* [[unlikely]] */ {
+      assert(false);
       return;
     }
     if (g[id] != rhs[id] && in_open_list[id]) {
@@ -173,7 +175,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
       auto it = find_if(open_list.begin(), open_list.end(),
                         [=](auto p) { return p.second == id; });
       if (it == open_list.end()) {
-        // should not reach here
+        __builtin_unreachable();  // should not reach here
         return;
       }
       open_list.erase(it);
@@ -253,7 +255,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
   ///
   /// \param[in] id Node ID
   HeapKey calculateKey(NodeId id) const {
-    if (id > NodeCount) {
+    if (id > NodeCount) /* [[unlikely]] */ {
       return {kInf, kInf};
     }
     return {satSum(satSum(std::min(g[id], rhs[id]),
@@ -289,7 +291,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     NodeId id_last_on_path = id_from;
     while (ids_to.find(id_current_on_path) == ids_to.end()) {
       auto [nid, ncost] = lowestNeighbor(id_current_on_path);
-      if (ncost == kInf) {
+      if (ncost == kInf) /* [[unlikely]] */ {
         return std::vector<AgentState>();
       }
       id_last_on_path = id_current_on_path;

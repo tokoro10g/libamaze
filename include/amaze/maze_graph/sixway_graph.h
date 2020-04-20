@@ -69,7 +69,7 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
 
   explicit SixWayGraph(const Maze<W> &maze) : Base(maze) {}
   TCost distance(TNodeId id_from, TNodeId id_to) const override {
-    if (id_from >= kSize || id_to >= kSize) {
+    if (id_from >= kSize || id_to >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
       std::cerr << "Out of bounds!!! (id_from: " << static_cast<int>(id_from)
                 << ", id_to: " << static_cast<int>(id_to) << ") " << __FILE__
@@ -84,7 +84,7 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   std::vector<std::pair<TNodeId, TCost>> neighborEdges(
       TNodeId id) const override {
     std::vector<std::pair<TNodeId, TCost>> v;
-    if (id >= kSize) {
+    if (id >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
@@ -117,7 +117,8 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   }
   std::pair<bool, TCost> edgeWithHypothesis(AgentState as1, AgentState as2,
                                             bool blocked) const override {
-    if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
+    if (as1 == kInvalidAgentState ||
+        as2 == kInvalidAgentState) /* [[unlikely]] */ {
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
       return {false, Base::kInf};
@@ -144,7 +145,8 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     return {false, Base::kInf};
   }
   std::pair<bool, TCost> edge(AgentState as1, AgentState as2) const override {
-    if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
+    if (as1 == kInvalidAgentState ||
+        as2 == kInvalidAgentState) /* [[unlikely]] */ {
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
       return {false, Base::kInf};
@@ -159,7 +161,7 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   }
   TNodeId nodeIdByAgentState(AgentState as) const override {
     if (as.pos.type() != PositionType::kWall || as.pos.x > 2 * W ||
-        as.pos.y > 2 * W) {
+        as.pos.y > 2 * W) /* [[unlikely]] */ {
       // cell, pillar, or out of range
       return Base::kInvalidNode;
     }
@@ -180,7 +182,7 @@ class SixWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     return ids;
   }
   AgentState agentStateByNodeId(TNodeId id) const override {
-    if (id >= kSize) {
+    if (id >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;

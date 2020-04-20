@@ -67,7 +67,7 @@ class MazeGraphFeatureBase {
         positions.push_back(as.pos + Difference{-1, 1});
         positions.push_back(as.pos + Difference{-1, -1});
       }
-    } else {
+    } else /* [[unlikely]] */ {
       return std::vector<Position>();
     }
     return positions;
@@ -133,7 +133,7 @@ class MazeGraphFeature<maze_graph::FourWayGraph<kExplore, TCost, TNodeId, W>>
       positions.push_back(as.pos + Difference{-1, 0});
       positions.push_back(as.pos + Difference{0, 1});
       positions.push_back(as.pos + Difference{0, -1});
-    } else {
+    } else /* [[unlikely]] */ {
       return std::vector<Position>();
     }
     return positions;

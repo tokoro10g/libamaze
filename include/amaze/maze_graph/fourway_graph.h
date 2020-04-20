@@ -75,7 +75,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
 
   explicit FourWayGraph(const Maze<W> &maze) : Base(maze) {}
   TCost distance(TNodeId id_from, TNodeId id_to) const override {
-    if (id_from >= kSize || id_to >= kSize) {
+    if (id_from >= kSize || id_to >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
       std::cerr << "Out of bounds!!! (id_from: " << static_cast<int>(id_from)
                 << ", id_to: " << static_cast<int>(id_to) << ") " << __FILE__
@@ -91,7 +91,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   std::vector<std::pair<TNodeId, TCost>> neighborEdges(
       TNodeId id) const override {
     std::vector<std::pair<TNodeId, TCost>> v;
-    if (id >= kSize) {
+    if (id >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
@@ -142,7 +142,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     return edges;
   }
   Position wallPositionOnEdge(AgentState from, AgentState to) const override {
-    if (!Base::edgeExist(from, to)) {
+    if (!Base::edgeExist(from, to)) /* [[unlikely]] */ {
       return kInvalidAgentState.pos;
     }
 
@@ -151,7 +151,8 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   }
   std::pair<bool, TCost> edgeWithHypothesis(AgentState as1, AgentState as2,
                                             bool blocked) const override {
-    if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
+    if (as1 == kInvalidAgentState ||
+        as2 == kInvalidAgentState) /* [[unlikely]] */ {
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
       return {false, Base::kInf};
@@ -170,7 +171,8 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     return {false, Base::kInf};
   }
   std::pair<bool, TCost> edge(AgentState as1, AgentState as2) const override {
-    if (as1 == kInvalidAgentState || as2 == kInvalidAgentState) {
+    if (as1 == kInvalidAgentState ||
+        as2 == kInvalidAgentState) /* [[unlikely]] */ {
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
       return {false, Base::kInf};
@@ -189,7 +191,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   }
   TNodeId nodeIdByAgentState(AgentState as) const override {
     if (as.pos.type() != PositionType::kCell || as.pos.x > 2 * W ||
-        as.pos.y > 2 * W) {
+        as.pos.y > 2 * W) /* [[unlikely]] */ {
       // wall, pillar, or out of range
 #if 0
       std::cerr << "Invalid state!!! (pos: " << static_cast<int>(as.pos.x)
@@ -209,7 +211,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     return ids;
   }
   AgentState agentStateByNodeId(TNodeId id) const override {
-    if (id >= kSize) {
+    if (id >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
@@ -225,22 +227,14 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     }
     AgentState ret = agentStateByNodeId(id_to);
     int diff = static_cast<int>(id_to) - id_from;
-    switch (diff) {
-      case W:
-        ret.dir = kNorth;
-        break;
-      case -W:
-        ret.dir = kSouth;
-        break;
-      case 1:
-        ret.dir = kEast;
-        break;
-      case -1:
-        ret.dir = kWest;
-        break;
-      default:
-        // TODO(tokoro10g): handle error
-        break;
+    if (diff == W) {
+      ret.dir = kNorth;
+    } else if (diff == -W) {
+      ret.dir = kSouth;
+    } else if (diff == 1) {
+      ret.dir = kEast;
+    } else if (diff == -1) {
+      ret.dir = kWest;
     }
     return ret;
   }

@@ -122,7 +122,7 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
   /// \param[in] id Node ID
   /// \param[in] k New key value
   void updateHeap(NodeId id, HeapKey k) {
-    if (id > NodeCount) {
+    if (id > NodeCount) /* [[unlikely]] */ {
       return;
     }
     auto it = find_if(open_list.begin(), open_list.end(),
@@ -181,7 +181,7 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
   ///
   /// \param[in] id Node ID
   HeapKey calculateKey(NodeId id) const {
-    if (id > NodeCount) {
+    if (id > NodeCount) /* [[unlikely]] */ {
       return kInf;
     }
     // commonly referred to as "fScore"
@@ -215,7 +215,7 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
     NodeId id_last_on_path = id_from;
     while (ids_to.find(id_current_on_path) == ids_to.end()) {
       auto [nid, ncost] = lowestNeighbor(id_current_on_path);
-      if (ncost == kInf) {
+      if (ncost == kInf) /* [[unlikely]] */ {
         return std::vector<AgentState>();
       }
       id_last_on_path = id_current_on_path;

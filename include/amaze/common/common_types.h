@@ -190,7 +190,7 @@ class Maze {
   /// \param[in] val New value
   void setInternal(Position p, bool is_checked, bool val) {
     if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
-        p.y >= 2 * W - 1) {
+        p.y >= 2 * W - 1) /* [[unlikely]] */ {
       // not a wall
       return;
     }
@@ -216,7 +216,7 @@ class Maze {
   /// \param[in] is_checked \p true if querying wall check data
   bool isSetInternal(Position p, bool is_checked) const {
     if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
-        p.y >= 2 * W - 1) {
+        p.y >= 2 * W - 1) /* [[unlikely]] */ {
       // not a wall
       return false;
     }

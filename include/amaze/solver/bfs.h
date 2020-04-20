@@ -143,7 +143,7 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount> {
     NodeId id_last_on_path = id_from;
     while (ids_to.find(id_current_on_path) == ids_to.end()) {
       auto [nid, ncost] = lowestNeighbor(id_current_on_path);
-      if (ncost == kInf) {
+      if (ncost == kInf) /* [[unlikely]] */ {
         return std::vector<AgentState>();
       }
       id_last_on_path = id_current_on_path;

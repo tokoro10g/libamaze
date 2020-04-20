@@ -44,11 +44,11 @@ bool loadMazeFromStream(Maze<W> &maze, std::istream &is) {
   std::getline(is, line);
   char_data.push_back(line);
 
-  if ((line.length() - 1) % 4 != 0) {
+  if ((line.length() - 1) % 4 != 0) /* [[unlikely]] */ {
     // invalid format
     return false;
   }
-  if (line.length() > 4 * W + 1) {
+  if (line.length() > 4 * W + 1) /* [[unlikely]] */ {
     // too large
     return false;
   }
@@ -125,7 +125,7 @@ template <uint8_t W>
 bool loadMazeFromFile(Maze<W> &maze, std::string filename) {
   std::ifstream fs;
   fs.open(filename);
-  if (fs.fail()) {
+  if (fs.fail()) /* [[unlikely]] */ {
     return false;
   }
   bool result = loadMazeFromStream(maze, fs);
