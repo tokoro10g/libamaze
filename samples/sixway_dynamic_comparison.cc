@@ -88,8 +88,8 @@ int main(int argc, char *argv[]) {
   //
   auto goals = reference_maze.goals;
   virtual_maze.goals = goals;
-  // スタート区画の前壁(0, 1)と右壁(1,
-  // 0)はスタート時に有無が確定しており，右壁があります．
+  // スタート区画の前壁(0, 1)と右壁(1, 0)はスタート時に有無が確定しており，
+  // 右壁があります．
   //
   // The front (0, 1) and the right (1, 0) of the start cell are checked before
   // exploration, and there is a wall on the right.
@@ -98,7 +98,8 @@ int main(int argc, char *argv[]) {
   virtual_maze.setCheckedWall({0, 1}, true);
   virtual_maze.setCheckedWall({1, 0}, true);
 
-  // 仮想迷路をグラフで表現します．SixWayGraphクラス(壁をノードとした6方向に連結するグラフ)を使用します．
+  // 仮想迷路をグラフで表現します．
+  // SixWayGraphクラス(壁をノードとした6方向に連結するグラフ)を使用します．
   //
   // Defines a graph representation of the virtual maze.
   // This example uses SixWayGraph class that represents a graph with
@@ -145,16 +146,19 @@ int main(int argc, char *argv[]) {
     // solver state.
     //
     auto sense_positions = AH::currentSensePositions(solver_DSL);
-    // センシング前のソルバの処理を行います．通常のD*
-    // Liteソルバでは何もしません．
+    // センシング前のソルバの処理を行います．
+    // 通常のD* Liteソルバでは何もしません．
     //
     // Performs a solver action before sensing. A normal D* Lite solver does not
     // do anything.
     //
     solver_DSL.preSense(sense_positions);
-    // センシングを行います．このサンプルでは，参照迷路の中の指定した位置にある壁の情報を仮想迷路に反映し，
+    // 壁のセンシングを模擬した処理を行います．
+    // AgentHelperを使用して参照迷路から壁の有無を取得し，仮想迷路に反映します．
     //
-    // 壁のデータに変更が加わった座標のリストを取得しています．(実装はsample_agent.hを参照)
+    // Simulates the wall sensing.
+    // AgentHelper::sense updates the wall information in the virtual maze based
+    // on that acquired from the reference maze.
     //
     auto changed_positions =
         AH::sense(virtual_maze, reference_maze, sense_positions);

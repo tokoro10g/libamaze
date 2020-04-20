@@ -64,7 +64,8 @@ int main(int argc, char *argv[]) {
   amaze::Maze<max_maze_width> maze;
   amaze::utils::loadMazeFromFile(maze, argv[1]);
 
-  // 仮想迷路をグラフで表現します．SixWayGraphクラス(壁をノードとした6方向に連結するグラフ)を使用します．
+  // 仮想迷路をグラフで表現します．
+  // SixWayGraphクラス(壁をノードとした6方向に連結するグラフ)を使用します．
   //
   // Defines a graph representation of the virtual maze.
   // This example uses SixWayGraph class that represents a graph with
