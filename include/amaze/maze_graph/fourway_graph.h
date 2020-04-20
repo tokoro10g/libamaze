@@ -77,9 +77,11 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   TCost distance(TNodeId id_from, TNodeId id_to) const override {
     if (id_from >= kSize || id_to >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
+#if 0
       std::cerr << "Out of bounds!!! (id_from: " << static_cast<int>(id_from)
                 << ", id_to: " << static_cast<int>(id_to) << ") " << __FILE__
                 << ":" << __LINE__ << std::endl;
+#endif
       return Base::kInf;
     }
     AgentState as1, as2;
@@ -93,9 +95,11 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     std::vector<std::pair<TNodeId, TCost>> v;
     if (id >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
+#if 0
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
-      return v;  // should be empty
+#endif
+      return v;  // returns empty
     }
     std::array<int8_t, 4> diff{{-1, 1, W, -W}};
     for (auto d : diff) {
@@ -153,8 +157,10 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
                                             bool blocked) const override {
     if (as1 == kInvalidAgentState ||
         as2 == kInvalidAgentState) /* [[unlikely]] */ {
+#if 0
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
+#endif
       return {false, Base::kInf};
     }
 
@@ -173,8 +179,10 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   std::pair<bool, TCost> edge(AgentState as1, AgentState as2) const override {
     if (as1 == kInvalidAgentState ||
         as2 == kInvalidAgentState) /* [[unlikely]] */ {
+#if 0
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
+#endif
       return {false, Base::kInf};
     }
     Difference d = as2.pos - as1.pos;
@@ -213,8 +221,10 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   AgentState agentStateByNodeId(TNodeId id) const override {
     if (id >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
+#if 0
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
+#endif
       return kInvalidAgentState;
     }
     uint8_t x = uint8_t(id % W);
