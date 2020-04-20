@@ -19,17 +19,15 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_VERSION_H_
-#define INCLUDE_AMAZE_VERSION_H_
-
-#define PROJECT_VER_MAJOR @PROJECT_VERSION_MAJOR@
-#define PROJECT_VER_MINOR @PROJECT_VERSION_MINOR@
-#define PROJECT_VER_PATCH @PROJECT_VERSION_PATCH@
+#ifndef INCLUDE_AMAZE_CONFIG_H_
+#define INCLUDE_AMAZE_CONFIG_H_
 
 namespace amaze {
-    int constexpr version_major() { return PROJECT_VER_MAJOR; }
-    int constexpr version_minor() { return PROJECT_VER_MINOR; }
-    int constexpr version_patch() { return PROJECT_VER_PATCH; }
+namespace config {
+    int constexpr version_major() { return @PROJECT_VERSION_MAJOR@; }
+    int constexpr version_minor() { return @PROJECT_VERSION_MINOR@; }
+    int constexpr version_patch() { return @PROJECT_VERSION_PATCH@; }
+}
 }  // namespace amaze
 
-#endif // INCLUDE_AMAZE_VERSION_H_
+#endif // INCLUDE_AMAZE_CONFIG_H_
