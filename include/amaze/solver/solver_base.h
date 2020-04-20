@@ -32,6 +32,13 @@ namespace amaze {
 namespace solver {
 
 /// \~japanese
+/// ソルバの結果を表す列挙型．
+///
+/// \~english
+/// Enumerator that represents the result of a solver.
+enum class SolverState { kInProgress = 0, kReached, kFailed };
+
+/// \~japanese
 /// 最短経路ソルバの抽象クラス．
 ///
 /// \tparam TMazeGraph MazeGraphを実装した型
@@ -50,11 +57,16 @@ class SolverBase {
   /// \~english Graph representation of the maze
   const MazeGraph *mg;
 
+  /// \~japanese ソルバの結果
+  /// \~english Solver result
+  SolverState state;
+
  public:
   using NodeId = TNodeId;
   using Cost = TCost;
 
-  explicit SolverBase(const MazeGraph *mg) : mg(mg) {}
+  explicit SolverBase(const MazeGraph *mg)
+      : mg(mg), state(SolverState::kInProgress) {}
   SolverBase(const SolverBase &s) = default;
   SolverBase &operator=(const SolverBase &other) {
     if (this != &other) {
@@ -64,6 +76,13 @@ class SolverBase {
   }
   virtual ~SolverBase() = default;
 
+  /// \~japanese
+  /// 迷路のグラフ表現を置き換えます．
+  /// \param[in] new_mg 新たな迷路グラフのポインタ
+  ///
+  /// \~english
+  /// Replaces graph representation of the maze.
+  /// \param[in] new_mg Pointer to the new maze graph.
   void changeMazeGraph(const MazeGraph *new_mg) {
     mg = new_mg;
     initialize();
@@ -139,6 +158,15 @@ class SolverBase {
   /// Returns the ID of the destination node.
   /// \returns List of destination IDs.
   virtual std::set<NodeId> destinationNodeIds() const = 0;
+
+  /// \~japanese
+  /// ソルバの結果を返します．
+  /// \returns ソルバの結果
+  ///
+  /// \~english
+  /// Returns the solver result.
+  /// \returns Solver result
+  SolverState currentSolverState() const { return state; }
 
   /// \~japanese
   /// 現在のグラフの情報から最短経路を構成します．

@@ -139,7 +139,8 @@ int main(int argc, char *argv[]) {
   //
   // Repeats until the solver arrives one of the goals.
   //
-  while (goal_ids.find(solver.currentNodeId()) == goal_ids.end()) {
+  while (solver.currentSolverState() ==
+         amaze::solver::SolverState::kInProgress) {
     std::cout << solver.currentAgentState() << std::endl;
     // 現在のソルバの状態から，つぎにセンシングする壁の位置のリストを取得します．
     //
@@ -201,7 +202,8 @@ int main(int argc, char *argv[]) {
   // The agent in this example simply uses D* Lite algorithm to get back to the
   // start instead of searching for the shortest path from the start to goals.
   //
-  while (solver.currentNodeId() != mg.startNodeId()) {
+  while (solver.currentSolverState() ==
+         amaze::solver::SolverState::kInProgress) {
     std::cout << solver.currentAgentState() << std::endl;
     auto sense_positions = AH::currentSensePositions(solver);
     solver.preSense(sense_positions);

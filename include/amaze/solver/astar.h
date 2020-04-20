@@ -146,9 +146,13 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
       auto [kold, uid] = *open_list.begin();
       examined_nodes++;
       if (uid == id_current) {
-        // std::cout << "The number of examined nodes in this round: " <<
-        // examined_nodes << std::endl; std::cout << "Maximum size of the open
-        // list: " << max_heap_size << std::endl;
+        // computation finished
+#if 0
+        std::cout << "The number of examined nodes in this round: "
+                  << examined_nodes << std::endl;
+        std::cout << "Maximum size of the open list: " << max_heap_size
+                  << std::endl;
+#endif
         return;
       }
       open_list.erase(open_list.begin());
@@ -169,7 +173,6 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
         max_heap_size = NodeId(open_list.size());
       }
     }
-    // cannot reach
   }
   /// \~japanese
   /// ヒープに用いるキー値を計算します．
@@ -227,34 +230,39 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
   }
 
   void preSense(const std::vector<Position> &sense_positions
-                __attribute__((unused))) override {
+                [[maybe_unused]]) override {
     auto ln = lowestNeighbor(id_current);
     id_candidate = ln.first;
   }
   void postSense(const std::vector<Position> &changed_positions
-                 __attribute__((unused))) override {
+                 [[maybe_unused]]) override {
     if (ids_destination.find(id_current) != ids_destination.end()) {
-      // reached the destination
-      // TODO(tokoro10g): implement
+      Base::state = SolverState::kReached;
+#if 0
       std::cout << "Reached the destination" << std::endl;
-    } else {
-      if (Base::mg->edgeCost(id_current, id_candidate) == kInf) {
-        // if (open_list.empty()) {
-        //    // no route
-        //    // TODO(tokoro10g): implement
-        //    std::cerr << "No route" << std::endl;
-        //    return;
-        //}
-        resetCostsAndLists();
-        for (auto id : ids_destination) {
-          g[id] = 0;
-          open_list.insert({Base::mg->distance(id_current, id), id});
-          in_open_list.set(id);
-        }
-        computeShortestPath();
+#endif
+      return;
+    }
+    if (Base::mg->edgeCost(id_current, id_candidate) == kInf) {
+      if (open_list.empty()) /* [[unlikely]] */ {
+        Base::state = SolverState::kFailed;
+#if 0
+        std::cerr << "No route" << std::endl;
+#endif
+        return;
       }
-      id_last = id_current;
-      id_current = lowestNeighbor(id_current).first;
+      resetCostsAndLists();
+      for (auto id : ids_destination) {
+        g[id] = 0;
+        open_list.insert({Base::mg->distance(id_current, id), id});
+        in_open_list.set(id);
+      }
+      computeShortestPath();
+    }
+    id_last = id_current;
+    id_current = lowestNeighbor(id_current).first;
+    if (ids_destination.find(id_current) != ids_destination.end()) {
+      Base::state = SolverState::kReached;
     }
   }
 
@@ -266,6 +274,7 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
   }
   void reset() override {
     resetCostsAndLists();
+    Base::state = SolverState::kInProgress;
     id_current = Base::mg->startNodeId();
     ids_destination = Base::mg->goalNodeIds();
     id_last = id_current;
@@ -281,6 +290,7 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
   }
   void changeDestinations(const std::set<NodeId> &ids) override {
     resetCostsAndLists();
+    Base::state = SolverState::kInProgress;
     // id_current = id_current
     ids_destination = ids;
     id_last = id_current;

@@ -98,22 +98,29 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount> {
       q.push(id);
     }
 
-    // NodeId examined_nodes = 0;
-    // NodeId max_heap_size = 0;
+    NodeId examined_nodes = 0;
+    NodeId max_heap_size = 0;
     while (!q.empty()) {
       auto uid = q.front();
       q.pop();
-      // examined_nodes++;
+      examined_nodes++;
       for (auto &[spid, spcost] : Base::mg->neighborEdges(uid)) {
         if (g[spid] > satSum(g[uid], spcost)) {
           g[spid] = satSum(g[uid], spcost);
           q.push(spid);
         }
       }
+      if (q.size() > max_heap_size) {
+        max_heap_size = NodeId(q.size());
+      }
     }
-    // std::cout << "The number of examined nodes in this round: " <<
-    // examined_nodes << std::endl; std::cout << "Maximum size of the open list:
-    // " << max_heap_size << std::endl;
+    // computation finished
+#if 0
+    std::cout << "The number of examined nodes in this round: "
+              << examined_nodes << std::endl;
+    std::cout << "Maximum size of the open list: " << max_heap_size
+              << std::endl;
+#endif
     return;
   }
   NodeId nextNodeId() const override { return NodeId(0); }
@@ -155,35 +162,41 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount> {
   }
 
   void preSense(const std::vector<Position> &sense_positions
-                __attribute__((unused))) override {
+                [[maybe_unused]]) override {
     auto ln = lowestNeighbor(id_current);
     id_candidate = ln.first;
   }
   void postSense(const std::vector<Position> &changed_positions
-                 __attribute__((unused))) override {
+                 [[maybe_unused]]) override {
     if (ids_destination.find(id_current) != ids_destination.end()) {
-      // reached the destination
-      // TODO(tokoro10g): implement
+      Base::state = SolverState::kReached;
+#if 0
       std::cout << "Reached the destination" << std::endl;
-    } else {
-      if (Base::mg->edgeCost(id_current, id_candidate) == kInf) {
-        // if (open_list.empty()) {
-        //    // no route
-        //    // TODO(tokoro10g): implement
-        //    std::cerr << "No route" << std::endl;
-        //    return;
-        //}
-        resetCostsAndLists();
-        computeShortestPath();
+#endif
+      return;
+    }
+    if (Base::mg->edgeCost(id_current, id_candidate) == kInf) {
+      resetCostsAndLists();
+      computeShortestPath();
+      if (g[id_current] == kInf) /* [[unlikely]] */ {
+        Base::state = SolverState::kFailed;
+#if 0
+        std::cerr << "No route" << std::endl;
+#endif
+        return;
       }
-      id_last = id_current;
-      id_current = lowestNeighbor(id_current).first;
+    }
+    id_last = id_current;
+    id_current = lowestNeighbor(id_current).first;
+    if (ids_destination.find(id_current) != ids_destination.end()) {
+      Base::state = SolverState::kReached;
     }
   }
 
   void resetCostsAndLists() { g.fill(kInf); }
   void reset() override {
     resetCostsAndLists();
+    Base::state = SolverState::kInProgress;
     id_current = Base::mg->startNodeId();
     ids_destination = Base::mg->goalNodeIds();
     id_last = id_current;
@@ -194,6 +207,7 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount> {
   }
   void changeDestinations(const std::set<NodeId> &ids) override {
     resetCostsAndLists();
+    Base::state = SolverState::kInProgress;
     // id_current = id_current
     ids_destination = ids;
     id_last = id_current;

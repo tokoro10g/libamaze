@@ -139,7 +139,8 @@ int main(int argc, char *argv[]) {
   //
   // Repeats until the solver arrives one of the goals.
   //
-  while (goal_ids.find(solver_DSL.currentNodeId()) == goal_ids.end()) {
+  while (solver_DSL.currentSolverState() ==
+         amaze::solver::SolverState::kInProgress) {
     // 現在のソルバの状態から，つぎにセンシングする壁の位置のリストを取得します．
     //
     // Obtains a list of wall positions to sense next according to the current
@@ -195,7 +196,8 @@ int main(int argc, char *argv[]) {
   tstart = high_resolution_clock::now();
   solver_AS.initialize();
   using AH2 = amaze::AgentHelper<decltype(mg), decltype(solver_AS)>;
-  while (goal_ids.find(solver_AS.currentNodeId()) == goal_ids.end()) {
+  while (solver_AS.currentSolverState() ==
+         amaze::solver::SolverState::kInProgress) {
     auto sense_positions = AH2::currentSensePositions(solver_AS);
     solver_AS.preSense(sense_positions);
     auto changed_positions =
@@ -221,7 +223,8 @@ int main(int argc, char *argv[]) {
   tstart = high_resolution_clock::now();
   solver_BFS.initialize();
   using AH3 = amaze::AgentHelper<decltype(mg), decltype(solver_BFS)>;
-  while (goal_ids.find(solver_BFS.currentNodeId()) == goal_ids.end()) {
+  while (solver_BFS.currentSolverState() ==
+         amaze::solver::SolverState::kInProgress) {
     auto sense_positions = AH3::currentSensePositions(solver_BFS);
     solver_BFS.preSense(sense_positions);
     auto changed_positions =
