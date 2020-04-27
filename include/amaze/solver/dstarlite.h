@@ -28,6 +28,7 @@
 #include <bitset>
 #include <cassert>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "amaze/solver/solver_base.h"
@@ -75,17 +76,17 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     }
   };
 
- private:
+ protected:
   /// \~japanese 現在のノードのID
   /// \~english Current node ID
   NodeId id_current;
-  /// \~japanese 終点ノードのID
-  /// \~english Destination node ID
-  std::set<NodeId> ids_destination;
   /// \~japanese 一手前のノードのID
   /// \~english Last node ID
   NodeId id_last;
   NodeId id_last_modified;
+  /// \~japanese 終点ノードのID
+  /// \~english Destination node ID
+  std::set<NodeId> ids_destination;
 
   /// Key modifier
   Cost key_modifier;
@@ -102,18 +103,15 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
 
  public:
   using Base::changeDestinations;
+  using Base::kInf;
   using Base::reconstructPath;
-
-  /// \~japanese 無限コストとみなす値
-  /// \~english Cost value assumed to be infinity
-  static constexpr Cost kInf = MazeGraph::kInf;
 
   explicit DStarLite(const MazeGraph *mg)
       : SolverBase<TCost, TNodeId, W, NodeCount>(mg),
         id_current(mg->startNodeId()),
-        ids_destination(),
         id_last(id_current),
         id_last_modified(id_current),
+        ids_destination(),
         key_modifier(0),
         g(),
         rhs(),
@@ -163,7 +161,6 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
   /// \param[in] id Node ID
   void updateNode(NodeId id) {
     if (id > NodeCount) /* [[unlikely]] */ {
-      assert(false);
       return;
     }
     if (g[id] != rhs[id] && in_open_list[id]) {
@@ -188,7 +185,8 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
   ///
   /// \~english
   /// Computes the shortest path from the current node to the destination node.
-  void computeShortestPath() {
+  void computeShortestPath(
+      std::unordered_map<Position, bool> wall_overrides = {}) {
     NodeId examined_nodes = 0;
     NodeId max_heap_size = 0;
     while (!open_list.empty() &&
@@ -216,7 +214,8 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
         }
         in_open_list.reset(uid);
 
-        for (auto &[sid, scost] : Base::mg->neighborEdges(uid)) {
+        for (auto &[sid, scost] :
+             Base::mg->neighborEdges(uid, wall_overrides)) {
           if (rhs[sid] != 0) {
             rhs[sid] = std::min(rhs[sid], satSum(scost, g[uid]));
           }
@@ -225,13 +224,14 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
       } else {
         Cost gold = g[uid];
         g[uid] = kInf;
-        auto v = Base::mg->neighborEdges(uid);
+        auto v = Base::mg->neighborEdges(uid, wall_overrides);
         v.push_back({uid, 0});
         for (auto &[sid, scost] : v) {
           if (rhs[sid] == satSum(scost, gold)) {
             if (rhs[sid] != 0) {
               Cost mincost = kInf;
-              for (auto &[spid, spcost] : Base::mg->neighborEdges(sid)) {
+              for (auto &[spid, spcost] :
+                   Base::mg->neighborEdges(sid, wall_overrides)) {
                 mincost = std::min(mincost, satSum(spcost, g[spid]));
               }
               rhs[sid] = mincost;
@@ -270,7 +270,6 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
                    key_modifier),
             std::min(g[id], rhs[id])};
   }
-  NodeId nextNodeId() const override { return NodeId(0); }
   NodeId currentNodeId() const override { return id_current; }
   NodeId lastNodeId() const override { return id_last; }
   std::set<NodeId> destinationNodeIds() const override {
@@ -309,9 +308,10 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     return path;
   }
 
-  void preSense(const std::vector<Position> &sense_positions
+  void preSense(const std::unordered_set<Position> &sense_positions
                 [[maybe_unused]]) override {}
-  void postSense(const std::vector<Position> &changed_positions) override {
+  void postSense(
+      const std::unordered_map<Position, bool> &wall_overrides) override {
     if (rhs[id_current] == 0) {
       Base::state = SolverState::kReached;
 #if 0
@@ -327,50 +327,48 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
       return;
     }
 
-    if (!changed_positions.empty()) {
+    if (!wall_overrides.empty()) {
       key_modifier = satSum(key_modifier,
                             Base::mg->distance(id_last_modified, id_current));
       id_last_modified = id_current;
-      for (auto &[uid, vid, cost] :
-           Base::mg->affectedEdges(changed_positions)) {
-        Cost cold;
-        if (cost == kInf) {
-          // assume that the path is NOT blocked in the previous step
-          cold = Base::mg->edgeWithHypothesis(uid, vid, false).second;
-        } else {
-          // assume that the path IS blocked in the previous step
-          cold = Base::mg->edgeWithHypothesis(uid, vid, true).second;
-        }
-        if (cold > kInf) {
-          // TODO(tokoro10g): probably unnecessary
-          if (rhs[uid] != 0) {
-            rhs[uid] = std::min(rhs[uid], satSum(kInf, g[vid]));
-          }
-        } else if (rhs[uid] == satSum(cold, g[vid])) {
-          if (rhs[uid] != 0) {
-            Cost mincost = kInf;
-            for (auto &[spid, spcost] : Base::mg->neighborEdges(uid)) {
-              mincost = std::min(mincost, satSum(spcost, g[spid]));
+      std::unordered_set<Position> changed_positions;
+      for (auto &[position, wall_state] : wall_overrides) {
+        changed_positions.insert(position);
+      }
+      for (auto &[position, wall_state] : wall_overrides) {
+        for (auto &[uid, vid] : Base::mg->affectedEdges(position)) {
+          Cost cold = Base::mg->edgeWithHypothesis(uid, vid, !wall_state).cost;
+          if (cold > kInf) /* [[unlikely]] */ {
+            // TODO(tokoro10g): probably unnecessary
+            if (rhs[uid] != 0) {
+              rhs[uid] = std::min(rhs[uid], satSum(kInf, g[vid]));
             }
-            rhs[uid] = mincost;
-          }
-        }
-        updateNode(uid);
-        if (cold > kInf) {
-          // TODO(tokoro10g): probably unnecessary
-          if (rhs[vid] != 0) {
-            rhs[vid] = std::min(rhs[vid], satSum(kInf, g[uid]));
-          }
-        } else if (rhs[vid] == satSum(cold, g[uid])) {
-          if (rhs[vid] != 0) {
-            Cost mincost = kInf;
-            for (auto &[spid, spcost] : Base::mg->neighborEdges(vid)) {
-              mincost = std::min(mincost, satSum(spcost, g[spid]));
+          } else if (rhs[uid] == satSum(cold, g[vid])) {
+            if (rhs[uid] != 0) {
+              Cost mincost = kInf;
+              for (auto &[spid, spcost] : Base::mg->neighborEdges(uid)) {
+                mincost = std::min(mincost, satSum(spcost, g[spid]));
+              }
+              rhs[uid] = mincost;
             }
-            rhs[vid] = mincost;
           }
+          updateNode(uid);
+          if (cold > kInf) /* [[unlikely]] */ {
+            // TODO(tokoro10g): probably unnecessary
+            if (rhs[vid] != 0) {
+              rhs[vid] = std::min(rhs[vid], satSum(kInf, g[uid]));
+            }
+          } else if (rhs[vid] == satSum(cold, g[uid])) {
+            if (rhs[vid] != 0) {
+              Cost mincost = kInf;
+              for (auto &[spid, spcost] : Base::mg->neighborEdges(vid)) {
+                mincost = std::min(mincost, satSum(spcost, g[spid]));
+              }
+              rhs[vid] = mincost;
+            }
+          }
+          updateNode(vid);
         }
-        updateNode(vid);
       }
       computeShortestPath();
     }

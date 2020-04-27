@@ -336,4 +336,43 @@ class Maze {
 
 }  // namespace amaze
 
+namespace std {
+
+template <>
+struct hash<amaze::Direction> {
+  std::size_t operator()(amaze::Direction const &dir) const noexcept {
+    return dir.half;
+  }
+  static constexpr size_t hash_max = 15;
+};
+
+template <>
+struct hash<amaze::Difference> {
+  std::size_t operator()(amaze::Difference const &diff) const noexcept {
+    return static_cast<uint8_t>(diff.y) * 256 + static_cast<uint8_t>(diff.x);
+  }
+  static constexpr size_t hash_max = 65535;
+};
+
+template <>
+struct hash<amaze::Position> {
+  std::size_t operator()(amaze::Position const &pos) const noexcept {
+    return pos.y * 256 + pos.x;
+  }
+  static constexpr size_t hash_max = 65535;
+};
+
+template <>
+struct hash<amaze::AgentState> {
+  std::size_t operator()(amaze::AgentState const &as) const noexcept {
+    return hash<amaze::Position>()(as.pos) +
+           hash<amaze::Direction>()(as.dir) *
+               (hash<amaze::Position>::hash_max + 1) +
+           as.attribute * (hash<amaze::Position>::hash_max + 1) *
+               (hash<amaze::Direction>::hash_max + 1);
+  }
+};
+
+}  // namespace std
+
 #endif  // INCLUDE_AMAZE_COMMON_COMMON_TYPES_H_

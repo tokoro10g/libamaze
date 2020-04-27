@@ -23,7 +23,7 @@
 #ifndef INCLUDE_AMAZE_COMMON_AGENT_HELPER_H_
 #define INCLUDE_AMAZE_COMMON_AGENT_HELPER_H_
 
-#include <vector>
+#include <unordered_set>
 
 #include "amaze/common/common_types.h"
 #include "amaze/maze_graph/fourway_graph.h"
@@ -33,66 +33,68 @@ namespace amaze {
 template <typename TMazeGraph>
 class MazeGraphFeatureBase {
  public:
-  static std::vector<Position> sensePositions(AgentState as) {
-    std::vector<Position> positions;
+  static std::unordered_set<Position> sensePositions(AgentState as) {
+    std::unordered_set<Position> positions;
     if (as.dir == kNorth) {
-      positions.push_back(as.pos + Difference{0, 2});
-      positions.push_back(as.pos + Difference{1, 1});
-      positions.push_back(as.pos + Difference{-1, 1});
+      positions.insert(as.pos + Difference{0, 2});
+      positions.insert(as.pos + Difference{1, 1});
+      positions.insert(as.pos + Difference{-1, 1});
     } else if (as.dir == kEast) {
-      positions.push_back(as.pos + Difference{2, 0});
-      positions.push_back(as.pos + Difference{1, 1});
-      positions.push_back(as.pos + Difference{1, -1});
+      positions.insert(as.pos + Difference{2, 0});
+      positions.insert(as.pos + Difference{1, 1});
+      positions.insert(as.pos + Difference{1, -1});
     } else if (as.dir == kSouth) {
-      positions.push_back(as.pos + Difference{0, -2});
-      positions.push_back(as.pos + Difference{1, -1});
-      positions.push_back(as.pos + Difference{-1, -1});
+      positions.insert(as.pos + Difference{0, -2});
+      positions.insert(as.pos + Difference{1, -1});
+      positions.insert(as.pos + Difference{-1, -1});
     } else if (as.dir == kWest) {
-      positions.push_back(as.pos + Difference{-2, 0});
-      positions.push_back(as.pos + Difference{-1, 1});
-      positions.push_back(as.pos + Difference{-1, -1});
+      positions.insert(as.pos + Difference{-2, 0});
+      positions.insert(as.pos + Difference{-1, 1});
+      positions.insert(as.pos + Difference{-1, -1});
     } else if (as.dir == kNoDirection) {
       if (as.pos.x % 2 == 0 && as.pos.y % 2 == 1) {
-        positions.push_back(as.pos + Difference{0, 2});
-        positions.push_back(as.pos + Difference{1, 1});
-        positions.push_back(as.pos + Difference{-1, 1});
-        positions.push_back(as.pos + Difference{0, -2});
-        positions.push_back(as.pos + Difference{1, -1});
-        positions.push_back(as.pos + Difference{-1, -1});
+        positions.insert(as.pos + Difference{0, 2});
+        positions.insert(as.pos + Difference{1, 1});
+        positions.insert(as.pos + Difference{-1, 1});
+        positions.insert(as.pos + Difference{0, -2});
+        positions.insert(as.pos + Difference{1, -1});
+        positions.insert(as.pos + Difference{-1, -1});
       } else if (as.pos.x % 2 == 1 && as.pos.y % 2 == 0) {
-        positions.push_back(as.pos + Difference{2, 0});
-        positions.push_back(as.pos + Difference{1, 1});
-        positions.push_back(as.pos + Difference{1, -1});
-        positions.push_back(as.pos + Difference{-2, 0});
-        positions.push_back(as.pos + Difference{-1, 1});
-        positions.push_back(as.pos + Difference{-1, -1});
+        positions.insert(as.pos + Difference{2, 0});
+        positions.insert(as.pos + Difference{1, 1});
+        positions.insert(as.pos + Difference{1, -1});
+        positions.insert(as.pos + Difference{-2, 0});
+        positions.insert(as.pos + Difference{-1, 1});
+        positions.insert(as.pos + Difference{-1, -1});
       }
     } else /* [[unlikely]] */ {
-      return std::vector<Position>();
+      return std::unordered_set<Position>();
     }
     return positions;
   }
-  static std::vector<Position> sense(
+  static std::unordered_map<Position, bool> sense(
       Maze<TMazeGraph::kWidth> &virtual_maze,
       const Maze<TMazeGraph::kWidth> &reference_maze,
-      const std::vector<Position> &sense_positions) {
-    std::vector<Position> changed_positions;
+      const std::unordered_set<Position> &sense_positions) {
+    std::unordered_map<Position, bool> wall_overrides;
     for (auto p : sense_positions) {
       if (p.x > 2 * TMazeGraph::kWidth || p.y > 2 * TMazeGraph::kWidth) {
         continue;
       }
+      // TODO(tokoro10g): consider cases where the wall information acquired
+      // previously was wrong
       if (virtual_maze.isCheckedWall(p)) {
         continue;
       }
       virtual_maze.setCheckedWall(p, true);
       if (reference_maze.isSetWall(p)) {
         virtual_maze.setWall(p, true);
-        changed_positions.push_back(p);
+        wall_overrides.insert({p, true});
       } else {
         virtual_maze.setWall(p, false);
       }
     }
-    return changed_positions;
+    return wall_overrides;
   }
 
  private:
@@ -110,31 +112,31 @@ class MazeGraphFeature<maze_graph::FourWayGraph<kExplore, TCost, TNodeId, W>>
     : public MazeGraphFeatureBase<
           maze_graph::FourWayGraph<kExplore, TCost, TNodeId, W>> {
  public:
-  static std::vector<Position> sensePositions(AgentState as) {
-    std::vector<Position> positions;
+  static std::unordered_set<Position> sensePositions(AgentState as) {
+    std::unordered_set<Position> positions;
     if (as.dir == kNorth) {
-      positions.push_back(as.pos + Difference{0, 1});
-      positions.push_back(as.pos + Difference{1, 0});
-      positions.push_back(as.pos + Difference{-1, 0});
+      positions.insert(as.pos + Difference{0, 1});
+      positions.insert(as.pos + Difference{1, 0});
+      positions.insert(as.pos + Difference{-1, 0});
     } else if (as.dir == kEast) {
-      positions.push_back(as.pos + Difference{1, 0});
-      positions.push_back(as.pos + Difference{0, 1});
-      positions.push_back(as.pos + Difference{0, -1});
+      positions.insert(as.pos + Difference{1, 0});
+      positions.insert(as.pos + Difference{0, 1});
+      positions.insert(as.pos + Difference{0, -1});
     } else if (as.dir == kSouth) {
-      positions.push_back(as.pos + Difference{0, -1});
-      positions.push_back(as.pos + Difference{1, 0});
-      positions.push_back(as.pos + Difference{-1, 0});
+      positions.insert(as.pos + Difference{0, -1});
+      positions.insert(as.pos + Difference{1, 0});
+      positions.insert(as.pos + Difference{-1, 0});
     } else if (as.dir == kWest) {
-      positions.push_back(as.pos + Difference{-1, 0});
-      positions.push_back(as.pos + Difference{0, 1});
-      positions.push_back(as.pos + Difference{0, -1});
+      positions.insert(as.pos + Difference{-1, 0});
+      positions.insert(as.pos + Difference{0, 1});
+      positions.insert(as.pos + Difference{0, -1});
     } else if (as.dir == kNoDirection) {
-      positions.push_back(as.pos + Difference{1, 0});
-      positions.push_back(as.pos + Difference{-1, 0});
-      positions.push_back(as.pos + Difference{0, 1});
-      positions.push_back(as.pos + Difference{0, -1});
+      positions.insert(as.pos + Difference{1, 0});
+      positions.insert(as.pos + Difference{-1, 0});
+      positions.insert(as.pos + Difference{0, 1});
+      positions.insert(as.pos + Difference{0, -1});
     } else /* [[unlikely]] */ {
-      return std::vector<Position>();
+      return std::unordered_set<Position>();
     }
     return positions;
   }
@@ -159,7 +161,8 @@ class AgentHelper : public MazeGraphFeature<TMazeGraph>,
   using MazeGraph = TMazeGraph;
   using Solver = TSolver;
 
-  static std::vector<Position> currentSensePositions(const TSolver &solver) {
+  static std::unordered_set<Position> currentSensePositions(
+      const TSolver &solver) {
     return MazeGraphFeature<TMazeGraph>::sensePositions(
         solver.currentAgentState());
   }

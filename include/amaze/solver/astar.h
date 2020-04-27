@@ -27,6 +27,7 @@
 #include <array>
 #include <bitset>
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -67,16 +68,16 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
     }
   };
 
- private:
+ protected:
   /// \~japanese 現在のノードのID
   /// \~english Current node ID
   NodeId id_current;
-  /// \~japanese 終点ノードのID
-  /// \~english Destination node ID
-  std::set<NodeId> ids_destination;
   /// \~japanese 一手前のノードのID
   /// \~english Last node ID
   NodeId id_last;
+  /// \~japanese 終点ノードのID
+  /// \~english Destination node ID
+  std::set<NodeId> ids_destination;
   /// \~japanese つぎに訪れる候補ノードのID
   /// \~english Next candidate node ID
   NodeId id_candidate;
@@ -92,17 +93,14 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
 
  public:
   using Base::changeDestinations;
+  using Base::kInf;
   using Base::reconstructPath;
-
-  /// \~japanese 無限コストとみなす値
-  /// \~english Cost value assumed to be infinity
-  static constexpr Cost kInf = MazeGraph::kInf;
 
   explicit AStar(const MazeGraph *mg)
       : SolverBase<TCost, TNodeId, W, NodeCount>(mg),
         id_current(mg->startNodeId()),
-        ids_destination(),
         id_last(id_current),
+        ids_destination(),
         id_candidate(id_current),
         g(),
         open_list(),
@@ -190,7 +188,6 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
     // commonly referred to as "fScore"
     return satSum(g[id], Base::mg->distance(id_current, id));
   }
-  NodeId nextNodeId() const override { return NodeId(0); }
   NodeId currentNodeId() const override { return id_current; }
   NodeId lastNodeId() const override { return id_last; }
   std::set<NodeId> destinationNodeIds() const override {
@@ -229,12 +226,12 @@ class AStar : public SolverBase<TCost, TNodeId, W, NodeCount> {
     return path;
   }
 
-  void preSense(const std::vector<Position> &sense_positions
+  void preSense(const std::unordered_set<Position> &sense_positions
                 [[maybe_unused]]) override {
     auto ln = lowestNeighbor(id_current);
     id_candidate = ln.first;
   }
-  void postSense(const std::vector<Position> &changed_positions
+  void postSense(const std::unordered_map<Position, bool> &wall_overrides
                  [[maybe_unused]]) override {
     if (ids_destination.find(id_current) != ids_destination.end()) {
       Base::state = SolverState::kReached;

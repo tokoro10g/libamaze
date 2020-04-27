@@ -24,6 +24,7 @@
 #define INCLUDE_AMAZE_SOLVER_SOLVER_BASE_H_
 
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "amaze/maze_graph/maze_graph_base.h"
@@ -57,6 +58,15 @@ class SolverBase {
   /// \~english Graph representation of the maze
   const MazeGraph *mg;
 
+  /// \~japanese 現在のノードのID
+  /// \~english Current node ID
+  TNodeId id_current;
+  /// \~japanese 一手前のノードのID
+  /// \~english Last node ID
+  TNodeId id_last;
+  /// \~japanese 終点ノードのID
+  /// \~english Destination node ID
+  std::set<TNodeId> ids_destination;
   /// \~japanese ソルバの結果
   /// \~english Solver result
   SolverState state;
@@ -66,7 +76,11 @@ class SolverBase {
   using Cost = TCost;
 
   explicit SolverBase(const MazeGraph *mg)
-      : mg(mg), state(SolverState::kInProgress) {}
+      : mg(mg),
+        id_current(mg->startNodeId()),
+        id_last(id_current),
+        ids_destination(),
+        state(SolverState::kInProgress) {}
   SolverBase(const SolverBase &s) = default;
   SolverBase &operator=(const SolverBase &other) {
     if (this != &other) {
@@ -76,6 +90,13 @@ class SolverBase {
   }
   virtual ~SolverBase() = default;
 
+  static constexpr uint8_t kWidth = W;
+  static constexpr NodeId kNodeCount = NodeCount;
+
+  /// \~japanese 無限コストとみなす値
+  /// \~english Cost value assumed to be infinity
+  static constexpr Cost kInf = MazeGraph::kInf;
+
   /// \~japanese
   /// 迷路のグラフ表現を置き換えます．
   /// \param[in] new_mg 新たな迷路グラフのポインタ
@@ -83,21 +104,11 @@ class SolverBase {
   /// \~english
   /// Replaces graph representation of the maze.
   /// \param[in] new_mg Pointer to the new maze graph.
-  void changeMazeGraph(const MazeGraph *new_mg) {
+  inline void changeMazeGraph(const MazeGraph *new_mg) {
     mg = new_mg;
     initialize();
   }
 
-  /// \~japanese
-  /// 次に訪れるノードのエージェント状態を返します．
-  /// \returns 次のエージェント状態
-  ///
-  /// \~english
-  /// Returns the agent state of the node the solver is going to visit next.
-  /// \returns next agent state.
-  AgentState nextAgentState() const {
-    return mg->agentStateByNodeId(nextNodeId());
-  }
   /// \~japanese
   /// 現在のノードのエージェント状態を返します．
   /// \returns 現在のエージェント状態
@@ -105,7 +116,7 @@ class SolverBase {
   /// \~english
   /// Returns the agent state of the current node.
   /// \returns current agent state.
-  AgentState currentAgentState() const {
+  inline AgentState currentAgentState() const {
     if (lastNodeId() == currentNodeId()) {
       return mg->agentStateByNodeId(currentNodeId());
     } else {
@@ -119,21 +130,13 @@ class SolverBase {
   /// \~english
   /// Returns the agent states of the destination nodes.
   /// \returns List of agent states at the destinations.
-  std::vector<AgentState> destinationAgentStates() const {
-    std::vector<AgentState> states;
+  inline std::unordered_set<AgentState> destinationAgentStates() const {
+    std::unordered_set<AgentState> states;
     for (auto id : destinationNodeIds()) {
-      states.push_back(mg->agentStateByNodeId(id));
+      states.insert(mg->agentStateByNodeId(id));
     }
     return states;
   }
-  /// \~japanese
-  /// 次に訪れるノードのIDを返します．
-  /// \returns 次のID
-  ///
-  /// \~english
-  /// Returns the ID of the node the solver is going to visit next.
-  /// \returns next ID.
-  virtual NodeId nextNodeId() const = 0;
   /// \~japanese
   /// 現在のノードのIDを返します．
   /// \returns 現在のID
@@ -166,7 +169,18 @@ class SolverBase {
   /// \~english
   /// Returns the solver result.
   /// \returns Solver result
-  SolverState currentSolverState() const { return state; }
+  inline SolverState currentSolverState() const { return state; }
+
+  /// \~japanese
+  /// 最もコストの低い隣接ノードのIDとコストを返します．
+  /// \param[in] id ノードID
+  /// \returns 隣接ノードのIDとコスト
+  ///
+  /// \~english
+  /// Returns the ID and cost of the lowest-cost neighbor.
+  /// \param[in] id Node ID
+  /// \returns ID and cost of the neighbor node.
+  virtual std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const = 0;
 
   /// \~japanese
   /// 現在のグラフの情報から最短経路を構成します．
@@ -177,7 +191,8 @@ class SolverBase {
   /// Reconstructs the shortest path based on the current graph data.
   /// \param[in] id_from, id_to Start and end of the path
   /// \returns \p std::vector to return the path
-  std::vector<AgentState> reconstructPath(NodeId id_from, NodeId id_to) const {
+  inline std::vector<AgentState> reconstructPath(NodeId id_from,
+                                                 NodeId id_to) const {
     std::set<NodeId> s;
     s.insert(id_to);
     return reconstructPath(id_from, s);
@@ -202,16 +217,18 @@ class SolverBase {
   /// Performs pre-sensing routines.
   /// \param [in] sense_positions Positions of walls etc. which are going to be
   /// sensed
-  virtual void preSense(const std::vector<Position> &sense_positions) = 0;
+  virtual void preSense(
+      const std::unordered_set<Position> &sense_positions) = 0;
   /// \~japanese
   /// 壁センシング後の処理を行います．
   ///
-  /// \param [in] sensed_positions センシングした壁等の位置
+  /// \param [in] wall_overrides センシングした壁等の位置
   ///
   /// \~english
   /// Performs post-sensing routines.
-  /// \param [in] sense_positions Positions of sensed walls etc.
-  virtual void postSense(const std::vector<Position> &sense_positions) = 0;
+  /// \param [in] wall_overrides Positions of sensed walls etc.
+  virtual void postSense(
+      const std::unordered_map<Position, bool> &wall_overrides) = 0;
 
   /// \~japanese
   /// ソルバの内部状態をすべて初期値クリアします．
@@ -243,7 +260,7 @@ class SolverBase {
   /// Changes destination and initializes internal variables to be ready for a
   /// new search originated from the current node. \param[in] id Node ID at the
   /// destination
-  void changeDestinations(NodeId id) {
+  inline void changeDestinations(NodeId id) {
     std::set<NodeId> s;
     s.insert(id);
     changeDestinations(s);

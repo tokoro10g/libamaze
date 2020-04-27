@@ -26,6 +26,7 @@
 #include <string>
 
 #include "amaze/common/common_types.h"
+#include "amaze/maze_graph/maze_graph_base.h"
 #include "gmock/gmock-matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest-typed-test.h"
@@ -41,6 +42,21 @@ class AbstractMazeGraphFixture {
   AbstractMazeGraphFixture() : maze(), mg(maze) {}
   ConcreteMaze maze;
   ConcreteMazeGraph mg;
+};
+
+template <typename TNodeId, typename TCost>
+void ExpectEq(const amaze::maze_graph::EdgeTo<TNodeId, TCost>& val1,
+              const amaze::maze_graph::EdgeTo<TNodeId, TCost>& val2) {
+  EXPECT_EQ(val1.id, val2.id);
+  EXPECT_EQ(val1.cost, val2.cost);
+}
+
+template <typename TNodeId, typename TCost>
+struct EdgeToSorter {
+  bool operator()(const amaze::maze_graph::EdgeTo<TNodeId, TCost>& a,
+                  const amaze::maze_graph::EdgeTo<TNodeId, TCost>& b) const {
+    return a.id < b.id || (a.id == b.id && a.cost < b.cost);
+  }
 };
 
 /* clang-format off */

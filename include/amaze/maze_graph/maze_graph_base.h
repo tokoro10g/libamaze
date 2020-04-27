@@ -29,6 +29,7 @@
 #include <limits>
 #include <set>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -36,6 +37,17 @@
 
 namespace amaze {
 namespace maze_graph {
+
+template <typename TNodeId, typename TCost>
+struct EdgeTo {
+  TNodeId id;
+  TCost cost;
+};
+template <typename TNodeId>
+struct EdgeEnds {
+  TNodeId id_from;
+  TNodeId id_to;
+};
 
 /// \~japanese
 /// 迷路のグラフ表現を扱う抽象クラス．
@@ -73,6 +85,8 @@ class MazeGraphBase {
   /// \~japanese 迷路の最大幅
   /// \~english Maximum width of the maze
   static constexpr uint8_t kWidth = W;
+
+  static_assert(kInvalidNode >= kSize);
 
   explicit MazeGraphBase(const Maze<W> &maze) : maze(maze) {}
   virtual ~MazeGraphBase() = default;
@@ -114,10 +128,10 @@ class MazeGraphBase {
   ///
   /// \param[in] id Node ID of the source
   /// \returns \p std::vector filled with neighbors' IDs
-  std::vector<TNodeId> neighbors(TNodeId id) const {
+  inline std::vector<TNodeId> neighbors(TNodeId id) const {
     std::vector<TNodeId> v;
     for (auto edge : neighborEdges(id)) {
-      v.push_back(edge.first);
+      v.push_back(edge.id);
     }
     return v;
   }
@@ -137,8 +151,9 @@ class MazeGraphBase {
   ///
   /// \param[in] id Node ID of the source
   /// \returns \p std::vector filled with edges
-  virtual std::vector<std::pair<TNodeId, TCost>> neighborEdges(
-      TNodeId id) const = 0;
+  virtual std::vector<EdgeTo<TNodeId, TCost>> neighborEdges(
+      TNodeId id,
+      std::unordered_map<Position, bool> wall_overrides = {}) const = 0;
 
   /// \~japanese
   /// 与えた位置への迷路情報の変更の影響を受けるエッジを列挙します．
@@ -156,8 +171,8 @@ class MazeGraphBase {
   ///
   /// \param[in] positions List of positions
   /// \returns \p std::vector filled with edges
-  virtual std::vector<std::tuple<TNodeId, TNodeId, TCost>> affectedEdges(
-      const std::vector<Position> &positions) const {
+  virtual std::vector<EdgeEnds<TNodeId>> affectedEdges(
+      const Position position) const {
     /// \~japanese
     /// デフォルトの実装はナイーブで遅いです．
     /// \link MazeGraphBase \endlink
@@ -166,17 +181,14 @@ class MazeGraphBase {
     /// This default implementation is naive and therefore slow.
     /// It is better to reimplement this method for each \link MazeGraphBase
     /// \endlink subclass.
-    std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
-    std::vector<TNodeId> visited;
-    for (Position p : positions) {
-      for (auto id : nodeIdsByPosition(p)) {
-        if (id == kInvalidNode) {
-          continue;
-        }
-        if (std::find(visited.begin(), visited.end(), id) == visited.end()) {
-          visited.push_back(id);
+    std::vector<EdgeEnds<TNodeId>> edges;
+    std::set<TNodeId> visited;
+    for (auto id : nodeIdsByPosition(position)) {
+      if (id != kInvalidNode) {
+        if (visited.count(id) == 0) {
+          visited.insert(id);
           for (auto n : neighborEdges(id)) {
-            edges.push_back({id, n.first, n.second});
+            edges.push_back({id, n.id});
           }
         }
       }
@@ -196,7 +208,7 @@ class MazeGraphBase {
   /// \param[in] from, to Agent states at the ends of the edge
   /// \returns Position of the wall
   virtual Position wallPositionOnEdge(AgentState from, AgentState to) const = 0;
-  Position wallPositionOnEdge(TNodeId id_from, TNodeId id_to) const {
+  inline Position wallPositionOnEdge(TNodeId id_from, TNodeId id_to) const {
     return wallPositionOnEdge(agentStateByNodeId(id_from),
                               agentStateByNodeId(id_to));
   }
@@ -221,7 +233,7 @@ class MazeGraphBase {
   /// assumed to be blocked \returns \p std::pair which consists of the
   /// existence and cost of the edge. The cost is \link MazeGraphBase::kInf kInf
   /// \endlink if the edge is blocked or either node is invalid.
-  virtual std::pair<bool, TCost> edgeWithHypothesis(AgentState from,
+  virtual EdgeTo<TNodeId, TCost> edgeWithHypothesis(AgentState from,
                                                     AgentState to,
                                                     bool blocked) const = 0;
   /// \~japanese
@@ -244,8 +256,9 @@ class MazeGraphBase {
   /// assumed to be blocked \returns \p std::pair which consists of the
   /// existence and cost of the edge. The cost is \link MazeGraphBase::kInf kInf
   /// \endlink if the edge is blocked or either node is invalid.
-  std::pair<bool, TCost> edgeWithHypothesis(TNodeId id_from, TNodeId id_to,
-                                            bool blocked) const {
+  inline EdgeTo<TNodeId, TCost> edgeWithHypothesis(TNodeId id_from,
+                                                   TNodeId id_to,
+                                                   bool blocked) const {
     return edgeWithHypothesis(agentStateByNodeId(id_from),
                               agentStateByNodeId(id_to), blocked);
   }
@@ -264,7 +277,7 @@ class MazeGraphBase {
   /// \returns \p std::pair which consists of the existence and cost of the
   /// edge. The cost is \link MazeGraphBase::kInf kInf \endlink if the edge is
   /// blocked or either node is invalid.
-  virtual std::pair<bool, TCost> edge(AgentState from, AgentState to) const = 0;
+  virtual EdgeTo<TNodeId, TCost> edge(AgentState from, AgentState to) const = 0;
   /// \~japanese
   /// 迷路データに基づいてエッジの存在性とコストを計算します．
   ///
@@ -290,7 +303,7 @@ class MazeGraphBase {
   /// \returns \p std::pair which consists of the existence and cost of the
   /// edge. The cost is \link MazeGraphBase::kInf kInf \endlink if the edge is
   /// blocked or either node is invalid.
-  std::pair<bool, TCost> edge(TNodeId id_from, TNodeId id_to) const {
+  inline EdgeTo<TNodeId, TCost> edge(TNodeId id_from, TNodeId id_to) const {
     return edge(agentStateByNodeId(id_from), agentStateByNodeId(id_to));
   }
   /// \~japanese
@@ -304,11 +317,11 @@ class MazeGraphBase {
   ///
   /// \param[in] id_from, id_to Node IDs at the ends of the edge
   /// \returns the existence of the edge.
-  bool edgeExist(TNodeId id_from, TNodeId id_to) const {
-    return edge(id_from, id_to).first;
+  inline bool edgeExist(TNodeId id_from, TNodeId id_to) const {
+    return edge(id_from, id_to).id != kInvalidNode;
   }
-  bool edgeExist(AgentState from, AgentState to) const {
-    return edge(from, to).first;
+  inline bool edgeExist(AgentState from, AgentState to) const {
+    return edge(from, to).id != kInvalidNode;
   }
   /// \~japanese
   /// 迷路データに基づいてエッジのコストを返します．
@@ -321,11 +334,11 @@ class MazeGraphBase {
   ///
   /// \param[in] id_from, id_to Node IDs at the ends of the edge
   /// \returns the cost of the edge.
-  TCost edgeCost(TNodeId id_from, TNodeId id_to) const {
-    return edge(id_from, id_to).second;
+  inline TCost edgeCost(TNodeId id_from, TNodeId id_to) const {
+    return edge(id_from, id_to).cost;
   }
-  TCost edgeCost(AgentState from, AgentState to) const {
-    return edge(from, to).second;
+  inline TCost edgeCost(AgentState from, AgentState to) const {
+    return edge(from, to).cost;
   }
 
   /// \~japanese
@@ -360,7 +373,7 @@ class MazeGraphBase {
   ///
   /// \param[in] p Position
   /// \returns List of node ID.
-  virtual std::vector<NodeId> nodeIdsByPosition(Position p) const = 0;
+  virtual std::set<NodeId> nodeIdsByPosition(Position p) const = 0;
   /// \~japanese
   /// ノードIDから対応するエージェントの状態を計算します．
   ///

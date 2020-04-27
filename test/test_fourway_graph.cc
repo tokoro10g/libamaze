@@ -98,13 +98,17 @@ INSTANTIATE_TYPED_TEST_SUITE_P(VariousSize, FourWayGraphTypedTest, MazeTypes);
 TEST_F(FourWayGraphTest, EnumeratesEdges) {
   auto as1 = AgentState{{0, 2}, kNoDirection, 0};
   auto as2 = AgentState{{0, 0}, kNoDirection, 0};
+  auto id1 = mg.nodeIdByAgentState(as1);
+  auto id2 = mg.nodeIdByAgentState(as2);
 
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edge(as1, as2));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)), mg.edge(as2, as1));
-  EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf),
-            mg.edge(as1, kInvalidAgentState));
-  EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf),
-            mg.edge(kInvalidAgentState, as1));
+  using ConcreteEdgeTo = EdgeTo<decltype(mg)::NodeId, decltype(mg)::Cost>;
+
+  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::Cost(1)}), mg.edge(as1, as2));
+  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::Cost(1)}), mg.edge(as2, as1));
+  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
+           mg.edge(as1, kInvalidAgentState));
+  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
+           mg.edge(kInvalidAgentState, as1));
 }
 
 TEST_F(FourWayGraphTest, EnumeratesEdgesWithHypothesis) {
@@ -113,36 +117,40 @@ TEST_F(FourWayGraphTest, EnumeratesEdgesWithHypothesis) {
   auto id1 = mg.nodeIdByAgentState(as1);
   auto id2 = mg.nodeIdByAgentState(as2);
 
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)),
-            mg.edgeWithHypothesis(as1, as2, false));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)),
-            mg.edgeWithHypothesis(as2, as1, false));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)),
-            mg.edgeWithHypothesis(id1, id2, false));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::Cost(1)),
-            mg.edgeWithHypothesis(id2, id1, false));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(as1, as2, true));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(as2, as1, true));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(id1, id2, true));
-  EXPECT_EQ(std::make_pair(true, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(id2, id1, true));
-  EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(as1, kInvalidAgentState, false));
-  EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(kInvalidAgentState, as1, false));
-  EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(as1, kInvalidAgentState, true));
-  EXPECT_EQ(std::make_pair(false, decltype(mg)::kInf),
-            mg.edgeWithHypothesis(kInvalidAgentState, as1, true));
+  using ConcreteEdgeTo = EdgeTo<decltype(mg)::NodeId, decltype(mg)::Cost>;
+
+  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::Cost(1)}),
+           mg.edgeWithHypothesis(as1, as2, false));
+  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::Cost(1)}),
+           mg.edgeWithHypothesis(as2, as1, false));
+  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::Cost(1)}),
+           mg.edgeWithHypothesis(id1, id2, false));
+  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::Cost(1)}),
+           mg.edgeWithHypothesis(id2, id1, false));
+  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(as1, as2, true));
+  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(as2, as1, true));
+  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(id1, id2, true));
+  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(id2, id1, true));
+  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(as1, kInvalidAgentState, false));
+  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(kInvalidAgentState, as1, false));
+  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(as1, kInvalidAgentState, true));
+  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
+           mg.edgeWithHypothesis(kInvalidAgentState, as1, true));
 }
 
 TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
   using ::testing::ElementsAre;
   using Cost = decltype(mg)::Cost;
   using NodeId = decltype(mg)::NodeId;
+
+  using ConcreteEdgeTo = EdgeTo<NodeId, Cost>;
 
   std::istringstream iss(maze_str1);
   ASSERT_TRUE(loadMazeFromStream(maze, iss));
@@ -155,9 +163,9 @@ TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
   std::sort(v1.begin(), v1.end());
   EXPECT_THAT(v1, ElementsAre(1, 16));
   auto v1e = mg.neighborEdges(0);
-  std::sort(v1e.begin(), v1e.end());
-  EXPECT_EQ(v1e[0], std::make_pair(NodeId(1), mg.kInf));
-  EXPECT_EQ(v1e[1], std::make_pair(NodeId(16), Cost(1)));
+  std::sort(v1e.begin(), v1e.end(), EdgeToSorter<NodeId, Cost>());
+  ExpectEq(v1e[0], ConcreteEdgeTo({NodeId(1), mg.kInf}));
+  ExpectEq(v1e[1], ConcreteEdgeTo({NodeId(16), Cost(1)}));
 
   EXPECT_EQ(mg.edgeCost(0, 1), mg.kInf);
   EXPECT_EQ(mg.edgeCost(0, 16), Cost(1));
@@ -166,10 +174,10 @@ TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
   std::sort(v2.begin(), v2.end());
   EXPECT_THAT(v2, ElementsAre(0, 17, 32));
   auto v2e = mg.neighborEdges(16);
-  std::sort(v2e.begin(), v2e.end());
-  EXPECT_EQ(v2e[0], std::make_pair(NodeId(0), Cost(1)));
-  EXPECT_EQ(v2e[1], std::make_pair(NodeId(17), mg.kInf));
-  EXPECT_EQ(v2e[2], std::make_pair(NodeId(32), Cost(1)));
+  std::sort(v2e.begin(), v2e.end(), EdgeToSorter<NodeId, Cost>());
+  ExpectEq(v2e[0], ConcreteEdgeTo({NodeId(0), Cost(1)}));
+  ExpectEq(v2e[1], ConcreteEdgeTo({NodeId(17), mg.kInf}));
+  ExpectEq(v2e[2], ConcreteEdgeTo({NodeId(32), Cost(1)}));
 
   EXPECT_EQ(mg.edgeCost(16, 0), Cost(1));
   EXPECT_EQ(mg.edgeCost(16, 17), mg.kInf);
@@ -179,11 +187,11 @@ TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
   std::sort(v3.begin(), v3.end());
   EXPECT_THAT(v3, ElementsAre(1, 16, 18, 33));
   auto v3e = mg.neighborEdges(17);
-  std::sort(v3e.begin(), v3e.end());
-  EXPECT_EQ(v3e[0], std::make_pair(NodeId(1), Cost(1)));
-  EXPECT_EQ(v3e[1], std::make_pair(NodeId(16), mg.kInf));
-  EXPECT_EQ(v3e[2], std::make_pair(NodeId(18), mg.kInf));
-  EXPECT_EQ(v3e[3], std::make_pair(NodeId(33), Cost(1)));
+  std::sort(v3e.begin(), v3e.end(), EdgeToSorter<NodeId, Cost>());
+  ExpectEq(v3e[0], ConcreteEdgeTo({NodeId(1), Cost(1)}));
+  ExpectEq(v3e[1], ConcreteEdgeTo({NodeId(16), mg.kInf}));
+  ExpectEq(v3e[2], ConcreteEdgeTo({NodeId(18), mg.kInf}));
+  ExpectEq(v3e[3], ConcreteEdgeTo({NodeId(33), Cost(1)}));
 
   EXPECT_EQ(mg.edgeCost(17, 1), Cost(1));
   EXPECT_EQ(mg.edgeCost(17, 16), mg.kInf);
@@ -213,9 +221,7 @@ TEST_F(FourWayGraphTest, GetsStartGoalNodeIds) {
 }
 
 TEST_P(FourWayGraphAffectedEdgesTest, CalculatesAffectedEdges) {
-  std::vector<Position> positions;
-  positions.push_back(std::get<0>(GetParam()));
-  auto edges = mg.affectedEdges(positions);
+  auto edges = mg.affectedEdges(std::get<0>(GetParam()));
   EXPECT_EQ(std::get<1>(GetParam()), edges.size());
 }
 INSTANTIATE_TEST_SUITE_P(AffectedEdgesGeneral, FourWayGraphAffectedEdgesTest,

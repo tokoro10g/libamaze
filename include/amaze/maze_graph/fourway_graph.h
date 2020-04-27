@@ -71,7 +71,8 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   using Base::edgeWithHypothesis;
   using Base::wallPositionOnEdge;
 
-  static constexpr TNodeId kSize = NodeCount;
+  using Base::kInvalidNode;
+  using Base::kSize;
 
   explicit FourWayGraph(const Maze<W> &maze) : Base(maze) {}
   TCost distance(TNodeId id_from, TNodeId id_to) const override {
@@ -90,9 +91,10 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     return TCost(abs(static_cast<int>(as1.pos.x) - as2.pos.x) / 2 +
                  abs(static_cast<int>(as1.pos.y) - as2.pos.y) / 2);
   }
-  std::vector<std::pair<TNodeId, TCost>> neighborEdges(
-      TNodeId id) const override {
-    std::vector<std::pair<TNodeId, TCost>> v;
+  std::vector<EdgeTo<TNodeId, TCost>> neighborEdges(
+      TNodeId id,
+      std::unordered_map<Position, bool> wall_overrides = {}) const override {
+    std::vector<EdgeTo<TNodeId, TCost>> v;
     if (id >= kSize) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
 #if 0
@@ -106,40 +108,50 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       if (id + d < 0 || id + d >= kSize) {
         continue;
       }
-      std::pair<bool, TNodeId> e = edge(id, TNodeId(id + d));
-      if (e.first) {
-        v.push_back({TNodeId(id + d), e.second});
+      TNodeId id_to = TNodeId(id + d);
+      Position p = wallPositionOnEdge(id, id_to);
+      if (p == kInvalidAgentState.pos) {
+        continue;
+      }
+      if (!kExplore && (!Base::maze.isCheckedWall(p))) {
+        continue;
+      }
+      bool wall_state;
+      auto it = wall_overrides.find(p);
+      if (it == wall_overrides.end()) {
+        wall_state = Base::maze.isSetWall(p);
+      } else {
+        wall_state = it->second;
+      }
+      auto e = edgeWithHypothesis(id, id_to, wall_state);
+      if (e.id != kInvalidNode) {
+        v.push_back(e);
       }
     }
     return v;
   }
-  std::vector<std::tuple<TNodeId, TNodeId, TCost>> affectedEdges(
-      const std::vector<Position> &positions) const override {
-    std::vector<std::tuple<TNodeId, TNodeId, TCost>> edges;
-    for (auto p : positions) {
-      if (p.type() != PositionType::kWall) {
-        continue;
-      }
-      if (p.x % 2 == 0 && p.y % 2 == 1) {
-        TNodeId id_from =
-            nodeIdByAgentState({p + Difference{0, -1}, kNoDirection, 0});
-        if (id_from == Base::kInvalidNode) {
-          continue;
-        }
+  std::vector<EdgeEnds<TNodeId>> affectedEdges(
+      const Position position) const override {
+    std::vector<EdgeEnds<TNodeId>> edges;
+    if (position.type() != PositionType::kWall) {
+      return edges;
+    }
+    if (position.x % 2 == 0 && position.y % 2 == 1) {
+      TNodeId id_from =
+          nodeIdByAgentState({position + Difference{0, -1}, kNoDirection, 0});
+      if (id_from != Base::kInvalidNode) {
         auto e = edge(id_from, TNodeId(id_from + W));
-        if (e.first) {
-          edges.push_back({id_from, TNodeId(id_from + W), e.second});
+        if (e.id != kInvalidNode) {
+          edges.push_back({id_from, TNodeId(id_from + W)});
         }
-
-      } else /* p.x % 2 == 1 && p.y % 2 == 0 */ {
-        TNodeId id_from =
-            nodeIdByAgentState({p + Difference{-1, 0}, kNoDirection, 0});
-        if (id_from == Base::kInvalidNode) {
-          continue;
-        }
+      }
+    } else /* position.x % 2 == 1 && position.y % 2 == 0 */ {
+      TNodeId id_from =
+          nodeIdByAgentState({position + Difference{-1, 0}, kNoDirection, 0});
+      if (id_from != Base::kInvalidNode) {
         auto e = edge(id_from, TNodeId(id_from + 1));
-        if (e.first) {
-          edges.push_back({id_from, TNodeId(id_from + 1), e.second});
+        if (e.id != kInvalidNode) {
+          edges.push_back({id_from, TNodeId(id_from + 1)});
         }
       }
     }
@@ -153,7 +165,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     Difference d = to.pos - from.pos;
     return from.pos + Difference({int8_t(d.x / 2), int8_t(d.y / 2)});
   }
-  std::pair<bool, TCost> edgeWithHypothesis(AgentState as1, AgentState as2,
+  EdgeTo<TNodeId, TCost> edgeWithHypothesis(AgentState as1, AgentState as2,
                                             bool blocked) const override {
     if (as1 == kInvalidAgentState ||
         as2 == kInvalidAgentState) /* [[unlikely]] */ {
@@ -161,7 +173,7 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
 #endif
-      return {false, Base::kInf};
+      return {kInvalidNode, Base::kInf};
     }
 
     TCost maxcost = 0;
@@ -172,28 +184,25 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
          abs(static_cast<int>(as1.pos.y) - as2.pos.y) == 0) ||
         (abs(static_cast<int>(as1.pos.y) - as2.pos.y) == 2 &&
          abs(static_cast<int>(as1.pos.x) - as2.pos.x) == 0)) {
-      return {true, std::max(TCost(1), maxcost)};
+      return {nodeIdByAgentState(as2), std::max(TCost(1), maxcost)};
     }
-    return {false, Base::kInf};
+    return {kInvalidNode, Base::kInf};
   }
-  std::pair<bool, TCost> edge(AgentState as1, AgentState as2) const override {
+  EdgeTo<TNodeId, TCost> edge(AgentState as1, AgentState as2) const override {
     if (as1 == kInvalidAgentState ||
         as2 == kInvalidAgentState) /* [[unlikely]] */ {
 #if 0
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
 #endif
-      return {false, Base::kInf};
+      return {kInvalidNode, Base::kInf};
     }
-    Difference d = as2.pos - as1.pos;
-    if (d.x != 0 && d.y != 0) {
-      return {false, Base::kInf};
+    Position p = wallPositionOnEdge(as1, as2);
+    if (p == kInvalidAgentState.pos) {
+      return {kInvalidNode, Base::kInf};
     }
-    d.x /= 2;
-    d.y /= 2;
-    Position p = as1.pos + d;
     if (!kExplore && !Base::maze.isCheckedWall(p)) {
-      return {false, Base::kInf};
+      return {kInvalidNode, Base::kInf};
     }
     return edgeWithHypothesis(as1, as2, Base::maze.isSetWall(p));
   }
@@ -210,11 +219,11 @@ class FourWayGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     }
     return TNodeId(as.pos.x / 2 + as.pos.y / 2 * W);
   }
-  std::vector<TNodeId> nodeIdsByPosition(Position p) const override {
-    std::vector<TNodeId> ids;
+  std::set<TNodeId> nodeIdsByPosition(Position p) const override {
+    std::set<TNodeId> ids;
     TNodeId id = nodeIdByAgentState({p, kNoDirection, 0});
     if (id != Base::kInvalidNode) {
-      ids.push_back(id);
+      ids.insert(id);
     }
     return ids;
   }

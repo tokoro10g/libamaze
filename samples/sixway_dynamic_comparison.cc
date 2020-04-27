@@ -41,6 +41,7 @@
 #include "amaze/solver/astar.h"
 #include "amaze/solver/bfs.h"
 #include "amaze/solver/dstarlite.h"
+#include "amaze/solver/look_ahead.h"
 
 #define ENABLE_TURN_COST 0
 
@@ -143,8 +144,8 @@ int main(int argc, char *argv[]) {
          amaze::solver::SolverState::kInProgress) {
     // 現在のソルバの状態から，つぎにセンシングする壁の位置のリストを取得します．
     //
-    // Obtains a list of wall positions to sense next according to the current
-    // solver state.
+    // Obtains a list of wall positions to sense before the next step, according
+    // to the current solver state.
     //
     auto sense_positions = AH::currentSensePositions(solver_DSL);
     // センシング前のソルバの処理を行います．
@@ -161,7 +162,7 @@ int main(int argc, char *argv[]) {
     // AgentHelper::sense updates the wall information in the virtual maze based
     // on that acquired from the reference maze.
     //
-    auto changed_positions =
+    auto wall_overrides =
         AH::sense(virtual_maze, reference_maze, sense_positions);
     // センシング後のソルバの処理を行います．変更された壁の座標を渡して，つぎに取るべき行動を決定します．
     // ソルバの状態はこの処理で更新されます．
@@ -170,7 +171,7 @@ int main(int argc, char *argv[]) {
     // action according to the positions of changed walls. The solver state is
     // updated during this process.
     //
-    solver_DSL.postSense(changed_positions);
+    solver_DSL.postSense(wall_overrides);
     // ここでsolver.currentAgentState()を取得すると，つぎの状態が取得できます．
     //
     // The return value of solver.currentAgentState() here corresponds to the
@@ -200,9 +201,9 @@ int main(int argc, char *argv[]) {
          amaze::solver::SolverState::kInProgress) {
     auto sense_positions = AH2::currentSensePositions(solver_AS);
     solver_AS.preSense(sense_positions);
-    auto changed_positions =
+    auto wall_overrides =
         AH2::sense(virtual_maze, reference_maze, sense_positions);
-    solver_AS.postSense(changed_positions);
+    solver_AS.postSense(wall_overrides);
   }
   tend = high_resolution_clock::now();
   std::cout << "[A*] Time: "
@@ -227,9 +228,9 @@ int main(int argc, char *argv[]) {
          amaze::solver::SolverState::kInProgress) {
     auto sense_positions = AH3::currentSensePositions(solver_BFS);
     solver_BFS.preSense(sense_positions);
-    auto changed_positions =
+    auto wall_overrides =
         AH3::sense(virtual_maze, reference_maze, sense_positions);
-    solver_BFS.postSense(changed_positions);
+    solver_BFS.postSense(wall_overrides);
   }
   tend = high_resolution_clock::now();
   std::cout << "[BFS] Time: "

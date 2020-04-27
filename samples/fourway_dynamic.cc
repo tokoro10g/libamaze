@@ -40,6 +40,7 @@
 #include "amaze/solver/astar.h"
 #include "amaze/solver/bfs.h"
 #include "amaze/solver/dstarlite.h"
+#include "amaze/solver/look_ahead.h"
 
 void showUsage(std::string name) {
   std::cout << "usage:" << std::endl;
@@ -137,8 +138,8 @@ int main(int argc, char *argv[]) {
     std::cout << solver.currentAgentState() << std::endl;
     // 現在のソルバの状態から，つぎにセンシングする壁の位置のリストを取得します．
     //
-    // Obtains a list of wall positions to sense next according to the current
-    // solver state.
+    // Obtains a list of wall positions to sense before the next step, according
+    // to the current solver state.
     //
     auto sense_positions = AH::currentSensePositions(solver);
     // センシング前のソルバの処理を行います．
@@ -155,7 +156,7 @@ int main(int argc, char *argv[]) {
     // AgentHelper::sense updates the wall information in the virtual maze based
     // on that acquired from the reference maze.
     //
-    auto changed_positions =
+    auto wall_overrides =
         AH::sense(virtual_maze, reference_maze, sense_positions);
     // センシング後のソルバの処理を行います．変更された壁の座標を渡して，つぎに取るべき行動を決定します．
     // ソルバの状態はこの処理で更新されます．
@@ -164,15 +165,15 @@ int main(int argc, char *argv[]) {
     // action according to the positions of changed walls. The solver state is
     // updated during this process.
     //
-    solver.postSense(changed_positions);
+    solver.postSense(wall_overrides);
     // ここでsolver.currentAgentState()を取得すると，つぎの状態が取得できます．
     //
     // The return value of solver.currentAgentState() here corresponds to the
     // next agent state.
     //
   }
-  auto changed_positions = AH::sense(virtual_maze, reference_maze,
-                                     AH::currentSensePositions(solver));
+  auto wall_overrides = AH::sense(virtual_maze, reference_maze,
+                                  AH::currentSensePositions(solver));
   std::cout << solver.currentAgentState() << std::endl;
 
   /*
@@ -200,9 +201,9 @@ int main(int argc, char *argv[]) {
     std::cout << solver.currentAgentState() << std::endl;
     auto sense_positions = AH::currentSensePositions(solver);
     solver.preSense(sense_positions);
-    auto changed_positions =
+    auto wall_overrides =
         AH::sense(virtual_maze, reference_maze, sense_positions);
-    solver.postSense(changed_positions);
+    solver.postSense(wall_overrides);
   }
   std::cout << solver.currentAgentState() << std::endl;
   std::cout << std::endl;
