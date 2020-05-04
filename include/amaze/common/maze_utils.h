@@ -73,18 +73,18 @@ bool loadMazeFromStream(Maze<W> &maze, std::istream &is) {
       if (cell_char == 'G') {
         if (std::find(maze.goals.begin(), maze.goals.end(), p) ==
             maze.goals.end()) {
-          maze.goals.push_back(p);
+          maze.goals.insert(p);
           if (y != w - 1 && char_data[ch_y - 2][ch_x] == 'G') {
-            maze.goals.push_back(p + Difference({0, 1}));
+            maze.goals.insert(p + Difference({0, 1}));
           }
           if (y != 0 && char_data[ch_y + 2][ch_x] == 'G') {
-            maze.goals.push_back(p + Difference({0, -1}));
+            maze.goals.insert(p + Difference({0, -1}));
           }
           if (x != w - 1 && char_data[ch_y][ch_x + 4] == 'G') {
-            maze.goals.push_back(p + Difference({1, 0}));
+            maze.goals.insert(p + Difference({1, 0}));
           }
           if (x != 0 && char_data[ch_y][ch_x - 4] == 'G') {
-            maze.goals.push_back(p + Difference({-1, 0}));
+            maze.goals.insert(p + Difference({-1, 0}));
           }
         }
       } else if (cell_char == 'S') {
@@ -137,7 +137,7 @@ template <uint8_t W>
 void loadEmptyMaze(int x, int y, Maze<W> &maze) {
   maze.resetData();
   maze.goals.clear();
-  maze.goals.push_back({uint8_t(x), uint8_t(y)});
+  maze.goals.insert({uint8_t(x), uint8_t(y)});
 }
 template <uint8_t W>
 void loadEmptyMaze(Maze<W> &maze) {

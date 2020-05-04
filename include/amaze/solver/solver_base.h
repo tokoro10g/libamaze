@@ -67,9 +67,6 @@ class SolverBase {
   /// \~japanese 終点ノードのID
   /// \~english Destination node ID
   std::set<TNodeId> ids_destination;
-  /// \~japanese ソルバの結果
-  /// \~english Solver result
-  SolverState state;
 
  public:
   using NodeId = TNodeId;
@@ -79,23 +76,25 @@ class SolverBase {
       : mg(mg),
         id_current(mg->startNodeId()),
         id_last(id_current),
-        ids_destination(),
-        state(SolverState::kInProgress) {}
+        ids_destination() {}
+
   SolverBase(const SolverBase &s) = default;
+
   SolverBase &operator=(const SolverBase &other) {
     if (this != &other) {
       this->mg = other.mg;
     }
     return *this;
   }
+
   virtual ~SolverBase() = default;
 
-  static constexpr uint8_t kWidth = W;
+  static constexpr uint8_t kMaxWidth = W;
   static constexpr NodeId kNodeCount = NodeCount;
 
   /// \~japanese 無限コストとみなす値
   /// \~english Cost value assumed to be infinity
-  static constexpr Cost kInf = MazeGraph::kInf;
+  static constexpr Cost kMaxCost = MazeGraph::kMaxCost;
 
   /// \~japanese
   /// 迷路のグラフ表現を置き換えます．
@@ -123,6 +122,7 @@ class SolverBase {
       return mg->agentStateByEdge(lastNodeId(), currentNodeId());
     }
   }
+
   /// \~japanese
   /// 終点のノードのエージェント状態を返します．
   /// \returns 終点のエージェント状態のリスト
@@ -137,6 +137,7 @@ class SolverBase {
     }
     return states;
   }
+
   /// \~japanese
   /// 現在のノードのIDを返します．
   /// \returns 現在のID
@@ -145,6 +146,7 @@ class SolverBase {
   /// Returns the ID of the current node.
   /// \returns current ID.
   virtual NodeId currentNodeId() const = 0;
+
   /// \~japanese
   /// 1ステップ前のノードのIDを返します．
   /// \returns 1ステップ前のID
@@ -153,6 +155,7 @@ class SolverBase {
   /// Returns the ID of the last node.
   /// \returns last ID.
   virtual NodeId lastNodeId() const = 0;
+
   /// \~japanese
   /// 終点ノードのIDを返します．
   /// \returns 終点のIDのリスト
@@ -169,7 +172,7 @@ class SolverBase {
   /// \~english
   /// Returns the solver result.
   /// \returns Solver result
-  inline SolverState currentSolverState() const { return state; }
+  virtual SolverState currentSolverState() const = 0;
 
   /// \~japanese
   /// 最もコストの低い隣接ノードのIDとコストを返します．
@@ -180,7 +183,9 @@ class SolverBase {
   /// Returns the ID and cost of the lowest-cost neighbor.
   /// \param[in] id Node ID
   /// \returns ID and cost of the neighbor node.
-  virtual std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const = 0;
+  virtual std::pair<NodeId, Cost> lowestNeighbor(
+      NodeId id,
+      std::unordered_map<Position, bool> wall_overrides = {}) const = 0;
 
   /// \~japanese
   /// 現在のグラフの情報から最短経路を構成します．
@@ -197,6 +202,7 @@ class SolverBase {
     s.insert(id_to);
     return reconstructPath(id_from, s);
   }
+
   /// \~japanese
   /// 現在のグラフの情報から最短経路を構成します．
   /// \param[in] id_from, ids_to 経路の始点と終点
@@ -209,6 +215,10 @@ class SolverBase {
   virtual std::vector<AgentState> reconstructPath(
       NodeId id_from, const std::set<NodeId> &ids_to) const = 0;
 
+  virtual void processBeforeReplanning(
+      const std::unordered_map<Position, bool> &wall_overrides,
+      const Position &last_key) = 0;
+
   /// \~japanese
   /// 壁センシング前の処理を行います．
   /// \param [in] sensed_positions センシングする壁等の位置
@@ -219,6 +229,7 @@ class SolverBase {
   /// sensed
   virtual void preSense(
       const std::unordered_set<Position> &sense_positions) = 0;
+
   /// \~japanese
   /// 壁センシング後の処理を行います．
   ///
@@ -236,6 +247,7 @@ class SolverBase {
   /// \~english
   /// Resets all the internal variables to the initial value.
   virtual void reset() = 0;
+
   /// \~japanese
   /// ソルバの内部状態を探索開始直前の状態に初期化します．
   ///
@@ -243,6 +255,7 @@ class SolverBase {
   /// Initializes internal variables to be ready for a new search from the
   /// start.
   virtual void initialize() = 0;
+
   /// \~japanese
   /// 終点を変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
   /// \param[in] ids 終点のノードIDのリスト
@@ -252,6 +265,7 @@ class SolverBase {
   /// new search originated from the current node. \param[in] ids List of node
   /// IDs at the destinations
   virtual void changeDestinations(const std::set<NodeId> &ids) = 0;
+
   /// \~japanese
   /// 終点を変更し，現在のノードを起点とした探索開始直前の状態に初期化します．
   /// \param[in] id 終点のノードID
@@ -266,6 +280,17 @@ class SolverBase {
     changeDestinations(s);
   }
 };
+
+struct AllAtOnceSolverBase {
+  static constexpr bool kIsIncremental = false;
+  virtual ~AllAtOnceSolverBase() = default;
+};
+
+struct IncrementalSolverBase {
+  static constexpr bool kIsIncremental = true;
+  virtual ~IncrementalSolverBase() = default;
+};
+
 }  // namespace solver
 }  // namespace amaze
 #endif  // INCLUDE_AMAZE_SOLVER_SOLVER_BASE_H_

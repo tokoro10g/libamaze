@@ -41,6 +41,7 @@
 #include "amaze/solver/astar.h"
 #include "amaze/solver/bfs.h"
 #include "amaze/solver/dstarlite.h"
+#include "amaze/solver/look_ahead.h"
 
 #define ENABLE_TURN_COST 0
 
@@ -113,7 +114,8 @@ int main(int argc, char *argv[]) {
   // Passes the pointer of the graph to a D* Lite solver and initializes the
   // solver.
   //
-  auto solver = amaze::solver::DStarLite(&mg);
+  auto solver = amaze::solver::LookAhead<
+      amaze::solver::AStar<uint16_t, uint16_t, 32, 1984>>(&mg);
   solver.initialize();
   using AH = amaze::AgentHelper<decltype(mg), decltype(solver)>;
 
@@ -139,8 +141,12 @@ int main(int argc, char *argv[]) {
   //
   // Repeats until the solver arrives one of the goals.
   //
+#if 1
   while (solver.currentSolverState() ==
          amaze::solver::SolverState::kInProgress) {
+#else
+  for (int i = 0; i < 30; i++) {
+#endif
     std::cout << solver.currentAgentState() << std::endl;
     // 現在のソルバの状態から，つぎにセンシングする壁の位置のリストを取得します．
     //
@@ -181,6 +187,7 @@ int main(int argc, char *argv[]) {
   auto wall_overrides = AH::sense(virtual_maze, reference_maze,
                                   AH::currentSensePositions(solver));
   std::cout << solver.currentAgentState() << std::endl;
+  return 0;
 
   /*
    * 帰りの探索 Exploration back to the start
@@ -214,17 +221,17 @@ int main(int argc, char *argv[]) {
   std::cout << solver.currentAgentState() << std::endl;
   std::cout << std::endl;
 
-  /*
-   * 二次走行 Second trial
-   */
+/*
+ * 二次走行 Second trial
+ */
 
-  // 仮想迷路をグラフで表現します．
-  // FourWayGraph<false>クラスで，未知の壁を通らないようにエッジを張るグラフを考えます．
-  //
-  // Defines a graph representation of the virtual maze with
-  // FourWayGraph<false>. Edges are formed so that the robot does not go
-  // through unobserved wall positions.
-  //
+// 仮想迷路をグラフで表現します．
+// FourWayGraph<false>クラスで，未知の壁を通らないようにエッジを張るグラフを考えます．
+//
+// Defines a graph representation of the virtual maze with
+// FourWayGraph<false>. Edges are formed so that the robot does not go
+// through unobserved wall positions.
+//
 #if ENABLE_TURN_COST
   amaze::maze_graph::SixWayTurnCostGraph<false> mg_fast_run(virtual_maze);
 #else

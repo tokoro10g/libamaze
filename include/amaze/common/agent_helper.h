@@ -73,12 +73,12 @@ class MazeGraphFeatureBase {
     return positions;
   }
   static std::unordered_map<Position, bool> sense(
-      Maze<TMazeGraph::kWidth> &virtual_maze,
-      const Maze<TMazeGraph::kWidth> &reference_maze,
+      Maze<TMazeGraph::kMaxWidth> &virtual_maze,
+      const Maze<TMazeGraph::kMaxWidth> &reference_maze,
       const std::unordered_set<Position> &sense_positions) {
     std::unordered_map<Position, bool> wall_overrides;
     for (auto p : sense_positions) {
-      if (p.x > 2 * TMazeGraph::kWidth || p.y > 2 * TMazeGraph::kWidth) {
+      if (p.x > 2 * TMazeGraph::kMaxWidth || p.y > 2 * TMazeGraph::kMaxWidth) {
         continue;
       }
       // TODO(tokoro10g): consider cases where the wall information acquired

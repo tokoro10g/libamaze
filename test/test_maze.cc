@@ -51,7 +51,7 @@ TEST(MazeLoadTest, LoadsFromStringStream1) {
   printMaze(maze);
   EXPECT_EQ(16, maze.getWidth());
   EXPECT_EQ(Position({0, 0}), maze.start);
-  EXPECT_EQ(Position({14, 14}), maze.goals[0]);
+  EXPECT_EQ(maze.goals.count(Position({14, 14})), 1);
   EXPECT_EQ(true, maze.isSetWall({1, 0}));
 }
 
@@ -62,7 +62,7 @@ TEST(MazeLoadTest, LoadsFromStringStream2) {
   printMaze(maze);
   EXPECT_EQ(32, maze.getWidth());
   EXPECT_EQ(Position({0, 0}), maze.start);
-  EXPECT_EQ(Position({38, 40}), maze.goals[0]);
+  EXPECT_EQ(maze.goals.count(Position({38, 40})), 1);
   EXPECT_EQ(true, maze.isSetWall({1, 0}));
 }
 
@@ -70,7 +70,7 @@ TEST(MazeLoadTest, LoadsEmptyMaze) {
   Maze<16> maze;
   loadEmptyMaze(14, 14, maze);
   EXPECT_EQ(Position({0, 0}), maze.start);
-  EXPECT_EQ(Position({14, 14}), maze.goals[0]);
+  EXPECT_EQ(maze.goals.count(Position({14, 14})), 1);
   for (int y = 0; y < 16 * 2 - 1; y++) {
     for (int x = !(y % 2); x < 16 * 2 - 1; x += 2) {
       EXPECT_EQ(false, maze.isSetWall({uint8_t(x), uint8_t(y)}));

@@ -27,6 +27,7 @@
 #include <limits>
 #include <ostream>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -151,8 +152,51 @@ static constexpr Direction kWest = {0x8};
 
 static constexpr AgentState kInvalidAgentState = {
     {uint8_t(-1), uint8_t(-1)}, kNoDirection, 0};
+static constexpr Position kInvalidPosition = {uint8_t(-1), uint8_t(-1)};
 
 static constexpr uint8_t kDefaultMazeWidth = 32;
+}  // namespace amaze
+
+namespace std {
+
+template <>
+struct hash<amaze::Direction> {
+  std::size_t operator()(amaze::Direction const &dir) const noexcept {
+    return dir.half;
+  }
+  static constexpr size_t hash_max = 15;
+};
+
+template <>
+struct hash<amaze::Difference> {
+  std::size_t operator()(amaze::Difference const &diff) const noexcept {
+    return static_cast<uint8_t>(diff.y) * 256 + static_cast<uint8_t>(diff.x);
+  }
+  static constexpr size_t hash_max = 65535;
+};
+
+template <>
+struct hash<amaze::Position> {
+  std::size_t operator()(amaze::Position const &pos) const noexcept {
+    return pos.y * 256 + pos.x;
+  }
+  static constexpr size_t hash_max = 65535;
+};
+
+template <>
+struct hash<amaze::AgentState> {
+  std::size_t operator()(amaze::AgentState const &as) const noexcept {
+    return hash<amaze::Position>()(as.pos) +
+           hash<amaze::Direction>()(as.dir) *
+               (hash<amaze::Position>::hash_max + 1) +
+           as.attribute * (hash<amaze::Position>::hash_max + 1) *
+               (hash<amaze::Direction>::hash_max + 1);
+  }
+};
+
+}  // namespace std
+
+namespace amaze {
 
 /// \~japanese
 /// 迷路クラス．
@@ -165,69 +209,7 @@ static constexpr uint8_t kDefaultMazeWidth = 32;
 /// \tparam W Maze width in the number of cells
 template <uint8_t W = kDefaultMazeWidth>
 class Maze {
- private:
-  using MazeData = std::bitset<(2 * W - 1) * (2 * W - 1)>;
-
-  /// \~japanese 壁データ
-  /// \~english Wall data
-  MazeData maze_data;
-  /// \~japanese 壁チェックデータ
-  /// \~english Checked wall data
-  MazeData check_data;
-
-  /// \~japanese
-  /// 迷路データを操作する内部関数．
-  ///
-  /// \param[in] p 位置
-  /// \param[in] is_checked 壁チェックデータを操作するとき \p true
-  /// \param[in] val 変更後の値
-  ///
-  /// \~english
-  /// Internal function which manipulates maze data.
-  ///
-  /// \param[in] p Position
-  /// \param[in] is_checked \p true if modifying wall check data
-  /// \param[in] val New value
-  void setInternal(Position p, bool is_checked, bool val) {
-    if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
-        p.y >= 2 * W - 1) /* [[unlikely]] */ {
-      // not a wall
-      return;
-    }
-
-    uint16_t idx = uint16_t(p.y * (2 * W - 1) + p.x);
-    if (is_checked) {
-      check_data[idx] = val;
-    } else {
-      maze_data[idx] = val;
-    }
-  }
-
-  /// \~japanese
-  /// 迷路データを得る内部関数．
-  ///
-  /// \param[in] p 位置
-  /// \param[in] is_checked 壁チェックデータを得るとき \p true
-  ///
-  /// \~english
-  /// Internal function which queries maze data.
-  ///
-  /// \param[in] p Position
-  /// \param[in] is_checked \p true if querying wall check data
-  bool isSetInternal(Position p, bool is_checked) const {
-    if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
-        p.y >= 2 * W - 1) /* [[unlikely]] */ {
-      // not a wall
-      return false;
-    }
-
-    uint16_t idx = uint16_t(p.y * (2 * W - 1) + p.x);
-    if (is_checked) {
-      return check_data[idx];
-    } else {
-      return maze_data[idx];
-    }
-  }
+  static_assert(W <= 128);
 
  public:
   /// \~japanese スタート位置
@@ -235,12 +217,12 @@ class Maze {
   Position start;
   /// \~japanese ゴール位置
   /// \~english Goal positions
-  std::vector<Position> goals;
+  std::unordered_set<Position> goals;
   /// \~japanese 迷路の最大幅
   /// \~english Maximum width of the maze
-  static constexpr uint8_t kWidth = W;
+  static constexpr uint8_t kMaxWidth = W;
 
-  Maze() : maze_data(0), check_data(0), start({0, 0}), goals() {}
+  Maze() : start({0, 0}), goals(), maze_data(0), check_data(0) {}
 
   /// \~japanese
   /// 迷路データをリセットします．
@@ -332,47 +314,72 @@ class Maze {
   /// \param[in] p Position
   /// \returns \p true if the wall is checked.
   bool isCheckedWall(Position p) const { return isSetInternal(p, true); }
+
+ private:
+  using MazeData = std::bitset<(2 * W - 1) * (2 * W - 1)>;
+
+  /// \~japanese 壁データ
+  /// \~english Wall data
+  MazeData maze_data;
+  /// \~japanese 壁チェックデータ
+  /// \~english Checked wall data
+  MazeData check_data;
+
+  /// \~japanese
+  /// 迷路データを操作する内部関数．
+  ///
+  /// \param[in] p 位置
+  /// \param[in] is_checked 壁チェックデータを操作するとき \p true
+  /// \param[in] val 変更後の値
+  ///
+  /// \~english
+  /// Internal function which manipulates maze data.
+  ///
+  /// \param[in] p Position
+  /// \param[in] is_checked \p true if modifying wall check data
+  /// \param[in] val New value
+  void setInternal(Position p, bool is_checked, bool val) {
+    if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
+        p.y >= 2 * W - 1) /* [[unlikely]] */ {
+      // not a wall
+      return;
+    }
+
+    uint16_t idx = uint16_t(p.y * (2 * W - 1) + p.x);
+    if (is_checked) {
+      check_data[idx] = val;
+    } else {
+      maze_data[idx] = val;
+    }
+  }
+
+  /// \~japanese
+  /// 迷路データを得る内部関数．
+  ///
+  /// \param[in] p 位置
+  /// \param[in] is_checked 壁チェックデータを得るとき \p true
+  ///
+  /// \~english
+  /// Internal function which queries maze data.
+  ///
+  /// \param[in] p Position
+  /// \param[in] is_checked \p true if querying wall check data
+  bool isSetInternal(Position p, bool is_checked) const {
+    if (p.type() != PositionType::kWall || p.x >= 2 * W - 1 ||
+        p.y >= 2 * W - 1) /* [[unlikely]] */ {
+      // not a wall
+      return false;
+    }
+
+    uint16_t idx = uint16_t(p.y * (2 * W - 1) + p.x);
+    if (is_checked) {
+      return check_data[idx];
+    } else {
+      return maze_data[idx];
+    }
+  }
 };
 
 }  // namespace amaze
-
-namespace std {
-
-template <>
-struct hash<amaze::Direction> {
-  std::size_t operator()(amaze::Direction const &dir) const noexcept {
-    return dir.half;
-  }
-  static constexpr size_t hash_max = 15;
-};
-
-template <>
-struct hash<amaze::Difference> {
-  std::size_t operator()(amaze::Difference const &diff) const noexcept {
-    return static_cast<uint8_t>(diff.y) * 256 + static_cast<uint8_t>(diff.x);
-  }
-  static constexpr size_t hash_max = 65535;
-};
-
-template <>
-struct hash<amaze::Position> {
-  std::size_t operator()(amaze::Position const &pos) const noexcept {
-    return pos.y * 256 + pos.x;
-  }
-  static constexpr size_t hash_max = 65535;
-};
-
-template <>
-struct hash<amaze::AgentState> {
-  std::size_t operator()(amaze::AgentState const &as) const noexcept {
-    return hash<amaze::Position>()(as.pos) +
-           hash<amaze::Direction>()(as.dir) *
-               (hash<amaze::Position>::hash_max + 1) +
-           as.attribute * (hash<amaze::Position>::hash_max + 1) *
-               (hash<amaze::Direction>::hash_max + 1);
-  }
-};
-
-}  // namespace std
 
 #endif  // INCLUDE_AMAZE_COMMON_COMMON_TYPES_H_

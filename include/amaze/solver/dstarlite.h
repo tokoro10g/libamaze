@@ -50,13 +50,18 @@ namespace solver {
 /// \~
 /// Sven Koenig and Maxim Likhachev, "D* Lite", 2002.
 template <typename TCost, typename TNodeId, uint8_t W, TNodeId NodeCount>
-class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
+class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount>,
+                  public IncrementalSolverBase {
  public:
   using MazeGraph = maze_graph::MazeGraphBase<TCost, TNodeId, W, NodeCount>;
   using Base = SolverBase<TCost, TNodeId, W, NodeCount>;
   using NodeId = TNodeId;
   using Cost = TCost;
   using HeapKey = std::pair<Cost, Cost>;
+
+  using Base::changeDestinations;
+  using Base::kMaxCost;
+  using Base::reconstructPath;
 
   /// \~japanese
   /// ヒープ内のキー値のコンパレータ構造体．
@@ -76,36 +81,6 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     }
   };
 
- protected:
-  /// \~japanese 現在のノードのID
-  /// \~english Current node ID
-  NodeId id_current;
-  /// \~japanese 一手前のノードのID
-  /// \~english Last node ID
-  NodeId id_last;
-  NodeId id_last_modified;
-  /// \~japanese 終点ノードのID
-  /// \~english Destination node ID
-  std::set<NodeId> ids_destination;
-
-  /// Key modifier
-  Cost key_modifier;
-  /// g value
-  std::array<Cost, NodeCount> g;
-  /// rhs value
-  std::array<Cost, NodeCount> rhs;
-
-  /// Open list
-  std::set<std::pair<HeapKey, NodeId>, KeyCompare> open_list;
-  /// \~japanese Open listにノードが入っているかどうかのフラグ
-  /// \~english Flags whether nodes are in the open list
-  std::bitset<NodeCount> in_open_list;
-
- public:
-  using Base::changeDestinations;
-  using Base::kInf;
-  using Base::reconstructPath;
-
   explicit DStarLite(const MazeGraph *mg)
       : SolverBase<TCost, TNodeId, W, NodeCount>(mg),
         id_current(mg->startNodeId()),
@@ -118,9 +93,10 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
         open_list(),
         in_open_list(0) {
     ids_destination = mg->goalNodeIds();
-    g.fill(kInf);
-    rhs.fill(kInf);
+    g.fill(kMaxCost);
+    rhs.fill(kMaxCost);
   }
+
   /// \~japanese
   /// ヒープ内の要素を更新します．
   ///
@@ -144,6 +120,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     open_list.erase(it);
     open_list.insert({k, id});
   }
+
   /// \~japanese
   /// ノードに関するデータを更新します．
   ///
@@ -223,13 +200,13 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
         }
       } else {
         Cost gold = g[uid];
-        g[uid] = kInf;
+        g[uid] = kMaxCost;
         auto v = Base::mg->neighborEdges(uid, wall_overrides);
         v.push_back({uid, 0});
         for (auto &[sid, scost] : v) {
           if (rhs[sid] == satSum(scost, gold)) {
             if (rhs[sid] != 0) {
-              Cost mincost = kInf;
+              Cost mincost = kMaxCost;
               for (auto &[spid, spcost] :
                    Base::mg->neighborEdges(sid, wall_overrides)) {
                 mincost = std::min(mincost, satSum(spcost, g[spid]));
@@ -252,6 +229,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
               << std::endl;
 #endif
   }
+
   /// \~japanese
   /// ヒープに用いるキー値を計算します．
   ///
@@ -263,29 +241,53 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
   /// \param[in] id Node ID
   HeapKey calculateKey(NodeId id) const {
     if (id > NodeCount) /* [[unlikely]] */ {
-      return {kInf, kInf};
+      return {kMaxCost, kMaxCost};
     }
     return {satSum(satSum(std::min(g[id], rhs[id]),
                           Base::mg->distance(id_current, id)),
                    key_modifier),
             std::min(g[id], rhs[id])};
   }
+
   NodeId currentNodeId() const override { return id_current; }
+
   NodeId lastNodeId() const override { return id_last; }
+
   std::set<NodeId> destinationNodeIds() const override {
     return ids_destination;
   }
 
-  std::pair<NodeId, Cost> lowestNeighbor(NodeId id) const {
+  SolverState currentSolverState() const override {
+    if (rhs[id_current] == 0) {
+      return SolverState::kReached;
+    }
+    if (rhs[id_current] == kMaxCost) {
+      return SolverState::kFailed;
+    }
+    return SolverState::kInProgress;
+  }
+
+  std::pair<NodeId, Cost> lowestNeighbor(
+      NodeId id, std::unordered_map<Position, bool> wall_overrides = {}) const {
     NodeId argmin = id;
-    Cost mincost = kInf;
-    for (auto &[spid, spcost] : Base::mg->neighborEdges(id)) {
+    Cost mincost = kMaxCost;
+#define AMAZE_DEBUG 0
+#if AMAZE_DEBUG
+    std::cout << "neighbors of " << id << ": ";
+#endif
+    for (auto &[spid, spcost] : Base::mg->neighborEdges(id, wall_overrides)) {
       Cost cost = satSum(spcost, g[spid]);
+#if AMAZE_DEBUG
+      std::cout << spid << "(" << cost << "), ";
+#endif
       if (mincost >= cost) {
         mincost = cost;
         argmin = spid;
       }
     }
+#if AMAZE_DEBUG
+    std::cout << std::endl;
+#endif
     return {argmin, mincost};
   }
 
@@ -297,7 +299,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     NodeId id_last_on_path = id_from;
     while (ids_to.find(id_current_on_path) == ids_to.end()) {
       auto [nid, ncost] = lowestNeighbor(id_current_on_path);
-      if (ncost == kInf) /* [[unlikely]] */ {
+      if (ncost == kMaxCost) /* [[unlikely]] */ {
         return std::vector<AgentState>();
       }
       id_last_on_path = id_current_on_path;
@@ -308,19 +310,76 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     return path;
   }
 
+  void processBeforeReplanning(
+      const std::unordered_map<Position, bool> &wall_overrides [[maybe_unused]],
+      const Position &last_key [[maybe_unused]]) override {
+    auto it = wall_overrides.find(last_key);
+    if (it == wall_overrides.end()) {
+      return;
+    }
+
+    key_modifier =
+        satSum(key_modifier, Base::mg->distance(id_last_modified, id_current));
+    id_last_modified = id_current;
+
+    Position position = it->first;
+    bool wall_state = it->second;
+
+    for (auto &[uid, vid] : Base::mg->affectedEdges(position)) {
+      Cost cold = Base::mg->edgeWithHypothesis(uid, vid, !wall_state).cost;
+      Cost cnew = Base::mg->edgeWithHypothesis(uid, vid, wall_state).cost;
+      if (cold > cnew) /* [[unlikely]] */ {
+        if (rhs[uid] != 0) {
+          rhs[uid] = std::min(rhs[uid], satSum(cnew, g[vid]));
+        }
+      } else if (rhs[uid] == satSum(cold, g[vid])) {
+        if (rhs[uid] != 0) {
+          Cost mincost = kMaxCost;
+          for (auto &[spid, spcost] :
+               Base::mg->neighborEdges(uid, wall_overrides)) {
+            mincost = std::min(mincost, satSum(spcost, g[spid]));
+          }
+          rhs[uid] = mincost;
+        }
+      }
+      updateNode(uid);
+      if (cold > cnew) /* [[unlikely]] */ {
+        if (rhs[vid] != 0) {
+          rhs[vid] = std::min(rhs[vid], satSum(cnew, g[uid]));
+        }
+      } else if (rhs[vid] == satSum(cold, g[uid])) {
+        if (rhs[vid] != 0) {
+          Cost mincost = kMaxCost;
+          for (auto &[spid, spcost] :
+               Base::mg->neighborEdges(vid, wall_overrides)) {
+            mincost = std::min(mincost, satSum(spcost, g[spid]));
+          }
+          rhs[vid] = mincost;
+        }
+      }
+      updateNode(vid);
+    }
+  }
+
+  void processAfterReplanning(
+      const std::unordered_map<Position, bool> &wall_overrides) {
+    for (const auto &[key, value] : wall_overrides) {
+      processBeforeReplanning(wall_overrides, key);
+    }
+  }
+
   void preSense(const std::unordered_set<Position> &sense_positions
                 [[maybe_unused]]) override {}
+
   void postSense(
       const std::unordered_map<Position, bool> &wall_overrides) override {
-    if (rhs[id_current] == 0) {
-      Base::state = SolverState::kReached;
+    if (currentSolverState() == SolverState::kReached) {
 #if 0
       std::cout << "Reached the destination" << std::endl;
 #endif
       return;
     }
-    if (rhs[id_current] == kInf) /* [[unlikely]] */ {
-      Base::state = SolverState::kFailed;
+    if (currentSolverState() == SolverState::kFailed) /* [[unlikely]] */ {
 #if 0
       std::cerr << "No route" << std::endl;
 #endif
@@ -328,74 +387,31 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     }
 
     if (!wall_overrides.empty()) {
-      key_modifier = satSum(key_modifier,
-                            Base::mg->distance(id_last_modified, id_current));
-      id_last_modified = id_current;
-      std::unordered_set<Position> changed_positions;
-      for (auto &[position, wall_state] : wall_overrides) {
-        changed_positions.insert(position);
-      }
-      for (auto &[position, wall_state] : wall_overrides) {
-        for (auto &[uid, vid] : Base::mg->affectedEdges(position)) {
-          Cost cold = Base::mg->edgeWithHypothesis(uid, vid, !wall_state).cost;
-          if (cold > kInf) /* [[unlikely]] */ {
-            // TODO(tokoro10g): probably unnecessary
-            if (rhs[uid] != 0) {
-              rhs[uid] = std::min(rhs[uid], satSum(kInf, g[vid]));
-            }
-          } else if (rhs[uid] == satSum(cold, g[vid])) {
-            if (rhs[uid] != 0) {
-              Cost mincost = kInf;
-              for (auto &[spid, spcost] : Base::mg->neighborEdges(uid)) {
-                mincost = std::min(mincost, satSum(spcost, g[spid]));
-              }
-              rhs[uid] = mincost;
-            }
-          }
-          updateNode(uid);
-          if (cold > kInf) /* [[unlikely]] */ {
-            // TODO(tokoro10g): probably unnecessary
-            if (rhs[vid] != 0) {
-              rhs[vid] = std::min(rhs[vid], satSum(kInf, g[uid]));
-            }
-          } else if (rhs[vid] == satSum(cold, g[uid])) {
-            if (rhs[vid] != 0) {
-              Cost mincost = kInf;
-              for (auto &[spid, spcost] : Base::mg->neighborEdges(vid)) {
-                mincost = std::min(mincost, satSum(spcost, g[spid]));
-              }
-              rhs[vid] = mincost;
-            }
-          }
-          updateNode(vid);
-        }
-      }
+      processAfterReplanning(wall_overrides);
       computeShortestPath();
     }
     id_last = id_current;
     id_current = lowestNeighbor(id_current).first;
-    if (rhs[id_current] == 0) {
-      Base::state = SolverState::kReached;
-    }
   }
 
   void resetCostsAndLists() {
     key_modifier = Cost(0);
 
-    g.fill(kInf);
-    rhs.fill(kInf);
+    g.fill(kMaxCost);
+    rhs.fill(kMaxCost);
 
     open_list.clear();
     in_open_list.reset();
   }
+
   void reset() override {
     resetCostsAndLists();
-    Base::state = SolverState::kInProgress;
     id_current = Base::mg->startNodeId();
     ids_destination = Base::mg->goalNodeIds();
     id_last = id_current;
     id_last_modified = id_current;
   }
+
   void initialize() {
     reset();
     for (auto id : ids_destination) {
@@ -405,9 +421,9 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     }
     computeShortestPath();
   }
+
   void changeDestinations(const std::set<NodeId> &ids) override {
     resetCostsAndLists();
-    Base::state = SolverState::kInProgress;
     // id_current = id_current
     ids_destination = ids;
     id_last = id_current;
@@ -419,6 +435,31 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount> {
     }
     computeShortestPath();
   }
+
+ protected:
+  /// \~japanese 現在のノードのID
+  /// \~english Current node ID
+  NodeId id_current;
+  /// \~japanese 一手前のノードのID
+  /// \~english Last node ID
+  NodeId id_last;
+  NodeId id_last_modified;
+  /// \~japanese 終点ノードのID
+  /// \~english Destination node ID
+  std::set<NodeId> ids_destination;
+
+  /// Key modifier
+  Cost key_modifier;
+  /// g value
+  std::array<Cost, NodeCount> g;
+  /// rhs value
+  std::array<Cost, NodeCount> rhs;
+
+  /// Open list
+  std::set<std::pair<HeapKey, NodeId>, KeyCompare> open_list;
+  /// \~japanese Open listにノードが入っているかどうかのフラグ
+  /// \~english Flags whether nodes are in the open list
+  std::bitset<NodeCount> in_open_list;
 };
 
 }  // namespace solver

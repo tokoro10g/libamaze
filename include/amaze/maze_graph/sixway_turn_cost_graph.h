@@ -68,19 +68,20 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   using Base::edgeWithHypothesis;
   using Base::wallPositionOnEdge;
 
-  using Base::kInvalidNode;
-  using Base::kSize;
+  using Base::kInvalidNodeId;
+  using Base::kNodeCount;
 
   explicit SixWayTurnCostGraph(const Maze<W> &maze) : Base(maze) {}
+
   TCost distance(TNodeId id_from, TNodeId id_to) const override {
-    if (id_from >= kSize || id_to >= kSize) /* [[unlikely]] */ {
+    if (id_from >= kNodeCount || id_to >= kNodeCount) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
 #if 0
       std::cerr << "Out of bounds!!! (id_from: " << static_cast<int>(id_from)
                 << ", id_to: " << static_cast<int>(id_to) << ") " << __FILE__
                 << ":" << __LINE__ << std::endl;
 #endif
-      return Base::kInf;
+      return Base::kMaxCost;
     }
     if (id_from == id_to) {
       return 0;
@@ -96,7 +97,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       TNodeId id,
       std::unordered_map<Position, bool> wall_overrides = {}) const override {
     std::vector<EdgeTo<TNodeId, TCost>> v;
-    if (id >= kSize) /* [[unlikely]] */ {
+    if (id >= kNodeCount) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
 #if 0
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << __FILE__
@@ -129,25 +130,27 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
         wall_state = it->second;
       }
       auto e = edgeWithHypothesis(as, as_tmp, wall_state);
-      if (e.id != kInvalidNode) {
+      if (e.id != kInvalidNodeId) {
         v.push_back(e);
       }
     }
     auto as_tmp = as;
     as_tmp.attribute ^= 0x1;
     auto e = edge(as, as_tmp);
-    if (e.id != kInvalidNode) {
+    if (e.id != kInvalidNodeId) {
       v.push_back(e);
     }
     return v;
   }
 
   Position wallPositionOnEdge(AgentState from, AgentState to) const override {
-    if (!Base::edgeExist(from, to)) {
+    if (from == kInvalidAgentState ||
+        to == kInvalidAgentState) /* [[unlikely]] */ {
       return kInvalidAgentState.pos;
     }
     return to.pos;
   }
+
   EdgeTo<TNodeId, TCost> edgeWithHypothesis(AgentState as1, AgentState as2,
                                             bool blocked) const override {
     if (as1 == kInvalidAgentState ||
@@ -156,12 +159,12 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
 #endif
-      return {kInvalidNode, Base::kInf};
+      return {kInvalidNodeId, Base::kMaxCost};
     }
 
     TCost maxcost = 0;
     if (blocked) {
-      maxcost = Base::kInf;
+      maxcost = Base::kMaxCost;
     }
 
     auto id_as2 = nodeIdByAgentState(as2);
@@ -193,8 +196,9 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
         return {id_as2, std::max(TCost(1), maxcost)};
       }
     }
-    return {kInvalidNode, Base::kInf};
+    return {kInvalidNodeId, Base::kMaxCost};
   }
+
   EdgeTo<TNodeId, TCost> edge(AgentState as1, AgentState as2) const override {
     if (as1 == kInvalidAgentState ||
         as2 == kInvalidAgentState) /* [[unlikely]] */ {
@@ -202,46 +206,49 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
 #endif
-      return {kInvalidNode, Base::kInf};
+      return {kInvalidNodeId, Base::kMaxCost};
     }
     if (!kExplore && (!Base::maze.isCheckedWall(as1.pos) ||
                       !Base::maze.isCheckedWall(as2.pos))) {
-      return {kInvalidNode, Base::kInf};
+      return {kInvalidNodeId, Base::kMaxCost};
     }
     return edgeWithHypothesis(
         as1, as2,
         Base::maze.isSetWall(as1.pos) || Base::maze.isSetWall(as2.pos));
   }
+
   TNodeId nodeIdByAgentState(AgentState as) const override {
     if (as.pos.type() != PositionType::kWall || as.pos.x > 2 * W ||
         as.pos.y > 2 * W) /* [[unlikely]] */ {
       // cell, pillar, or out of range
-      return Base::kInvalidNode;
+      return Base::kInvalidNodeId;
     }
     if (as.pos.y % 2 == 0) {
       // East node
       return TNodeId(as.pos.y / 2 * (2 * W - 1) + as.pos.x / 2 +
-                     (as.attribute & 0x1) * kSize / 2);
+                     (as.attribute & 0x1) * kNodeCount / 2);
     } else {
       // North node
       return TNodeId(as.pos.y / 2 * (2 * W - 1) + as.pos.x / 2 + W - 1 +
-                     (as.attribute & 0x1) * kSize / 2);
+                     (as.attribute & 0x1) * kNodeCount / 2);
     }
   }
+
   std::set<TNodeId> nodeIdsByPosition(Position p) const override {
     std::set<TNodeId> ids;
     TNodeId id = nodeIdByAgentState({p, kNoDirection, 0});
-    if (id != Base::kInvalidNode) {
+    if (id != Base::kInvalidNodeId) {
       ids.insert(id);
     }
     id = nodeIdByAgentState({p, kNoDirection, 1});
-    if (id != Base::kInvalidNode) {
+    if (id != Base::kInvalidNodeId) {
       ids.insert(id);
     }
     return ids;
   }
+
   AgentState agentStateByNodeId(TNodeId id) const override {
-    if (id >= kSize) /* [[unlikely]] */ {
+    if (id >= kNodeCount) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
 #if 0
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
@@ -250,9 +257,9 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
       return kInvalidAgentState;
     }
     AgentState as;
-    as.attribute = id >= kSize / 2;
-    if (id >= kSize / 2) {
-      id = TNodeId(id - kSize / 2);
+    as.attribute = id >= kNodeCount / 2;
+    if (id >= kNodeCount / 2) {
+      id = TNodeId(id - kNodeCount / 2);
     }
     TNodeId tmp = TNodeId(id % (2 * W - 1));
     TNodeId tmp2 = TNodeId(id / (2 * W - 1));
@@ -267,6 +274,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     as.dir = kNoDirection;
     return as;
   }
+
   AgentState agentStateByEdge(TNodeId id_from, TNodeId id_to) const override {
     if (!Base::edgeExist(id_from, id_to)) {
       return kInvalidAgentState;
@@ -302,7 +310,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
         ret.dir = kEast;
       }
     }
-    ret.attribute = id_to >= kSize / 2;
+    ret.attribute = id_to >= kNodeCount / 2;
     return ret;
   }
 
@@ -328,15 +336,16 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     }
     return nodeIdByAgentState({p, kNoDirection, 0});
   }
+
   std::set<TNodeId> goalNodeIds() const override {
     std::set<TNodeId> ids;
     for (auto p : Base::maze.goals) {
       auto id = nodeIdByAgentState({p, kNoDirection, 0});
-      if (id != Base::kInvalidNode) {
+      if (id != Base::kInvalidNodeId) {
         ids.insert(id);
       }
       id = nodeIdByAgentState({p, kNoDirection, 1});
-      if (id != Base::kInvalidNode) {
+      if (id != Base::kInvalidNodeId) {
         ids.insert(id);
       }
     }

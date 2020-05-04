@@ -38,7 +38,8 @@ using namespace amaze::utils;       // NOLINT(build/namespaces)
 
 template <typename ConcreteMaze>
 using FourWayGraphFixture = AbstractMazeGraphFixture<
-    FourWayGraph<true, uint16_t, uint16_t, ConcreteMaze::kWidth>, ConcreteMaze>;
+    FourWayGraph<true, uint16_t, uint16_t, ConcreteMaze::kMaxWidth>,
+    ConcreteMaze>;
 
 template <typename ConcreteMaze>
 class FourWayGraphTypedTest : public FourWayGraphFixture<ConcreteMaze>,
@@ -59,11 +60,11 @@ TYPED_TEST_P(FourWayGraphTypedTest, ConvertsAgentStateAndNodeId) {
   using ::testing::ElementsAre;
   using TMazeGraph = typename decltype(this->mg)::Base;
 
-  EXPECT_EQ(TMazeGraph::kInvalidNode,
+  EXPECT_EQ(TMazeGraph::kInvalidNodeId,
             this->mg.nodeIdByAgentState({{1, 0}, kNoDirection, 0}));
   EXPECT_EQ(0, this->mg.nodeIdByAgentState({{0, 0}, kNoDirection, 0}));
   EXPECT_EQ(1, this->mg.nodeIdByAgentState({{2, 0}, kNoDirection, 0}));
-  EXPECT_EQ(TMazeGraph::kWidth,
+  EXPECT_EQ(TMazeGraph::kMaxWidth,
             this->mg.nodeIdByAgentState({{0, 2}, kNoDirection, 0}));
 
   EXPECT_EQ(AgentState({{0, 0}, kNoDirection, 0}),
@@ -71,25 +72,26 @@ TYPED_TEST_P(FourWayGraphTypedTest, ConvertsAgentStateAndNodeId) {
   EXPECT_EQ(AgentState({{2, 0}, kNoDirection, 0}),
             this->mg.agentStateByNodeId(1));
   EXPECT_EQ(AgentState({{0, 2}, kNoDirection, 0}),
-            this->mg.agentStateByNodeId(TMazeGraph::kWidth));
-  EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByNodeId(
-                                    TMazeGraph::kWidth * TMazeGraph::kWidth));
+            this->mg.agentStateByNodeId(TMazeGraph::kMaxWidth));
+  EXPECT_EQ(kInvalidAgentState,
+            this->mg.agentStateByNodeId(TMazeGraph::kMaxWidth *
+                                        TMazeGraph::kMaxWidth));
 
   EXPECT_THAT(this->mg.nodeIdsByPosition(Position{0, 0}), ElementsAre(0));
   EXPECT_THAT(this->mg.nodeIdsByPosition(Position{2, 0}), ElementsAre(1));
   EXPECT_THAT(this->mg.nodeIdsByPosition(Position{0, 2}),
-              ElementsAre(TMazeGraph::kWidth));
+              ElementsAre(TMazeGraph::kMaxWidth));
   EXPECT_EQ(0U, this->mg.nodeIdsByPosition(Position{200, 200}).size());
 
   EXPECT_EQ(AgentState({{2, 0}, kEast, 0}), this->mg.agentStateByEdge(0, 1));
   EXPECT_EQ(AgentState({{0, 0}, kWest, 0}), this->mg.agentStateByEdge(1, 0));
   EXPECT_EQ(AgentState({{0, 2}, kNorth, 0}),
-            this->mg.agentStateByEdge(0, TMazeGraph::kWidth));
+            this->mg.agentStateByEdge(0, TMazeGraph::kMaxWidth));
   EXPECT_EQ(AgentState({{0, 0}, kSouth, 0}),
-            this->mg.agentStateByEdge(TMazeGraph::kWidth, 0));
+            this->mg.agentStateByEdge(TMazeGraph::kMaxWidth, 0));
   EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, 2));
   EXPECT_EQ(kInvalidAgentState,
-            this->mg.agentStateByEdge(0, TMazeGraph::kWidth / 2));
+            this->mg.agentStateByEdge(0, TMazeGraph::kMaxWidth / 2));
 }
 
 REGISTER_TYPED_TEST_SUITE_P(FourWayGraphTypedTest, ConvertsAgentStateAndNodeId);
@@ -105,10 +107,12 @@ TEST_F(FourWayGraphTest, EnumeratesEdges) {
 
   ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::Cost(1)}), mg.edge(as1, as2));
   ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::Cost(1)}), mg.edge(as2, as1));
-  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
-           mg.edge(as1, kInvalidAgentState));
-  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
-           mg.edge(kInvalidAgentState, as1));
+  ExpectEq(
+      ConcreteEdgeTo({decltype(mg)::kInvalidNodeId, decltype(mg)::kMaxCost}),
+      mg.edge(as1, kInvalidAgentState));
+  ExpectEq(
+      ConcreteEdgeTo({decltype(mg)::kInvalidNodeId, decltype(mg)::kMaxCost}),
+      mg.edge(kInvalidAgentState, as1));
 }
 
 TEST_F(FourWayGraphTest, EnumeratesEdgesWithHypothesis) {
@@ -127,22 +131,26 @@ TEST_F(FourWayGraphTest, EnumeratesEdgesWithHypothesis) {
            mg.edgeWithHypothesis(id1, id2, false));
   ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::Cost(1)}),
            mg.edgeWithHypothesis(id2, id1, false));
-  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::kInf}),
+  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::kMaxCost}),
            mg.edgeWithHypothesis(as1, as2, true));
-  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::kInf}),
+  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::kMaxCost}),
            mg.edgeWithHypothesis(as2, as1, true));
-  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::kInf}),
+  ExpectEq(ConcreteEdgeTo({id2, decltype(mg)::kMaxCost}),
            mg.edgeWithHypothesis(id1, id2, true));
-  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::kInf}),
+  ExpectEq(ConcreteEdgeTo({id1, decltype(mg)::kMaxCost}),
            mg.edgeWithHypothesis(id2, id1, true));
-  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
-           mg.edgeWithHypothesis(as1, kInvalidAgentState, false));
-  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
-           mg.edgeWithHypothesis(kInvalidAgentState, as1, false));
-  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
-           mg.edgeWithHypothesis(as1, kInvalidAgentState, true));
-  ExpectEq(ConcreteEdgeTo({decltype(mg)::kInvalidNode, decltype(mg)::kInf}),
-           mg.edgeWithHypothesis(kInvalidAgentState, as1, true));
+  ExpectEq(
+      ConcreteEdgeTo({decltype(mg)::kInvalidNodeId, decltype(mg)::kMaxCost}),
+      mg.edgeWithHypothesis(as1, kInvalidAgentState, false));
+  ExpectEq(
+      ConcreteEdgeTo({decltype(mg)::kInvalidNodeId, decltype(mg)::kMaxCost}),
+      mg.edgeWithHypothesis(kInvalidAgentState, as1, false));
+  ExpectEq(
+      ConcreteEdgeTo({decltype(mg)::kInvalidNodeId, decltype(mg)::kMaxCost}),
+      mg.edgeWithHypothesis(as1, kInvalidAgentState, true));
+  ExpectEq(
+      ConcreteEdgeTo({decltype(mg)::kInvalidNodeId, decltype(mg)::kMaxCost}),
+      mg.edgeWithHypothesis(kInvalidAgentState, as1, true));
 }
 
 TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
@@ -157,17 +165,17 @@ TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
 
   EXPECT_EQ(1, mg.distance(0, 1));
   EXPECT_EQ(2, mg.distance(1, 16));
-  EXPECT_EQ(mg.kInf, mg.distance(0, decltype(mg)::kInvalidNode));
+  EXPECT_EQ(mg.kMaxCost, mg.distance(0, decltype(mg)::kInvalidNodeId));
 
   auto v1 = mg.neighbors(0);
   std::sort(v1.begin(), v1.end());
   EXPECT_THAT(v1, ElementsAre(1, 16));
   auto v1e = mg.neighborEdges(0);
   std::sort(v1e.begin(), v1e.end(), EdgeToSorter<NodeId, Cost>());
-  ExpectEq(v1e[0], ConcreteEdgeTo({NodeId(1), mg.kInf}));
+  ExpectEq(v1e[0], ConcreteEdgeTo({NodeId(1), mg.kMaxCost}));
   ExpectEq(v1e[1], ConcreteEdgeTo({NodeId(16), Cost(1)}));
 
-  EXPECT_EQ(mg.edgeCost(0, 1), mg.kInf);
+  EXPECT_EQ(mg.edgeCost(0, 1), mg.kMaxCost);
   EXPECT_EQ(mg.edgeCost(0, 16), Cost(1));
 
   auto v2 = mg.neighbors(16);
@@ -176,11 +184,11 @@ TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
   auto v2e = mg.neighborEdges(16);
   std::sort(v2e.begin(), v2e.end(), EdgeToSorter<NodeId, Cost>());
   ExpectEq(v2e[0], ConcreteEdgeTo({NodeId(0), Cost(1)}));
-  ExpectEq(v2e[1], ConcreteEdgeTo({NodeId(17), mg.kInf}));
+  ExpectEq(v2e[1], ConcreteEdgeTo({NodeId(17), mg.kMaxCost}));
   ExpectEq(v2e[2], ConcreteEdgeTo({NodeId(32), Cost(1)}));
 
   EXPECT_EQ(mg.edgeCost(16, 0), Cost(1));
-  EXPECT_EQ(mg.edgeCost(16, 17), mg.kInf);
+  EXPECT_EQ(mg.edgeCost(16, 17), mg.kMaxCost);
   EXPECT_EQ(mg.edgeCost(16, 32), Cost(1));
 
   auto v3 = mg.neighbors(17);
@@ -189,13 +197,13 @@ TEST_F(FourWayGraphTest, GetsNeighborsAndCosts) {
   auto v3e = mg.neighborEdges(17);
   std::sort(v3e.begin(), v3e.end(), EdgeToSorter<NodeId, Cost>());
   ExpectEq(v3e[0], ConcreteEdgeTo({NodeId(1), Cost(1)}));
-  ExpectEq(v3e[1], ConcreteEdgeTo({NodeId(16), mg.kInf}));
-  ExpectEq(v3e[2], ConcreteEdgeTo({NodeId(18), mg.kInf}));
+  ExpectEq(v3e[1], ConcreteEdgeTo({NodeId(16), mg.kMaxCost}));
+  ExpectEq(v3e[2], ConcreteEdgeTo({NodeId(18), mg.kMaxCost}));
   ExpectEq(v3e[3], ConcreteEdgeTo({NodeId(33), Cost(1)}));
 
   EXPECT_EQ(mg.edgeCost(17, 1), Cost(1));
-  EXPECT_EQ(mg.edgeCost(17, 16), mg.kInf);
-  EXPECT_EQ(mg.edgeCost(17, 18), mg.kInf);
+  EXPECT_EQ(mg.edgeCost(17, 16), mg.kMaxCost);
+  EXPECT_EQ(mg.edgeCost(17, 18), mg.kMaxCost);
   EXPECT_EQ(mg.edgeCost(17, 33), Cost(1));
 
   auto v4e = mg.neighborEdges(32768);
@@ -249,8 +257,6 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_tuple(1, 0, Position{1, 0})));
 INSTANTIATE_TEST_SUITE_P(
     WallOnEdgeInvalid, FourWayGraphWallOnEdgeTest,
-    ::testing::Values(std::make_tuple(0, 32, kInvalidAgentState.pos),
-                      std::make_tuple(0, 2, kInvalidAgentState.pos),
-                      std::make_tuple(255, 256, kInvalidAgentState.pos),
+    ::testing::Values(std::make_tuple(255, 256, kInvalidAgentState.pos),
                       std::make_tuple(255, 257, kInvalidAgentState.pos),
                       std::make_tuple(20000, 20001, kInvalidAgentState.pos)));

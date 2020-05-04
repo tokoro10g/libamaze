@@ -107,7 +107,8 @@ int main(int argc, char *argv[]) {
   // Passes the pointer of the graph to a D* Lite solver and initializes the
   // solver.
   //
-  auto solver = amaze::solver::DStarLite(&mg);
+  auto solver = amaze::solver::LookAhead<
+      amaze::solver::BFS<uint16_t, uint16_t, 32, 1024>>(&mg);
   solver.initialize();
   using AH = amaze::AgentHelper<decltype(mg), decltype(solver)>;
 

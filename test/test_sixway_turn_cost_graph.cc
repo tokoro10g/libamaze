@@ -39,7 +39,7 @@ using namespace amaze::utils;       // NOLINT(build/namespaces)
 
 template <typename ConcreteMaze>
 using SixWayTCGraphFixture = AbstractMazeGraphFixture<
-    SixWayTurnCostGraph<true, uint16_t, uint16_t, ConcreteMaze::kWidth>,
+    SixWayTurnCostGraph<true, uint16_t, uint16_t, ConcreteMaze::kMaxWidth>,
     ConcreteMaze>;
 
 template <typename ConcreteMaze>
@@ -61,13 +61,13 @@ TYPED_TEST_P(SixWayTCGraphTypedTest, ConvertsAgentStateAndNodeId) {
   using ::testing::ElementsAre;
   using TMazeGraph = typename decltype(this->mg)::Base;
 
-  auto n = 2 * TMazeGraph::kWidth * (TMazeGraph::kWidth - 1);
+  auto n = 2 * TMazeGraph::kMaxWidth * (TMazeGraph::kMaxWidth - 1);
 
-  EXPECT_EQ(TMazeGraph::kInvalidNode,
+  EXPECT_EQ(TMazeGraph::kInvalidNodeId,
             this->mg.nodeIdByAgentState({{0, 0}, kNoDirection, 0}));
   EXPECT_EQ(0, this->mg.nodeIdByAgentState({{1, 0}, kNoDirection, 0}));
   EXPECT_EQ(1, this->mg.nodeIdByAgentState({{3, 0}, kNoDirection, 0}));
-  EXPECT_EQ(TMazeGraph::kWidth - 1,
+  EXPECT_EQ(TMazeGraph::kMaxWidth - 1,
             this->mg.nodeIdByAgentState({{0, 1}, kNoDirection, 0}));
 
   EXPECT_EQ(AgentState({{1, 0}, kNoDirection, 0}),
@@ -75,14 +75,15 @@ TYPED_TEST_P(SixWayTCGraphTypedTest, ConvertsAgentStateAndNodeId) {
   EXPECT_EQ(AgentState({{3, 0}, kNoDirection, 0}),
             this->mg.agentStateByNodeId(1));
   EXPECT_EQ(AgentState({{0, 1}, kNoDirection, 0}),
-            this->mg.agentStateByNodeId(TMazeGraph::kWidth - 1));
+            this->mg.agentStateByNodeId(TMazeGraph::kMaxWidth - 1));
   EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByNodeId(2 * n));
 
   EXPECT_THAT(this->mg.nodeIdsByPosition(Position{1, 0}), ElementsAre(0, n));
   EXPECT_THAT(this->mg.nodeIdsByPosition(Position{3, 0}),
               ElementsAre(1, n + 1));
-  EXPECT_THAT(this->mg.nodeIdsByPosition(Position{0, 1}),
-              ElementsAre(TMazeGraph::kWidth - 1, n + TMazeGraph::kWidth - 1));
+  EXPECT_THAT(
+      this->mg.nodeIdsByPosition(Position{0, 1}),
+      ElementsAre(TMazeGraph::kMaxWidth - 1, n + TMazeGraph::kMaxWidth - 1));
   EXPECT_EQ(0U, this->mg.nodeIdsByPosition(Position{200, 200}).size());
 
   EXPECT_EQ(AgentState({{3, 0}, kEast, 0}), this->mg.agentStateByEdge(0, 1));
@@ -92,22 +93,22 @@ TYPED_TEST_P(SixWayTCGraphTypedTest, ConvertsAgentStateAndNodeId) {
   EXPECT_EQ(AgentState({{1, 0}, kNoDirection, 0}),
             this->mg.agentStateByEdge(n, 0));
   EXPECT_EQ(AgentState({{2, 1}, kNorth, 1}),
-            this->mg.agentStateByEdge(n, n + TMazeGraph::kWidth));
+            this->mg.agentStateByEdge(n, n + TMazeGraph::kMaxWidth));
   EXPECT_EQ(AgentState({{1, 0}, kWest, 1}),
-            this->mg.agentStateByEdge(n + TMazeGraph::kWidth, n));
+            this->mg.agentStateByEdge(n + TMazeGraph::kMaxWidth, n));
   EXPECT_EQ(kInvalidAgentState,
-            this->mg.agentStateByEdge(0, TMazeGraph::kWidth));
+            this->mg.agentStateByEdge(0, TMazeGraph::kMaxWidth));
   EXPECT_EQ(kInvalidAgentState,
-            this->mg.agentStateByEdge(TMazeGraph::kWidth, 0));
+            this->mg.agentStateByEdge(TMazeGraph::kMaxWidth, 0));
   EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(n, n + 1));
   EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(n + 1, n));
   EXPECT_EQ(kInvalidAgentState,
-            this->mg.agentStateByEdge(0, TMazeGraph::kWidth - 1));
+            this->mg.agentStateByEdge(0, TMazeGraph::kMaxWidth - 1));
   EXPECT_EQ(kInvalidAgentState,
-            this->mg.agentStateByEdge(TMazeGraph::kWidth - 1, 0));
+            this->mg.agentStateByEdge(TMazeGraph::kMaxWidth - 1, 0));
   EXPECT_EQ(kInvalidAgentState, this->mg.agentStateByEdge(0, 2));
   EXPECT_EQ(kInvalidAgentState,
-            this->mg.agentStateByEdge(0, TMazeGraph::kWidth / 2));
+            this->mg.agentStateByEdge(0, TMazeGraph::kMaxWidth / 2));
 }
 
 REGISTER_TYPED_TEST_SUITE_P(SixWayTCGraphTypedTest,
