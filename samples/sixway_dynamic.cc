@@ -43,7 +43,7 @@
 #include "amaze/solver/dstarlite.h"
 #include "amaze/solver/look_ahead.h"
 
-#define ENABLE_TURN_COST 0
+#define ENABLE_TURN_COST 1
 
 void showUsage(std::string name) {
   std::cout << "usage:" << std::endl;
@@ -114,8 +114,9 @@ int main(int argc, char *argv[]) {
   // Passes the pointer of the graph to a D* Lite solver and initializes the
   // solver.
   //
-  auto solver = amaze::solver::LookAhead<
-      amaze::solver::AStar<uint16_t, uint16_t, 32, 1984>>(&mg);
+  // auto solver = amaze::solver::LookAhead<
+  //     amaze::solver::AStar<uint16_t, uint16_t, 32, 1984>>(&mg);
+  auto solver = amaze::solver::BFS(&mg);
   solver.initialize();
   using AH = amaze::AgentHelper<decltype(mg), decltype(solver)>;
 

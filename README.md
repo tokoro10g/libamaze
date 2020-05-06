@@ -28,9 +28,10 @@ Amazeは主に3つの基本クラスで構成されています．
 - `Maze`  
 迷路データを表すクラスです．テンプレート引数によって最大の迷路幅を指定できます．使用するメモリはコンパイル時に決定され，静的に確保されます．
 - `MazeGraph`  
-`Maze` クラスで表現された迷路の壁データをもとにグラフを構成します． `MazeGraph` は抽象クラスであり，`FourWayStepMapGraph`, `SixWayWallNodeGraph`, `SixWayWallNodeTurnCostGraph` が具体的に実装しています．
+`Maze` クラスで表現された迷路の壁データをもとにグラフを構成します． `MazeGraph` は抽象クラスであり，`FourWayGraph`, `SixWayGraph`, `SixWayTurnCostGraph` が具体的に実装しています．
 - `Solver`  
-`MazeGraph` 上を探索するソルバです．迷路データである `Maze` 自身は参照せず，`MazeGraph` を通して迷路を解釈します．`AStar`, `BFS`, `DStarLite` が具体的な実装を提供しています．
+`MazeGraph` 上を探索するソルバです．迷路データである `Maze` 自身は参照せず，`MazeGraph` を通して迷路を解釈します．`AStar`, `BFS`, `DStarLite` が具体的な実装を提供しています．  
+インクリメンタルでないソルバ(`AStar` と `BFS`)については，壁の有無の数パターンをセンシング前に仮定して事前計算を行う，look-aheadアルゴリズムをオプションで利用できます．
 
 また，計算機上でのシミュレーションのためのヘルパークラスも用意しています．
 - `AgentHelper`  

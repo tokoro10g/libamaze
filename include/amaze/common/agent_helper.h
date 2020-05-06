@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_COMMON_AGENT_HELPER_H_
-#define INCLUDE_AMAZE_COMMON_AGENT_HELPER_H_
+#ifndef AMAZE_COMMON_AGENT_HELPER_H_
+#define AMAZE_COMMON_AGENT_HELPER_H_
 
 #include <unordered_set>
 
@@ -173,4 +173,4 @@ class AgentHelper : public MazeGraphFeature<TMazeGraph>,
 
 }  // namespace amaze
 
-#endif  // INCLUDE_AMAZE_COMMON_AGENT_HELPER_H_
+#endif  // AMAZE_COMMON_AGENT_HELPER_H_

@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_SOLVER_BFS_H_
-#define INCLUDE_AMAZE_SOLVER_BFS_H_
+#ifndef AMAZE_SOLVER_BFS_H_
+#define AMAZE_SOLVER_BFS_H_
 
 #include <algorithm>
 #include <array>
@@ -32,7 +32,12 @@
 #include <utility>
 #include <vector>
 
+#include "amaze/config.h"
 #include "amaze/solver/solver_base.h"
+
+#ifndef AMAZE_NO_STDIO
+#include <iostream>
+#endif
 
 namespace amaze {
 namespace solver {
@@ -96,7 +101,7 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount>,
       }
     }
     // computation finished
-#if 0
+#ifdef AMAZE_DEBUG
     std::cout << "The number of examined nodes in this round: "
               << examined_nodes << std::endl;
     std::cout << "Maximum size of the open list: " << max_heap_size
@@ -155,11 +160,7 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount>,
     return path;
   }
 
-  void processBeforeReplanning(
-      const std::unordered_map<Position, bool> &wall_overrides [[maybe_unused]],
-      const Position &last_key [[maybe_unused]]) override {
-    resetCostsAndLists();
-  }
+  void processBeforeReplanning() override { resetCostsAndLists(); }
 
   void preSense(const std::unordered_set<Position> &sense_positions
                 [[maybe_unused]]) override {
@@ -167,19 +168,19 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount>,
     id_candidate = ln.first;
   }
 
-  void postSense(
-      const std::unordered_map<Position, bool> &wall_overrides) override {
+  void postSense(const std::unordered_map<Position, bool> &wall_overrides
+                 [[maybe_unused]]) override {
     if (currentSolverState() == SolverState::kReached) {
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cout << "Reached the destination" << std::endl;
 #endif
       return;
     }
     if (Base::mg->edgeCost(id_current, id_candidate) == kMaxCost) {
-      processBeforeReplanning(wall_overrides, {});
+      processBeforeReplanning();
       computeShortestPath();
       if (currentSolverState() == SolverState::kFailed) /* [[unlikely]] */ {
-#if 0
+#ifndef AMAZE_NO_STDIO
         std::cerr << "No route" << std::endl;
 #endif
         return;
@@ -204,10 +205,9 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount>,
   }
 
   void changeDestinations(const std::set<NodeId> &ids) override {
-    resetCostsAndLists();
-    // id_current = id_current
     ids_destination = ids;
     id_last = id_current;
+    processBeforeReplanning();
     computeShortestPath();
   }
 
@@ -232,4 +232,4 @@ class BFS : public SolverBase<TCost, TNodeId, W, NodeCount>,
 
 }  // namespace solver
 }  // namespace amaze
-#endif  // INCLUDE_AMAZE_SOLVER_BFS_H_
+#endif  // AMAZE_SOLVER_BFS_H_

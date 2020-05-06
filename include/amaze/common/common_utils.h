@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_COMMON_COMMON_UTILS_H_
-#define INCLUDE_AMAZE_COMMON_COMMON_UTILS_H_
+#ifndef AMAZE_COMMON_COMMON_UTILS_H_
+#define AMAZE_COMMON_COMMON_UTILS_H_
 
 #include <cstdint>
 #include <limits>
@@ -86,4 +86,4 @@ inline std::ostream &operator<<(std::ostream &os, AgentState as) {
 }
 
 }  // namespace amaze
-#endif  // INCLUDE_AMAZE_COMMON_COMMON_UTILS_H_
+#endif  // AMAZE_COMMON_COMMON_UTILS_H_

@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 
+#include "amaze/amaze.h"
 #include "amaze/common/agent_helper.h"
 #include "amaze/common/common_types.h"
 #include "amaze/common/common_utils.h"

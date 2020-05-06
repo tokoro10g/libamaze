@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef TEST_TEST_UTILS_H_
-#define TEST_TEST_UTILS_H_
+#ifndef AMAZE_TEST_TEST_UTILS_H_
+#define AMAZE_TEST_TEST_UTILS_H_
 
 #include <string>
 
@@ -163,4 +163,4 @@ const std::string maze_str2 = "+---+---+---+---+---+---+---+---+---+---+---+---+
 
 /* clang-format on */
 
-#endif  // TEST_TEST_UTILS_H_
+#endif  // AMAZE_TEST_TEST_UTILS_H_

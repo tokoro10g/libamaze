@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_MAZE_GRAPH_MAZE_GRAPH_BASE_H_
-#define INCLUDE_AMAZE_MAZE_GRAPH_MAZE_GRAPH_BASE_H_
+#ifndef AMAZE_MAZE_GRAPH_MAZE_GRAPH_BASE_H_
+#define AMAZE_MAZE_GRAPH_MAZE_GRAPH_BASE_H_
 
 #include <algorithm>
 #include <array>
@@ -90,6 +90,7 @@ class MazeGraphBase {
   static_assert(kInvalidNodeId >= kNodeCount);
 
   explicit MazeGraphBase(const Maze<W> &maze) : maze(maze) {}
+
   virtual ~MazeGraphBase() = default;
 
   /// \~japanese
@@ -265,6 +266,7 @@ class MazeGraphBase {
     return edgeWithHypothesis(agentStateByNodeId(id_from),
                               agentStateByNodeId(id_to), blocked);
   }
+
   /// \~japanese
   /// 迷路データに基づいてエッジの存在性とコストを計算します．
   ///
@@ -476,4 +478,4 @@ class MazeGraphBase {
 
 }  // namespace maze_graph
 }  // namespace amaze
-#endif  // INCLUDE_AMAZE_MAZE_GRAPH_MAZE_GRAPH_BASE_H_
+#endif  // AMAZE_MAZE_GRAPH_MAZE_GRAPH_BASE_H_

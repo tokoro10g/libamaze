@@ -29,7 +29,8 @@ add_compile_options(-Wall -Wextra -Weffc++ -pedantic -Werror -pedantic-errors
                     -Wtrigraphs -Wuninitialized -Wunknown-pragmas -Wunreachable-code
                     -Wunused -Wunused-function -Wunused-label -Wunused-parameter
                     -Wunused-value -Wunused-variable -Wvariadic-macros
-                    -Wvolatile-register-var -Wwrite-strings -funroll-loops -ffast-math)
+                    -Wvolatile-register-var -Wwrite-strings -Wno-attributes
+                    -funroll-loops -ffast-math)
 
 add_subdirectory(test)
 add_subdirectory(samples)

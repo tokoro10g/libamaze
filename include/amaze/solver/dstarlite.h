@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_SOLVER_DSTARLITE_H_
-#define INCLUDE_AMAZE_SOLVER_DSTARLITE_H_
+#ifndef AMAZE_SOLVER_DSTARLITE_H_
+#define AMAZE_SOLVER_DSTARLITE_H_
 
 #include <algorithm>
 #include <array>
@@ -31,7 +31,12 @@
 #include <unordered_set>
 #include <vector>
 
+#include "amaze/config.h"
 #include "amaze/solver/solver_base.h"
+
+#ifndef AMAZE_NO_STDIO
+#include <iostream>
+#endif
 
 namespace amaze {
 namespace solver {
@@ -222,7 +227,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount>,
       }
     }
     // computation finished
-#if 0
+#ifdef AMAZE_DEBUG
     std::cout << "The number of examined nodes in this round: "
               << examined_nodes << std::endl;
     std::cout << "Maximum size of the open list: " << max_heap_size
@@ -271,13 +276,12 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount>,
       NodeId id, std::unordered_map<Position, bool> wall_overrides = {}) const {
     NodeId argmin = id;
     Cost mincost = kMaxCost;
-#define AMAZE_DEBUG 0
-#if AMAZE_DEBUG
+#ifdef AMAZE_DEBUG
     std::cout << "neighbors of " << id << ": ";
 #endif
     for (auto &[spid, spcost] : Base::mg->neighborEdges(id, wall_overrides)) {
       Cost cost = satSum(spcost, g[spid]);
-#if AMAZE_DEBUG
+#ifdef AMAZE_DEBUG
       std::cout << spid << "(" << cost << "), ";
 #endif
       if (mincost >= cost) {
@@ -285,7 +289,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount>,
         argmin = spid;
       }
     }
-#if AMAZE_DEBUG
+#ifdef AMAZE_DEBUG
     std::cout << std::endl;
 #endif
     return {argmin, mincost};
@@ -310,63 +314,7 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount>,
     return path;
   }
 
-  void processBeforeReplanning(
-      const std::unordered_map<Position, bool> &wall_overrides [[maybe_unused]],
-      const Position &last_key [[maybe_unused]]) override {
-    auto it = wall_overrides.find(last_key);
-    if (it == wall_overrides.end()) {
-      return;
-    }
-
-    key_modifier =
-        satSum(key_modifier, Base::mg->distance(id_last_modified, id_current));
-    id_last_modified = id_current;
-
-    Position position = it->first;
-    bool wall_state = it->second;
-
-    for (auto &[uid, vid] : Base::mg->affectedEdges(position)) {
-      Cost cold = Base::mg->edgeWithHypothesis(uid, vid, !wall_state).cost;
-      Cost cnew = Base::mg->edgeWithHypothesis(uid, vid, wall_state).cost;
-      if (cold > cnew) /* [[unlikely]] */ {
-        if (rhs[uid] != 0) {
-          rhs[uid] = std::min(rhs[uid], satSum(cnew, g[vid]));
-        }
-      } else if (rhs[uid] == satSum(cold, g[vid])) {
-        if (rhs[uid] != 0) {
-          Cost mincost = kMaxCost;
-          for (auto &[spid, spcost] :
-               Base::mg->neighborEdges(uid, wall_overrides)) {
-            mincost = std::min(mincost, satSum(spcost, g[spid]));
-          }
-          rhs[uid] = mincost;
-        }
-      }
-      updateNode(uid);
-      if (cold > cnew) /* [[unlikely]] */ {
-        if (rhs[vid] != 0) {
-          rhs[vid] = std::min(rhs[vid], satSum(cnew, g[uid]));
-        }
-      } else if (rhs[vid] == satSum(cold, g[uid])) {
-        if (rhs[vid] != 0) {
-          Cost mincost = kMaxCost;
-          for (auto &[spid, spcost] :
-               Base::mg->neighborEdges(vid, wall_overrides)) {
-            mincost = std::min(mincost, satSum(spcost, g[spid]));
-          }
-          rhs[vid] = mincost;
-        }
-      }
-      updateNode(vid);
-    }
-  }
-
-  void processAfterReplanning(
-      const std::unordered_map<Position, bool> &wall_overrides) {
-    for (const auto &[key, value] : wall_overrides) {
-      processBeforeReplanning(wall_overrides, key);
-    }
-  }
+  void processBeforeReplanning() {}
 
   void preSense(const std::unordered_set<Position> &sense_positions
                 [[maybe_unused]]) override {}
@@ -374,20 +322,58 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount>,
   void postSense(
       const std::unordered_map<Position, bool> &wall_overrides) override {
     if (currentSolverState() == SolverState::kReached) {
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cout << "Reached the destination" << std::endl;
 #endif
       return;
     }
     if (currentSolverState() == SolverState::kFailed) /* [[unlikely]] */ {
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cerr << "No route" << std::endl;
 #endif
       return;
     }
 
     if (!wall_overrides.empty()) {
-      processAfterReplanning(wall_overrides);
+      key_modifier = satSum(key_modifier,
+                            Base::mg->distance(id_last_modified, id_current));
+      id_last_modified = id_current;
+      for (auto &[position, wall_state] : wall_overrides) {
+        for (auto &[uid, vid] : Base::mg->affectedEdges(position)) {
+          Cost cold = Base::mg->edgeWithHypothesis(uid, vid, !wall_state).cost;
+          Cost cnew = Base::mg->edgeWithHypothesis(uid, vid, wall_state).cost;
+          if (cold > cnew) /* [[unlikely]] */ {
+            if (rhs[uid] != 0) {
+              rhs[uid] = std::min(rhs[uid], satSum(cnew, g[vid]));
+            }
+          } else if (rhs[uid] == satSum(cold, g[vid])) {
+            if (rhs[uid] != 0) {
+              Cost mincost = kMaxCost;
+              for (auto &[spid, spcost] :
+                   Base::mg->neighborEdges(uid, wall_overrides)) {
+                mincost = std::min(mincost, satSum(spcost, g[spid]));
+              }
+              rhs[uid] = mincost;
+            }
+          }
+          updateNode(uid);
+          if (cold > cnew) /* [[unlikely]] */ {
+            if (rhs[vid] != 0) {
+              rhs[vid] = std::min(rhs[vid], satSum(cnew, g[uid]));
+            }
+          } else if (rhs[vid] == satSum(cold, g[uid])) {
+            if (rhs[vid] != 0) {
+              Cost mincost = kMaxCost;
+              for (auto &[spid, spcost] :
+                   Base::mg->neighborEdges(vid, wall_overrides)) {
+                mincost = std::min(mincost, satSum(spcost, g[spid]));
+              }
+              rhs[vid] = mincost;
+            }
+          }
+          updateNode(vid);
+        }
+      }
       computeShortestPath();
     }
     id_last = id_current;
@@ -464,4 +450,4 @@ class DStarLite : public SolverBase<TCost, TNodeId, W, NodeCount>,
 
 }  // namespace solver
 }  // namespace amaze
-#endif  // INCLUDE_AMAZE_SOLVER_DSTARLITE_H_
+#endif  // AMAZE_SOLVER_DSTARLITE_H_

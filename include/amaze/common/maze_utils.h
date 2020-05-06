@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_COMMON_MAZE_UTILS_H_
-#define INCLUDE_AMAZE_COMMON_MAZE_UTILS_H_
+#ifndef AMAZE_COMMON_MAZE_UTILS_H_
+#define AMAZE_COMMON_MAZE_UTILS_H_
 
 #include <algorithm>
 #include <fstream>
@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "amaze/common/common_types.h"
+#include "amaze/config.h"
 
 namespace amaze {
 namespace utils {
@@ -46,10 +47,16 @@ bool loadMazeFromStream(Maze<W> &maze, std::istream &is) {
 
   if ((line.length() - 1) % 4 != 0) /* [[unlikely]] */ {
     // invalid format
+#ifndef AMAZE_NO_STDIO
+    std::cerr << "Invalid maze format" << std::endl;
+#endif
     return false;
   }
   if (line.length() > 4 * W + 1) /* [[unlikely]] */ {
     // too large
+#ifndef AMAZE_NO_STDIO
+    std::cerr << "Maze data is too large" << std::endl;
+#endif
     return false;
   }
   uint8_t w = static_cast<uint8_t>((line.length() - 1) / 4);
@@ -210,4 +217,4 @@ void printMaze(const Maze<W> &maze, const int m = 1) {
 }  // namespace utils
 
 }  // namespace amaze
-#endif  // INCLUDE_AMAZE_COMMON_MAZE_UTILS_H_
+#endif  // AMAZE_COMMON_MAZE_UTILS_H_

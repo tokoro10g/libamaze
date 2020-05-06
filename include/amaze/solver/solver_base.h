@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_SOLVER_SOLVER_BASE_H_
-#define INCLUDE_AMAZE_SOLVER_SOLVER_BASE_H_
+#ifndef AMAZE_SOLVER_SOLVER_BASE_H_
+#define AMAZE_SOLVER_SOLVER_BASE_H_
 
 #include <set>
 #include <unordered_set>
@@ -215,9 +215,7 @@ class SolverBase {
   virtual std::vector<AgentState> reconstructPath(
       NodeId id_from, const std::set<NodeId> &ids_to) const = 0;
 
-  virtual void processBeforeReplanning(
-      const std::unordered_map<Position, bool> &wall_overrides,
-      const Position &last_key) = 0;
+  virtual void processBeforeReplanning() = 0;
 
   /// \~japanese
   /// 壁センシング前の処理を行います．
@@ -293,4 +291,4 @@ struct IncrementalSolverBase {
 
 }  // namespace solver
 }  // namespace amaze
-#endif  // INCLUDE_AMAZE_SOLVER_SOLVER_BASE_H_
+#endif  // AMAZE_SOLVER_SOLVER_BASE_H_

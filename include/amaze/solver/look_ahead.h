@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_SOLVER_LOOK_AHEAD_H_
-#define INCLUDE_AMAZE_SOLVER_LOOK_AHEAD_H_
+#ifndef AMAZE_SOLVER_LOOK_AHEAD_H_
+#define AMAZE_SOLVER_LOOK_AHEAD_H_
 
 #include <array>
 #include <iostream>
@@ -30,8 +30,13 @@
 #include <utility>
 #include <vector>
 
+#include "amaze/config.h"
 #include "amaze/maze_graph/sixway_turn_cost_graph.h"
 #include "amaze/solver/solver_base.h"
+
+#if !defined(AMAZE_NO_STDIO) && defined(AMAZE_DEBUG)
+#include <iostream>
+#endif
 
 namespace amaze {
 namespace solver {
@@ -55,7 +60,6 @@ class LookAhead : public TSolver {
       maze_graph::MazeGraphBase<Cost, NodeId, kMaxWidth, kNodeCount>;
 
   using TSolver::computeShortestPath;
-  using TSolver::currentSolverState;
   using TSolver::lowestNeighbor;
   using TSolver::processBeforeReplanning;
 
@@ -66,14 +70,25 @@ class LookAhead : public TSolver {
   using TSolver::mg;
 
   explicit LookAhead(const MazeGraph *mg)
-      : TSolver(mg), look_ahead_candidates() {}
+      : TSolver(mg), look_ahead_candidates(), is_post_sense_failed(false) {}
+
+  SolverState currentSolverState() const override {
+    SolverState solver_state = TSolver::currentSolverState();
+    if (solver_state == SolverState::kFailed && !is_post_sense_failed) {
+      return SolverState::kInProgress;
+    }
+    return solver_state;
+  }
 
   void preSense(const std::unordered_set<Position> &sense_positions
                 [[maybe_unused]]) final {
+    is_post_sense_failed = false;
     look_ahead_candidates.fill(mg->nodeIdByAgentState(kInvalidAgentState));
 
+    processBeforeReplanning();
+    computeShortestPath();
     auto [id_neighbor, cost_neighbor] = lowestNeighbor(id_current);
-#if 1
+#ifdef AMAZE_DEBUG
     std::cout << "[0]\tcandidate: " << id_neighbor << " *" << cost_neighbor
               << std::endl;
 #endif
@@ -90,7 +105,7 @@ class LookAhead : public TSolver {
       }
       wall_overrides.insert({pos_wall, true});
 
-      processBeforeReplanning(wall_overrides, pos_wall);
+      processBeforeReplanning();
       computeShortestPath(wall_overrides);
 
       auto [id_neighbor, cost_neighbor] =
@@ -101,7 +116,7 @@ class LookAhead : public TSolver {
       } else {
         look_ahead_candidates.at(i) = id_neighbor;
       }
-#if 1
+#ifdef AMAZE_DEBUG
       std::cout << "[" << i << "] wall position: " << pos_wall << std::endl;
       std::cout << "\tcandidate: " << look_ahead_candidates.at(i) << " *"
                 << cost_neighbor << std::endl;
@@ -115,17 +130,19 @@ class LookAhead : public TSolver {
   void postSense(const std::unordered_map<Position, bool> &wall_overrides
                  [[maybe_unused]]) final {
     if (currentSolverState() == SolverState::kReached) {
-#if 1
+#ifndef AMAZE_NO_STDIO
       std::cout << "Reached the destination" << std::endl;
 #endif
       return;
     }
     for (auto id_candidate : look_ahead_candidates) {
+#ifdef AMAZE_DEBUG
       std::cout << "candidate " << id_candidate << std::endl;
+#endif
       if (mg->edgeCost(id_current, id_candidate) != kMaxCost) {
         id_last = id_current;
         id_current = id_candidate;
-#if 1
+#ifdef AMAZE_DEBUG
         std::cout << "[v]\tmove to " << id_current << std::endl;
         std::cout << "\tSolverState: " << static_cast<int>(currentSolverState())
                   << std::endl;
@@ -133,18 +150,19 @@ class LookAhead : public TSolver {
         return;
       }
     }
-#if 1
-    std::cout << "No route" << std::endl;
+    // All paths are blocked
+    is_post_sense_failed = true;
+#ifndef AMAZE_NO_STDIO
+    std::cerr << "No route" << std::endl;
 #endif
-    // all paths are blocked, which is not supposed to happen
-    __builtin_unreachable();
   }
 
  private:
   std::array<NodeId, 4> look_ahead_candidates;
+  bool is_post_sense_failed;
 };
 
 }  // namespace solver
 }  // namespace amaze
 
-#endif  // INCLUDE_AMAZE_SOLVER_LOOK_AHEAD_H_
+#endif  // AMAZE_SOLVER_LOOK_AHEAD_H_

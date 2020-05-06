@@ -20,8 +20,8 @@
  * SOFTWARE.
  */
 
-#ifndef INCLUDE_AMAZE_MAZE_GRAPH_SIXWAY_TURN_COST_GRAPH_H_
-#define INCLUDE_AMAZE_MAZE_GRAPH_SIXWAY_TURN_COST_GRAPH_H_
+#ifndef AMAZE_MAZE_GRAPH_SIXWAY_TURN_COST_GRAPH_H_
+#define AMAZE_MAZE_GRAPH_SIXWAY_TURN_COST_GRAPH_H_
 
 #include <algorithm>
 #include <set>
@@ -30,7 +30,12 @@
 
 #include "amaze/common/common_types.h"
 #include "amaze/common/common_utils.h"
+#include "amaze/config.h"
 #include "amaze/maze_graph/maze_graph_base.h"
+
+#ifndef AMAZE_NO_STDIO
+#include <iostream>
+#endif
 
 namespace amaze {
 namespace maze_graph {
@@ -76,7 +81,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   TCost distance(TNodeId id_from, TNodeId id_to) const override {
     if (id_from >= kNodeCount || id_to >= kNodeCount) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cerr << "Out of bounds!!! (id_from: " << static_cast<int>(id_from)
                 << ", id_to: " << static_cast<int>(id_to) << ") " << __FILE__
                 << ":" << __LINE__ << std::endl;
@@ -99,7 +104,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
     std::vector<EdgeTo<TNodeId, TCost>> v;
     if (id >= kNodeCount) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << __FILE__
                 << ":" << __LINE__ << std::endl;
 #endif
@@ -155,7 +160,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
                                             bool blocked) const override {
     if (as1 == kInvalidAgentState ||
         as2 == kInvalidAgentState) /* [[unlikely]] */ {
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
 #endif
@@ -202,7 +207,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   EdgeTo<TNodeId, TCost> edge(AgentState as1, AgentState as2) const override {
     if (as1 == kInvalidAgentState ||
         as2 == kInvalidAgentState) /* [[unlikely]] */ {
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cerr << "Out of bounds!!! (from: " << as1 << ", to: " << as2 << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
 #endif
@@ -250,7 +255,7 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
   AgentState agentStateByNodeId(TNodeId id) const override {
     if (id >= kNodeCount) /* [[unlikely]] */ {
       // TODO(tokoro10g): implement exception handling
-#if 0
+#ifndef AMAZE_NO_STDIO
       std::cerr << "Out of bounds!!! (id: " << static_cast<int>(id) << ") "
                 << __FILE__ << ":" << __LINE__ << std::endl;
 #endif
@@ -355,4 +360,4 @@ class SixWayTurnCostGraph : public MazeGraphBase<TCost, TNodeId, W, NodeCount> {
 
 }  // namespace maze_graph
 }  // namespace amaze
-#endif  // INCLUDE_AMAZE_MAZE_GRAPH_SIXWAY_TURN_COST_GRAPH_H_
+#endif  // AMAZE_MAZE_GRAPH_SIXWAY_TURN_COST_GRAPH_H_
